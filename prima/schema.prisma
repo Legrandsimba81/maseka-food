@@ -42,7 +42,6 @@ model Order {
   status      String      @default("pending")
   pickupTime  DateTime?
   address     String?
-  adminNote   String?
   paymentMethod String?   // 👈 ajouté (mpesa, airtel, orange)
   items       OrderItem[]
   createdAt   DateTime    @default(now())
@@ -68,7 +67,6 @@ model Reservation {
   numberOfPeople Int
   specialRequests String?
   status         String   @default("pending")
-  adminNote      String?   // 👈 Ajoutez cette ligne
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
