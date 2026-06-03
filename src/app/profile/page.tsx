@@ -6,6 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
+import BackButton from "@/components/BackButton";
 
 interface Order {
   id: string;
@@ -104,6 +105,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container-custom py-8">
+      <BackButton />
       <h1 className="text-3xl font-bold mb-8">Mon tableau de bord</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -172,7 +174,7 @@ export default function ProfilePage() {
                   {orders.slice(0, 5).map((order) => (
                     <div key={order.id} className="border-b pb-2">
                       <p className="text-sm text-muted-foreground">#{order.id.slice(0,8)} - {new Date(order.createdAt).toLocaleDateString()}</p>
-                      <p className="font-semibold">{order.totalAmount.toFixed(2)} € - {order.status === "pending" ? "En attente" : "Confirmée"}</p>
+                      <p className="font-semibold">{order.totalAmount.toFixed(2)} $ - {order.status === "pending" ? "En attente" : "Confirmée"}</p>
                     </div>
                   ))}
                   {orders.length > 5 && <Link href="/orders" className="text-primary text-sm">Voir toutes</Link>}
@@ -205,7 +207,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p>{(item.price * item.quantity).toFixed(2)} €</p>
+                          <p>{(item.price * item.quantity).toFixed(2)} $</p>
                           <button onClick={() => removeFromCart(item.productId)} className="text-red-500 text-xs">Supprimer</button>
                         </div>
                       </div>
@@ -214,7 +216,7 @@ export default function ProfilePage() {
                   <div className="border-t pt-3 mt-3">
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
-                      <span>{getTotal().toFixed(2)} €</span>
+                      <span>{getTotal().toFixed(2)} $</span>
                     </div>
                     <button onClick={handleCheckout} className="btn-primary w-full mt-4">Valider la commande</button>
                     <button onClick={clearCart} className="btn-secondary w-full mt-2">Vider le panier</button>

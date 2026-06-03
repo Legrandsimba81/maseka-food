@@ -28,6 +28,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showMethodSelector, setShowMethodSelector] = useState(false);
+  const [currentOrderForMethod, setCurrentOrderForMethod] = useState<Order | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -39,12 +41,46 @@ export default function OrdersPage() {
     }
   }, [session, status]);
 
-  const getPaymentInstructions = (method?: string) => {
-    switch (method) {
-      case "mpesa": return "Composez *182# → 'Payer facture' → entrez votre code commerçant 123456 → référence : commande ID et montant.";
-      case "airtel": return "Composez *111# → 'Airtel Money' → 'Payer' → suivant les instructions.";
-      case "orange": return "Composez *144# → 'Orange Money' → 'Payer facture'.";
-      default: return "Veuillez contacter la boulangerie pour les instructions de paiement.";
+  const getPaymentInstructions = (method?: string | null) => {
+    const m = (method || "").toLowerCase();
+    switch (m) {
+      case "mpesa":
+        return "M-Pesa : Composez *1122# → '1.M-pesa USD' → '5. Mes paiements' → '2.Achat Produits' → 'Numero caise 03281450' → 'Montant' → 'Raison 1' → entrez votre code → suivez les instructions";
+      case "airtel":
+        return "Airtel Money : Composez *111# → 'Airtel Money' → 'Payer' → suivez les instructions.";
+      case "orange":
+        return "Orange Money : Composez *144# → 'Orange Money' → 'Payer facture'.";
+      default:
+        return "Veuillez contacter la boulangerie pour finaliser votre paiement.";
+    }
+  };
+
+  const getPaymentMethodLabel = (method?: string | null) => {
+    const m = (method || "").toLowerCase();
+    switch (m) {
+      case "mpesa": return "M-Pesa";
+      case "airtel": return "Airtel Money";
+      case "orange": return "Orange Money";
+      default: return "à déterminer";
+    }
+  };
+
+  const handleShowInstructions = (order: Order) => {
+    if (order.paymentMethod) {
+      setSelectedOrder(order);
+      setShowInstructions(true);
+    } else {
+      setCurrentOrderForMethod(order);
+      setShowMethodSelector(true);
+    }
+  };
+
+  const selectPaymentMethod = (method: string) => {
+    if (currentOrderForMethod) {
+      const updatedOrder = { ...currentOrderForMethod, paymentMethod: method };
+      setSelectedOrder(updatedOrder);
+      setShowMethodSelector(false);
+      setShowInstructions(true);
     }
   };
 
@@ -82,17 +118,20 @@ export default function OrdersPage() {
               {order.items.map((item) => (
                 <div key={item.id} className="flex justify-between py-1">
                   <span>{item.product.name} x {item.quantity}</span>
-                  <span>{(item.priceAtTime * item.quantity).toFixed(2)} €</span>
+                  <span>{(item.priceAtTime * item.quantity).toFixed(2)} $</span>
                 </div>
               ))}
               {order.adminNote && <p className="text-sm text-muted-foreground mt-2">Note : {order.adminNote}</p>}
               <div className="border-t mt-2 pt-2 font-bold flex justify-between">
-                <span>Total</span><span>{order.totalAmount.toFixed(2)} €</span>
+                <span>Total</span><span>{order.totalAmount.toFixed(2)} $</span>
               </div>
               {order.status === "confirmed" && (
                 <div className="mt-4">
-                  <button onClick={() => { setSelectedOrder(order); setShowInstructions(true); }} className="btn-primary w-full">
-                    💳 Instructions de paiement USSD
+                  <button
+                    onClick={() => handleShowInstructions(order)}
+                    className="btn-primary w-full py-2"
+                  >
+                    Instructions de paiement
                   </button>
                 </div>
               )}
@@ -101,16 +140,48 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      {showInstructions && selectedOrder && (
+      {/* Modal de sélection du moyen de paiement */}
+      {showMethodSelector && currentOrderForMethod && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Paiement par {selectedOrder.paymentMethod === "mpesa" ? "M-Pesa" : selectedOrder.paymentMethod === "airtel" ? "Airtel Money" : "Orange Money"}</h2>
-            <p className="mb-4">{getPaymentInstructions(selectedOrder.paymentMethod)}</p>
-            <p className="text-sm text-muted-foreground mb-4">Montant à payer : {selectedOrder.totalAmount.toFixed(2)} €</p>
-            <button onClick={() => setShowInstructions(false)} className="btn-secondary w-full">Fermer</button>
+            <h2 className="text-xl font-bold mb-4">Choisissez votre moyen de paiement</h2>
+            <div className="space-y-3">
+              <button onClick={() => selectPaymentMethod("mpesa")} className="btn-secondary w-full">M-Pesa</button>
+              <button onClick={() => selectPaymentMethod("airtel")} className="btn-secondary w-full">Airtel Money</button>
+              <button onClick={() => selectPaymentMethod("orange")} className="btn-secondary w-full">Orange Money</button>
+            </div>
+            <button onClick={() => setShowMethodSelector(false)} className="mt-4 text-sm text-muted-foreground w-full text-center">Annuler</button>
           </div>
         </div>
       )}
+
+      {/* Modal d'affichage des instructions */}
+      {showInstructions && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">
+              Paiement par {getPaymentMethodLabel(selectedOrder.paymentMethod)}
+            </h2>
+            <p className="mb-4">{getPaymentInstructions(selectedOrder.paymentMethod)}</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Montant à payer : <strong>{selectedOrder.totalAmount.toFixed(2)} $</strong>
+            </p>
+            <button
+              onClick={() => setShowInstructions(false)}
+              className="btn-secondary w-full"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="w-[700px] mx-auto mt-6 text-center">
+        <p className="text-gray-400">Le paiement de facture se fais en USSD cliqué pour voir les instructions <br/>selon les operateurs, pour finaliser votre achat 
+        ou programer une livraison ou encore d'autres préocupation
+        vous utiliserais le numero whatsApp maseka food +234 827 733 286.  
+      </p>
+      </div>
     </div>
+    
   );
 }

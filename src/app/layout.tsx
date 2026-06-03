@@ -7,6 +7,7 @@ import Footer from '@/components/Footer'
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "react-hot-toast";
 
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {

@@ -58,7 +58,7 @@ export default function CartPage() {
               <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center text-4xl">🥖</div>
               <div className="flex-1">
                 <h3 className="font-semibold">{item.name}</h3>
-                <p className="text-red-600 font-bold">{item.price.toFixed(2)} €</p>
+                <p className="text-red-600 font-bold">{item.price.toFixed(2)} $</p>
                 <div className="flex items-center gap-2 mt-2">
                   <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="px-2 py-1 border rounded">-</button>
                   <span className="w-8 text-center">{item.quantity}</span>
@@ -66,7 +66,7 @@ export default function CartPage() {
                   <button onClick={() => removeFromCart(item.productId)} className="ml-4 text-red-600 text-sm">Supprimer</button>
                 </div>
               </div>
-              <div className="text-right"><p className="font-bold">{(item.price * item.quantity).toFixed(2)} €</p></div>
+              <div className="text-right"><p className="font-bold">{(item.price * item.quantity).toFixed(2)} $</p></div>
             </div>
           ))}
         </div>
@@ -80,7 +80,7 @@ export default function CartPage() {
               <option value="orange">Orange Money (USSD *144#)</option>
             </select>
           </div>
-          <div className="flex justify-between mb-2"><span>Total</span><span className="font-bold text-xl">{getTotal().toFixed(2)} €</span></div>
+          <div className="flex justify-between mb-2"><span>Total</span><span className="font-bold text-xl">{getTotal().toFixed(2)} $</span></div>
           <button onClick={handleCheckout} className="btn-primary w-full mt-4">Valider la commande</button>
           <button onClick={clearCart} className="btn-secondary w-full mt-2">Vider le panier</button>
         </div>

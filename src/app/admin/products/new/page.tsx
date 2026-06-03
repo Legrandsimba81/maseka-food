@@ -60,7 +60,7 @@ export default function NewProductPage() {
           <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="input-field" />
         </div>
         <div>
-          <label className="block text-sm font-medium">Prix (€)</label>
+          <label className="block text-sm font-medium">Prix ($)</label>
           <input type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} required className="input-field" />
         </div>
         <div>

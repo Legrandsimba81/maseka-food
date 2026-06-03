@@ -39,19 +39,19 @@ export default async function AdminDashboard() {
   const recentOrders = await prisma.order.findMany({ take: 5, include: { user: true }, orderBy: { createdAt: "desc" } });
 
   return (
-    <div>
+    <div className= "">
       <h1 className="text-2xl font-bold mb-6">Tableau de bord</h1>
       {/* Cartes KPI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-red-500">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 dark:border-gray-600 border-gray-200">
           <p className="text-gray-500">Produits</p>
           <p className="text-3xl font-bold">{productsCount}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-yellow-500">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 dark:border-gray-600 border-gray-200">
           <p className="text-gray-500">Commandes</p>
           <p className="text-3xl font-bold">{ordersCount}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-black dark:border-gray-600">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 dark:border-gray-600 border-gray-200">
           <p className="text-gray-500">Réservations</p>
           <p className="text-3xl font-bold">{reservationsCount}</p>
         </div>
@@ -59,11 +59,11 @@ export default async function AdminDashboard() {
 
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl dark:border-gray-600 border-2 border-gray-200">
           <h2 className="text-lg font-semibold mb-4">Commandes par mois</h2>
           {barData.some(d => d.value > 0) ? <OrdersBarChart data={barData} /> : <p className="text-gray-500">Aucune donnée</p>}
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl dark:border-gray-600 border-2 border-gray-200">
           <h2 className="text-lg font-semibold mb-4">Répartition des statuts</h2>
           {pieData.length ? <OrdersPieChart data={pieData} /> : <p className="text-gray-500">Aucune commande</p>}
         </div>
@@ -81,7 +81,7 @@ export default async function AdminDashboard() {
               {recentOrders.map(order => (
                 <tr key={order.id} className="border-b dark:border-gray-700">
                   <td className="px-4 py-2">{order.user.name}</td>
-                  <td className="px-4 py-2">{order.totalAmount.toFixed(2)} €</td>
+                  <td className="px-4 py-2">{order.totalAmount.toFixed(2)} $</td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-xs ${order.status === "pending" ? "bg-yellow-100 text-yellow-800" : order.status === "confirmed" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                       {order.status === "pending" ? "En attente" : order.status === "confirmed" ? "Confirmée" : "Terminée"}

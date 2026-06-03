@@ -12,8 +12,9 @@
 
     --border: 214.3 31.8% 91.4%;
 
-    --primary: 0 72.2% 50.6%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 25 95% 53%; /* Orange */
+    --primary-foreground: 0 0% 100%; /* Texte blanc */
+    --ring: 24 95% 53%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -27,36 +28,68 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --ring: 0 72.2% 50.6%;
+    --ring: 24 95% 53%;
 
     --radius: 0.5rem;
+
+    --orange-50: 24 100% 97%;
+    --orange-100: 28 100% 92%;
+    --orange-200: 28 100% 86%;
+    --orange-300: 27 100% 75%;
+    --orange-400: 26 96% 65%;
+    --orange-500: 25 95% 53%;   /* #f97316 */
+    --orange-600: 24 94% 47%;
+    --orange-700: 23 89% 40%;
+    --orange-800: 22 85% 34%;
+    --orange-900: 21 79% 28%;
+    --orange-950: 20 80% 18%;
+
+    --brand-50: 22 49% 95%;   /* très clair */
+    --brand-100: 23 43% 90%;
+    --brand-200: 22 45% 80%;
+    --brand-300: 22 47% 68%;
+    --brand-400: 22 48% 50%;
+    --brand-500: 22 49% 32%;   /* votre couleur principale #7a472a */
+    --brand-600: 22 49% 28%;
+    --brand-700: 22 48% 24%;
+    --brand-800: 21 47% 20%;
+    --brand-900: 22 46% 16%;
+    --brand-950: 23 45% 10%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-
-    --primary: 0 72.2% 50.6%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 0 0% 9%;        /* gris très foncé (équivalent gray-900) */
+    --foreground: 0 0% 98%;       /* blanc cassé */
+    --card: 0 0% 12%;             /* un peu plus clair que background */
+    --card-foreground: 0 0% 98%;
+    --border: 0 0% 83%;
+    --primary: 25 95% 53%;     /* garde le rouge/original si besoin */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
+    --ring: 0 0% 83%;
 
-    --ring: 0 72.2% 50.6%;
+    --orange-500: 25 95% 60%;
+
+    --brand-50: 22 49% 95%;   /* très clair */
+    --brand-100: 23 43% 90%;
+    --brand-200: 22 45% 80%;
+    --brand-300: 22 47% 68%;
+    --brand-400: 22 48% 50%;
+    --brand-500: 22 49% 32%;   /* votre couleur principale #7a472a */
+    --brand-600: 22 49% 28%;
+    --brand-700: 22 48% 24%;
+    --brand-800: 21 47% 20%;
+    --brand-900: 22 46% 16%;
+    --brand-950: 23 45% 10%;
+
+    --ring: 0 0% 83%;
   }
 
   body {

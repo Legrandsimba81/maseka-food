@@ -13,23 +13,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
+    
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Menu horizontal */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-16 z-40">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-t border-b border-gray-300 dark:border-gray-700 sticky top-16 z-40">
         <div className="container mx-auto px-4">
-          <div className="flex space-x-1 overflow-x-auto">
+          <div className="flex justify-center sm:justify-start space-x-4 sm:space-x-1 overflow-x-auto py-3">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex items-center sm:gap-2 px-6 sm:px-4 py-2 lg:px-7 lg:py-2 text-sm font-medium transition-colors ${
                   pathname === item.href
-                    ? "border-b-2 border-red-500 text-red-500"
-                    : "text-gray-600 dark:text-gray-300 hover:text-red-500"
+                    ? "bg-orange-100 text-orange-600 rounded-xl sm:rounded-2xl"
+                    : "text-gray-600 dark:text-gray-300 hover:text-orange-500"
                 }`}
               >
                 <item.icon size={18} />
-                {item.label}
+                <span className="hidden sm:inline">{item.label}</span>
               </Link>
             ))}
           </div>

@@ -59,19 +59,19 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-background border-b border-border sticky top-0 z-50">
+      <nav className="bg-white dark:bg-gray-900 dark:border-b border-b border-b-gray-100 dark:border-b-gray-800 sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center space-x-1" onClick={closeMobileMenu}>
               <img src="/images/favicon.icon.png" alt="logo" width={50} height={50} />
               <div>
-                <div className="text-2xl font-bold text-primary">maseka food</div>
+                <div className="text-2xl font-bold text-primary dark:text-white">maseka food</div>
                 <div className="text-sm -mt-2 text-foreground/70">Boulangerie in butembo</div>
               </div>
             </Link>
 
             {/* Desktop menu */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Home size={18} /> Accueil
               </Link>
@@ -119,7 +119,7 @@ export default function Navbar() {
                           <LayoutDashboard size={16} /> Admin Dashboard
                         </Link>
                       )}
-                      <button onClick={() => { signOut(); setUserMenuOpen(false); }} className="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 transition dark:hover:bg-red-900/20">
+                      <button onClick={() => { signOut(); setUserMenuOpen(false); }} className="flex w-full items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 transition dark:hover:bg-orange-900/20">
                         <LogOut size={16} /> Déconnexion
                       </button>
                     </div>
@@ -133,7 +133,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile menu button */}
-            <button onClick={() => setMobileMenuOpen(true)} className="md:hidden focus:outline-none">
+            <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden focus:outline-none">
               <Menu size={24} className="text-foreground" />
             </button>
           </div>
@@ -142,7 +142,7 @@ export default function Navbar() {
 
       {/* Mobile drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={closeMobileMenu} />
           <div className="absolute right-0 top-0 h-full w-3/4 max-w-sm bg-card shadow-xl flex flex-col animate-slide-in-right">
             <div className="flex justify-between items-center p-4 border-b border-border">
@@ -188,7 +188,7 @@ export default function Navbar() {
                       <LayoutDashboard size={20} /> Admin Dashboard
                     </Link>
                   )}
-                  <button onClick={() => { signOut(); closeMobileMenu(); }} className="flex items-center gap-3 py-2 text-red-600 text-left">
+                  <button onClick={() => { signOut(); closeMobileMenu(); }} className="flex items-center gap-3 py-2 text-orange-600 text-left">
                     <LogOut size={20} /> Déconnexion
                   </button>
                 </>

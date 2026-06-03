@@ -60,7 +60,7 @@ export default function ReservationPage() {
   }
 
   return (
-    <div className="container-custom py-8 max-w-2xl mx-auto">
+    <div className="container-custom py-8 max-w-2xl mx-auto dark:bg-gray-900">
       <div className="card">
         <div className="card-header">
           <h1 className="card-title text-center">Réserver une table</h1>

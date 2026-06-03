@@ -63,7 +63,7 @@ export default function AdminReservationsPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-bold">Gestion des réservations</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input type="text" placeholder="Nom de l'utilisateur" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-field w-64" onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
           <button onClick={handleSearch} className="btn-primary">Rechercher</button>
           <button onClick={handleReset} className="btn-secondary">Réinitialiser</button>

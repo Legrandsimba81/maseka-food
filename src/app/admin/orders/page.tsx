@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
+
 interface Order {
   id: string;
   totalAmount: number;
@@ -87,7 +88,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
               <ul className="text-sm list-disc list-inside mt-2">
-                {order.items.map((item) => <li key={item.id}>{item.product.name} x {item.quantity} = {(item.priceAtTime * item.quantity).toFixed(2)} €</li>)}
+                {order.items.map((item) => <li key={item.id}>{item.product.name} x {item.quantity} = {(item.priceAtTime * item.quantity).toFixed(2)} $</li>)}
               </ul>
               {order.status === "pending" && (
                 <div className="mt-3 flex gap-2">
