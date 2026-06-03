@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         userId: user.id,
         totalAmount,
         status: "pending",
-        // paymentMethod supprimé
+        // ⚠️ pas de paymentMethod ici
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,
