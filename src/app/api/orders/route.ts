@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
   try {
-    const { items, totalAmount, paymentMethod } = await req.json();
+    const { items, totalAmount } = await req.json();
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "Panier vide" }, { status: 400 });
     }
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         userId: user.id,
         totalAmount,
         status: "pending",
-        paymentMethod,
+        // paymentMethod supprimé
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,

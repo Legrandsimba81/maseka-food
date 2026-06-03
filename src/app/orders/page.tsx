@@ -17,7 +17,7 @@ interface Order {
   status: string;
   createdAt: string;
   adminNote?: string | null;
-  paymentMethod?: string | null;
+  // paymentMethod supprimé – on ne le stocke pas en base
   items: OrderItem[];
 }
 
@@ -30,19 +30,23 @@ export default function OrdersPage() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [showMethodSelector, setShowMethodSelector] = useState(false);
   const [currentOrderForMethod, setCurrentOrderForMethod] = useState<Order | null>(null);
+  const [chosenMethod, setChosenMethod] = useState<string>(""); // méthode choisie temporairement
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     if (session) {
       fetch("/api/orders")
-        .then(res => res.json())
-        .then(data => { setOrders(data); setLoading(false); })
+        .then((res) => res.json())
+        .then((data) => {
+          setOrders(data);
+          setLoading(false);
+        })
         .catch(() => setLoading(false));
     }
   }, [session, status]);
 
-  const getPaymentInstructions = (method?: string | null) => {
-    const m = (method || "").toLowerCase();
+  const getPaymentInstructions = (method: string) => {
+    const m = method.toLowerCase();
     switch (m) {
       case "mpesa":
         return "M-Pesa : Composez *1122# → '1.M-pesa USD' → '5. Mes paiements' → '2.Achat Produits' → 'Numero caise 03281450' → 'Montant' → 'Raison 1' → entrez votre code → suivez les instructions";
@@ -55,31 +59,30 @@ export default function OrdersPage() {
     }
   };
 
-  const getPaymentMethodLabel = (method?: string | null) => {
-    const m = (method || "").toLowerCase();
+  const getPaymentMethodLabel = (method: string) => {
+    const m = method.toLowerCase();
     switch (m) {
-      case "mpesa": return "M-Pesa";
-      case "airtel": return "Airtel Money";
-      case "orange": return "Orange Money";
-      default: return "à déterminer";
+      case "mpesa":
+        return "M-Pesa";
+      case "airtel":
+        return "Airtel Money";
+      case "orange":
+        return "Orange Money";
+      default:
+        return "Moyen de paiement";
     }
   };
 
   const handleShowInstructions = (order: Order) => {
-    if (order.paymentMethod) {
-      setSelectedOrder(order);
-      setShowInstructions(true);
-    } else {
-      setCurrentOrderForMethod(order);
-      setShowMethodSelector(true);
-    }
+    setCurrentOrderForMethod(order);
+    setShowMethodSelector(true);
   };
 
   const selectPaymentMethod = (method: string) => {
+    setChosenMethod(method);
+    setShowMethodSelector(false);
     if (currentOrderForMethod) {
-      const updatedOrder = { ...currentOrderForMethod, paymentMethod: method };
-      setSelectedOrder(updatedOrder);
-      setShowMethodSelector(false);
+      setSelectedOrder(currentOrderForMethod);
       setShowInstructions(true);
     }
   };
@@ -103,13 +106,18 @@ export default function OrdersPage() {
             <div className="card-header">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground">Commande #{order.id.slice(0,8)}</p>
+                  <p className="text-sm text-muted-foreground">Commande #{order.id.slice(0, 8)}</p>
                   <p className="text-sm text-muted-foreground">Le {new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  order.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                  order.status === "confirmed" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    order.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : order.status === "confirmed"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {order.status === "pending" ? "En attente" : order.status === "confirmed" ? "Confirmée" : "Annulée"}
                 </span>
               </div>
@@ -123,7 +131,8 @@ export default function OrdersPage() {
               ))}
               {order.adminNote && <p className="text-sm text-muted-foreground mt-2">Note : {order.adminNote}</p>}
               <div className="border-t mt-2 pt-2 font-bold flex justify-between">
-                <span>Total</span><span>{order.totalAmount.toFixed(2)} $</span>
+                <span>Total</span>
+                <span>{order.totalAmount.toFixed(2)} $</span>
               </div>
               {order.status === "confirmed" && (
                 <div className="mt-4">
@@ -146,23 +155,32 @@ export default function OrdersPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">Choisissez votre moyen de paiement</h2>
             <div className="space-y-3">
-              <button onClick={() => selectPaymentMethod("mpesa")} className="btn-secondary w-full">M-Pesa</button>
-              <button onClick={() => selectPaymentMethod("airtel")} className="btn-secondary w-full">Airtel Money</button>
-              <button onClick={() => selectPaymentMethod("orange")} className="btn-secondary w-full">Orange Money</button>
+              <button onClick={() => selectPaymentMethod("mpesa")} className="btn-secondary w-full">
+                M-Pesa
+              </button>
+              <button onClick={() => selectPaymentMethod("airtel")} className="btn-secondary w-full">
+                Airtel Money
+              </button>
+              <button onClick={() => selectPaymentMethod("orange")} className="btn-secondary w-full">
+                Orange Money
+              </button>
             </div>
-            <button onClick={() => setShowMethodSelector(false)} className="mt-4 text-sm text-muted-foreground w-full text-center">Annuler</button>
+            <button
+              onClick={() => setShowMethodSelector(false)}
+              className="mt-4 text-sm text-muted-foreground w-full text-center"
+            >
+              Annuler
+            </button>
           </div>
         </div>
       )}
 
       {/* Modal d'affichage des instructions */}
-      {showInstructions && selectedOrder && (
+      {showInstructions && selectedOrder && chosenMethod && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">
-              Paiement par {getPaymentMethodLabel(selectedOrder.paymentMethod)}
-            </h2>
-            <p className="mb-4">{getPaymentInstructions(selectedOrder.paymentMethod)}</p>
+            <h2 className="text-xl font-bold mb-4">Paiement par {getPaymentMethodLabel(chosenMethod)}</h2>
+            <p className="mb-4">{getPaymentInstructions(chosenMethod)}</p>
             <p className="text-sm text-muted-foreground mb-4">
               Montant à payer : <strong>{selectedOrder.totalAmount.toFixed(2)} $</strong>
             </p>
@@ -176,12 +194,12 @@ export default function OrdersPage() {
         </div>
       )}
       <div className="w-[700px] mx-auto mt-6 text-center">
-        <p className="text-gray-400">Le paiement de facture se fais en USSD cliqué pour voir les instructions <br/>selon les operateurs, pour finaliser votre achat 
-        ou programer une livraison ou encore d'autres préocupation
-        vous utiliserais le numero whatsApp maseka food +234 827 733 286.  
-      </p>
+        <p className="text-gray-400">
+          Le paiement de facture se fais en USSD cliqué pour voir les instructions <br />
+          selon les operateurs, pour finaliser votre achat ou programer une livraison ou encore d'autres préocupation
+          vous utiliserais le numero whatsApp maseka food +234 827 733 286.
+        </p>
       </div>
     </div>
-    
   );
 }

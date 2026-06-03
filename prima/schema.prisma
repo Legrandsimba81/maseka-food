@@ -42,7 +42,6 @@ model Order {
   status      String      @default("pending")
   pickupTime  DateTime?
   address     String?
-  paymentMethod String?   // 👈 ajouté (mpesa, airtel, orange)
   items       OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
