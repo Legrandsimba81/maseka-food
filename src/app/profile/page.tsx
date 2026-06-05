@@ -189,41 +189,8 @@ export default function ProfilePage() {
           <div className="card sticky top-24">
             <div className="card-header">
               <h2 className="card-title">Mon panier</h2>
-            </div>
-            <div className="card-content">
-              {items.length === 0 ? (
-                <p className="text-muted-foreground">Votre panier est vide.</p>
-              ) : (
-                <>
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {items.map((item) => (
-                      <div key={item.productId} className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="text-sm px-2 py-0 border rounded">-</button>
-                            <span className="text-sm">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="text-sm px-2 py-0 border rounded">+</button>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p>{(item.price * item.quantity).toFixed(2)} $</p>
-                          <button onClick={() => removeFromCart(item.productId)} className="text-red-500 text-xs">Supprimer</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="border-t pt-3 mt-3">
-                    <div className="flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>{getTotal().toFixed(2)} $</span>
-                    </div>
-                    <button onClick={handleCheckout} className="btn-primary w-full mt-4">Valider la commande</button>
-                    <button onClick={clearCart} className="btn-secondary w-full mt-2">Vider le panier</button>
-                  </div>
-                </>
-              )}
-              <Link href="/products" className="text-primary text-sm block mt-4 text-center">Ajouter des produits</Link>
+                          <Link href="/cart" className="text-gray-200 rounded-xl p-5 bg-gray-700 text-sm block mt-5 text-center">Ajouter des produits</Link>
+
             </div>
           </div>
         </div>

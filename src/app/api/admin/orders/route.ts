@@ -12,19 +12,15 @@ export async function GET(req: Request) {
   const userName = searchParams.get("userName") || "";
 
   try {
-    // Pour SQLite, on évite 'mode: insensitive' – on récupère toutes les commandes puis on filtre en JS
     let orders = await prisma.order.findMany({
       include: { user: true, items: { include: { product: true } } },
       orderBy: { createdAt: "desc" },
     });
-
-    // Filtrage insensible à la casse (si un nom est recherché)
     if (userName) {
       orders = orders.filter(order => 
         order.user.name.toLowerCase().includes(userName.toLowerCase())
       );
     }
-
     return NextResponse.json(orders);
   } catch (error) {
     console.error("Erreur API admin/orders:", error);

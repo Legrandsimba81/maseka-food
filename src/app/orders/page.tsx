@@ -17,6 +17,7 @@ interface Order {
   status: string;
   createdAt: string;
   adminNote?: string | null;
+  paymentStatus?: string;
   // paymentMethod supprimé – on ne le stocke pas en base
   items: OrderItem[];
 }
@@ -129,7 +130,7 @@ export default function OrdersPage() {
                   <span>{(item.priceAtTime * item.quantity).toFixed(2)} $</span>
                 </div>
               ))}
-              {order.adminNote && <p className="text-sm text-muted-foreground mt-2">Note : {order.adminNote}</p>}
+              {order.adminNote && <p className="text-sm text-orange-500 mt-2">Note : {order.adminNote}</p>}
               <div className="border-t mt-2 pt-2 font-bold flex justify-between">
                 <span>Total</span>
                 <span>{order.totalAmount.toFixed(2)} $</span>
@@ -181,13 +182,13 @@ export default function OrdersPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">Paiement par {getPaymentMethodLabel(chosenMethod)}</h2>
             <p className="mb-4">{getPaymentInstructions(chosenMethod)}</p>
+            {selectedOrder.paymentStatus === "paid_by_ussd" && (
+              <p className="text-sm text-green-600 mt-1">✅ Payé par USSD</p>
+            )}
             <p className="text-sm text-muted-foreground mb-4">
               Montant à payer : <strong>{selectedOrder.totalAmount.toFixed(2)} $</strong>
             </p>
-            <button
-              onClick={() => setShowInstructions(false)}
-              className="btn-secondary w-full"
-            >
+            <button onClick={() => setShowInstructions(false)} className="btn-secondary w-full">
               Fermer
             </button>
           </div>

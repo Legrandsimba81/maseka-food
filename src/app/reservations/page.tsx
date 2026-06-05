@@ -69,6 +69,7 @@ export default function ReservationsPage() {
                   <p className="text-gray-600">{res.time} · {res.numberOfPeople} personne(s)</p>
                   {res.specialRequests && <p className="text-gray-500 text-sm italic">Note : {res.specialRequests}</p>}
                   {res.adminNote && <p className="text-sm text-muted-foreground mt-1">Note de la boulangerie : {res.adminNote}</p>}
+          
                 </div>
                 <span className={`px-2 py-1 text-xs rounded-full ${
                   res.status === "pending" ? "bg-yellow-100 text-yellow-800" :

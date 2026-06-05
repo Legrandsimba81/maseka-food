@@ -13,16 +13,16 @@ export async function GET(req: Request) {
   const userName = searchParams.get("userName") || "";
 
   try {
-    // Récupérer toutes les réservations
     let reservations = await prisma.reservation.findMany({
       include: { user: { select: { name: true, email: true } } },
       orderBy: { date: "desc" },
     });
 
-    // Filtrage insensible à la casse (côté JS, compatible SQLite)
     if (userName) {
-      reservations = reservations.filter(res =>
-        res.user.name.toLowerCase().includes(userName.toLowerCase())
+      reservations = reservations.filter(
+        (res) =>
+          res.user &&
+          res.user.name.toLowerCase().includes(userName.toLowerCase())
       );
     }
 

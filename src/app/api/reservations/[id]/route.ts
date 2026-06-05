@@ -16,7 +16,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     });
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Erreur mise à jour réservation:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -26,10 +25,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  try {
-    await prisma.reservation.delete({ where: { id: params.id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
+  await prisma.reservation.delete({ where: { id: params.id } });
+  return NextResponse.json({ success: true });
 }

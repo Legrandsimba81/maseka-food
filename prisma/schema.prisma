@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -17,6 +17,9 @@ model User {
   resetTokenExpiry  DateTime?
   orders            Order[]
   reservations      Reservation[]
+  cart    Cart?
+  sentMessages      Message[] @relation("sentMessages")
+  receivedMessages  Message[] @relation("receivedMessages")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 }
@@ -28,6 +31,7 @@ model Product {
   price       Float
   category    String
   imageUrl    String?
+  cartItems CartItem[]
   isAvailable Boolean   @default(true)
   orderItems  OrderItem[]
   createdAt   DateTime  @default(now())
@@ -35,16 +39,20 @@ model Product {
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  totalAmount Float
-  status      String      @default("pending")
-  pickupTime  DateTime?
-  address     String?
-  items       OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  totalAmount     Float
+  status          String      @default("pending")
+  pickupTime      DateTime?
+  address         String?
+  deliveryAddress String?
+  deliveryTime    String?
+  adminNote String?
+  paymentStatus   String      @default("pending") // pending, paid_by_ussd
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model OrderItem {
@@ -66,6 +74,7 @@ model Reservation {
   numberOfPeople Int
   specialRequests String?
   status         String   @default("pending")
+  adminNote      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -78,7 +87,47 @@ model BakerySettings {
   contactPhone  String?
   address       String?
   openingHours  String?
+  exchangeRate Float? @default(2300)
   primaryColor  String   @default("#fbbf24")
   secondaryColor String  @default("#78350f")
   updatedAt     DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     User     @relation("sentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("receivedMessages", fields: [receiverId], references: [id])
+}
+
+model Cart {
+  id        String      @id @default(cuid())
+  userId    String      @unique
+  user      User        @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  updatedAt DateTime    @updatedAt
+  createdAt DateTime    @default(now())
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
 }

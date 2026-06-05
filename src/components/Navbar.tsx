@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import { useCart } from "@/hooks/useCart"; // import du hook panier
 import {
   Home,
   Package,
@@ -19,15 +20,20 @@ import {
   LayoutDashboard,
   Sun,
   Moon,
+  MessageSquare,
+  ShoppingCart,
 } from "lucide-react";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
+  const { getItemCount } = useCart(); // récupère le nombre d'articles
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const itemCount = getItemCount(); // nombre d'articles dans le panier
 
   useEffect(() => setMounted(true), []);
 
@@ -81,6 +87,16 @@ export default function Navbar() {
               <Link href="/reservations" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Calendar size={18} /> Réservation
               </Link>
+              {/* Lien Panier avec badge */}
+              <Link href="/cart" className="relative flex items-center gap-1 text-foreground hover:text-primary transition">
+                <ShoppingCart size={18} />
+                <span>Panier</span>
+                {itemCount > 0 && (
+                  <span className="absolute -top-2 -right-4 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
               <Link href="/contact" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Phone size={18} /> Contact
               </Link>
@@ -113,6 +129,9 @@ export default function Navbar() {
                       </Link>
                       <Link href="/reservations" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
                         <BookOpen size={16} /> Mes réservations
+                      </Link>
+                      <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
+                        <MessageSquare size={16} /> Mes messages
                       </Link>
                       {session.user?.role === "admin" && (
                         <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
@@ -158,8 +177,17 @@ export default function Navbar() {
               <Link href="/products" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                 <Package size={20} /> Produits
               </Link>
-              <Link href="/reservation" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
+              <Link href="/reservations" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                 <Calendar size={20} /> Réservation
+              </Link>
+              <Link href="/cart" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
+                <ShoppingCart size={20} />
+                <span>Panier</span>
+                {itemCount > 0 && (
+                  <span className="absolute left-7 top-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
               </Link>
               <Link href="/contact" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                 <Phone size={20} /> Contact

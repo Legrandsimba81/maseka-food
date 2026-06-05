@@ -1,7 +1,9 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Package, ShoppingCart, Calendar } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Calendar, MessageSquare } from "lucide-react";
+import { Settings } from "lucide-react";
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -10,6 +12,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/products", label: "Produits", icon: Package },
     { href: "/admin/orders", label: "Commandes", icon: ShoppingCart },
     { href: "/admin/reservations", label: "Réservations", icon: Calendar },
+    { href: "/admin/messages", label: "Messages", icon: MessageSquare },
+    { href: "/admin/settings", label: "Paramètres", icon: Settings },
   ];
 
   return (

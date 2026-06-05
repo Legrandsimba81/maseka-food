@@ -3,106 +3,111 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
-
-interface Order {
-  id: string;
-  totalAmount: number;
-  status: string;
-  createdAt: string;
-  paymentMethod?: string | null;
-  user: { name: string; email: string };
-  items: { id: string; quantity: number; priceAtTime: number; product: { name: string } }[];
-}
-
 export default function AdminOrdersPage() {
-  const { data: session, status } = useSession();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterName, setFilterName] = useState("");
+  const { data: session } = useSession();
+  const [orders, setOrders] = useState([]);
+  const [noteInput, setNoteInput] = useState({});
 
-  const fetchOrders = async (userName: string = "") => {
-    setLoading(true);
-    const url = userName ? `/api/admin/orders?userName=${encodeURIComponent(userName)}` : "/api/admin/orders";
-    const res = await fetch(url);
+  const fetchOrders = async () => {
+    const res = await fetch("/api/admin/orders");
     if (res.ok) setOrders(await res.json());
-    setLoading(false);
   };
 
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.role === "admin") fetchOrders();
-  }, [session, status]);
+  useEffect(() => { fetchOrders(); }, []);
 
-  const handleSearch = () => { setFilterName(searchTerm); fetchOrders(searchTerm); };
-  const handleReset = () => { setSearchTerm(""); setFilterName(""); fetchOrders(""); };
-
-  const updateStatus = async (id: string, newStatus: string) => {
+  const updateStatus = async (id, status, adminNote) => {
     const res = await fetch(`/api/admin/orders/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status, adminNote }),
     });
     if (res.ok) {
-      toast.success(`Commande ${newStatus === "confirmed" ? "confirmée" : "annulée"}`);
-      fetchOrders(filterName);
+      toast.success(`Commande ${status === "confirmed" ? "confirmée" : "annulée"}`);
+      fetchOrders();
     } else toast.error("Erreur");
   };
 
-  const deleteOrder = async (id: string) => {
+  const markPaid = async (id) => {
+    const res = await fetch(`/api/admin/orders/${id}/pay`, { method: "POST" });
+    if (res.ok) {
+      toast.success("Payé par USSD");
+      fetchOrders();
+    } else toast.error("Erreur");
+  };
+
+  const sendNote = async (id) => {
+    const note = noteInput[id];
+    if (!note) return;
+    const res = await fetch(`/api/admin/orders/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminNote: note }),
+    });
+    if (res.ok) {
+      toast.success("Note envoyée");
+      setNoteInput({ ...noteInput, [id]: "" });
+      fetchOrders();
+    } else toast.error("Erreur");
+  };
+
+  const deleteOrder = async (id) => {
     if (!confirm("Supprimer définitivement cette commande ?")) return;
     const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Commande supprimée");
-      fetchOrders(filterName);
-    } else toast.error("Erreur suppression");
+      fetchOrders();
+    } else toast.error("Erreur");
   };
 
-  if (status !== "authenticated" || session?.user?.role !== "admin") return <div className="text-center py-8">Accès refusé</div>;
-  if (loading) return <div className="text-center py-8">Chargement...</div>;
+  const deleteAllOrders = async () => {
+    if (!confirm("⚠️ Supprimer TOUTES les commandes ? Action irréversible.")) return;
+    const res = await fetch("/api/admin/orders/delete-all", { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Toutes les commandes supprimées");
+      fetchOrders();
+    } else toast.error("Erreur");
+  };
+
+  if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        <h1 className="text-2xl font-bold">Gestion des commandes</h1>
-        <div className="flex gap-2">
-          <input type="text" placeholder="Nom de l'utilisateur" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-field w-64" onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
-          <button onClick={handleSearch} className="btn-primary">Rechercher</button>
-          <button onClick={handleReset} className="btn-secondary">Réinitialiser</button>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Commandes</h1>
+        <button onClick={deleteAllOrders} className="btn-secondary bg-red-600 text-white">Tout supprimer</button>
       </div>
-      {orders.length === 0 ? <p>Aucune commande.</p> : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {orders.map((order) => (
-            <div key={order.id} className="card p-4 border rounded-lg shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold">{order.user.name}</p>
-                  <p className="text-sm text-gray-500">{order.user.email}</p>
-                  <p className="text-sm">Date : {new Date(order.createdAt).toLocaleString()}</p>
-                  <p className="text-sm">Paiement : {order.paymentMethod === "mpesa" ? "M-Pesa" : order.paymentMethod === "airtel" ? "Airtel Money" : "Orange Money"}</p>
-                </div>
-                <div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${order.status === "pending" ? "bg-yellow-100 text-yellow-800" : order.status === "confirmed" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                    {order.status === "pending" ? "En attente" : order.status === "confirmed" ? "Confirmée" : "Annulée"}
-                  </span>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {orders.map(order => (
+          <div key={order.id} className="border p-4 mb-4 rounded">
+            <p>Client: {order.user?.name} ({order.user?.email})</p>
+            <p>Total: {order.totalAmount} $ - Statut: {order.status}</p>
+            <p>Adresse de livraison : {order.deliveryAddress} - Heure: {order.deliveryTime}</p>
+            {order.adminNote && <p className="text-sm text-gray-500">Note admin: {order.adminNote}</p>}
+            {order.paymentStatus === "paid_by_ussd" && <p className="text-green-600">✅ Payé par USSD</p>}
+            {order.status === "pending" && (
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => updateStatus(order.id, "confirmed", noteInput[order.id])} className="bg-green-500 text-white px-2 py-1 rounded">Confirmer</button>
+                <button onClick={() => updateStatus(order.id, "cancelled", noteInput[order.id])} className="bg-red-500 text-white px-2 py-1 rounded">Annuler</button>
               </div>
-              <ul className="text-sm list-disc list-inside mt-2">
-                {order.items.map((item) => <li key={item.id}>{item.product.name} x {item.quantity} = {(item.priceAtTime * item.quantity).toFixed(2)} $</li>)}
-              </ul>
-              {order.status === "pending" && (
-                <div className="mt-3 flex gap-2">
-                  <button onClick={() => updateStatus(order.id, "confirmed")} className="btn-primary text-sm py-1">Confirmer</button>
-                  <button onClick={() => updateStatus(order.id, "cancelled")} className="btn-secondary bg-red-600 text-white text-sm py-1">Annuler</button>
-                </div>
-              )}
-              <div className="mt-3">
-                <button onClick={() => deleteOrder(order.id)} className="btn-secondary bg-red-600 text-white w-full">Supprimer</button>
+            )}
+            {order.status === "confirmed" && order.paymentStatus !== "paid_by_ussd" && (
+              <button onClick={() => markPaid(order.id)} className="bg-blue-500 text-white px-2 py-1 rounded mt-2">Marquer payé (USSD)</button>
+            )}
+            <div className="mt-2">
+              <textarea
+                placeholder="Ajouter une note"
+                className="border p-1 w-full"
+                value={noteInput[order.id] || ""}
+                onChange={e => setNoteInput({ ...noteInput, [order.id]: e.target.value })}
+              />
+              <div className="flex gap-2 mt-1">
+                <button onClick={() => sendNote(order.id)} className="bg-gray-500 text-white px-2 py-1 rounded">Envoyer note</button>
+                <button onClick={() => deleteOrder(order.id)} className="bg-red-700 text-white px-2 py-1 rounded">Supprimer</button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

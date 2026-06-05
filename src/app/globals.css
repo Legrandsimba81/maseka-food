@@ -202,4 +202,21 @@
   .container-custom {
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
   }
+
+  body, .card, .btn-primary, .btn-secondary, .input-field, .navbar, .footer {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+* {
+  transition: background-color 0.3s ease-in-out,
+              color 0.2s ease-in-out,
+              border-color 0.2s ease-in-out;
+}
+
+/* Évite les transitions sur les propriétés qui ne changent pas de thème */
+img, video, iframe {
+  transition: none;
+}
+img.custom-image {
+  transition: background-color 0.3s ease, opacity 0.3s ease; /* ou toute autre propriété */
+}
 }
