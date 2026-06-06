@@ -54,6 +54,7 @@ export default function AdminSettingsPage() {
           {loading ? "Enregistrement..." : "Enregistrer"}
         </button>
       </div>
+      <p>mot de passe base de donnees supabase : P4rP0oIPf9F2rlOA</p>
     </div>
   );
 }

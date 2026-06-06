@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import Link from "next/dist/client/link";
 
 interface Message {
   id: string;
@@ -47,7 +48,12 @@ export default function AdminMessagesPage() {
 
   return (
     <div className="p-6">
+      <div className="flex flex-wrap items-center justify-between mb-6 ">
+
+      
       <h1 className="text-2xl font-bold mb-6">Messages de contact</h1>
+      <Link href="/admin/messages/new/" className="btn-primary mb-4 inline-block">Ecrire à un client</Link>
+      </div>
       {messages.length === 0 ? (
         <p>Aucun message.</p>
       ) : (

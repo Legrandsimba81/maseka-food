@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { formatPrice } from "@/lib/format";
 
 interface ProductCardProps {
   product: Product;
@@ -51,9 +52,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="p-4">
         <h3 className="text-lg font-semibold mb-1">{product.name}</h3>
         <p className="text-gray-400 text-sm mb-1 line-clamp-2">{product.description}</p>
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-white font-bold text-xl">{product.price.toFixed(2)} $</span>
-          <div className="space-x-2">
+        <div className="flex flex-wrap justify-between items-center mt-4">
+          <span className="text-orange-500 dark:text-white font-bold text-xl">{formatPrice(product.price)} $</span>
+          <div className=" space-x-2">
             <Link href={`/products/${product.id}`} className="text-amber-600 hover:text-amber-700">
               Voir les détails
             </Link>

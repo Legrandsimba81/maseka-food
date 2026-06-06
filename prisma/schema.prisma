@@ -13,6 +13,8 @@ model User {
   name              String
   password          String
   role              String    @default("user")
+  image String?   // URL de l'avatar
+  avatarUrl         String?
   resetToken        String?
   resetTokenExpiry  DateTime?
   orders            Order[]
@@ -26,12 +28,14 @@ model User {
 
 model Product {
   id          String    @id @default(cuid())
-  name        String
+  name String @unique
   description String
   price       Float
   category    String
   imageUrl    String?
   cartItems CartItem[]
+  isPromo    Boolean  @default(false)
+  promoPrice Float?
   isAvailable Boolean   @default(true)
   orderItems  OrderItem[]
   createdAt   DateTime  @default(now())
@@ -87,6 +91,7 @@ model BakerySettings {
   contactPhone  String?
   address       String?
   openingHours  String?
+  categoryOrder Json?
   exchangeRate Float? @default(2300)
   primaryColor  String   @default("#fbbf24")
   secondaryColor String  @default("#78350f")

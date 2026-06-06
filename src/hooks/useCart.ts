@@ -42,6 +42,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
   addToCart: async (productId, quantity) => {
+    const res = await fetch(`/api/products/${productId}`);
+    const product = await res.json();
+    const price = product.effectivePrice || product.price;
     const currentItems = get().items;
     const existing = currentItems.find(i => i.productId === productId);
     let newItems;
@@ -50,9 +53,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         i.productId === productId ? { ...i, quantity: i.quantity + quantity } : i
       );
     } else {
-      const res = await fetch(`/api/products/${productId}`);
-      const product = await res.json();
-      newItems = [...currentItems, { productId, quantity, name: product.name, price: product.price }];
+      newItems = [...currentItems, { productId, quantity, name: product.name, price }];
     }
     set({ items: newItems });
     await fetch("/api/cart", {
@@ -97,7 +98,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
   getTotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
 }));
 
-// Hook principal qui charge le panier au démarrage et à la connexion
 export const useCart = () => {
   const { data: session } = useSession();
   const { fetchCart, ...store } = useCartStore();
@@ -106,7 +106,6 @@ export const useCart = () => {
     if (session) {
       fetchCart();
     } else {
-      // Si l'utilisateur est déconnecté, on vide le panier local
       useCartStore.setState({ items: [] });
     }
   }, [session]);

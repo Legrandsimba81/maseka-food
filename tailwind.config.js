@@ -8,6 +8,17 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        // 'tablet': { 'min': '1200px', 'max': '1360px' },
+        // 'tablet-md': { 'min': '1190px', 'max': '1200px' },
+        // 'tablet-sm': { 'min': '960px', 'max': '1190px' },
+        // 'tablet-sm-2': { 'min': '830px', 'max': '960px' },
+        // 'tablet-sm-3': { 'min': '700px', 'max': '830px' },
+        // 'tablet-sm-4': { 'min': '500px', 'max': '700px' },
+        // 'tablet-sm-5': { 'min': '200px', 'max': '500px' },
+        'mobile': { 'max': '1145px' },
+        'desktop': '1145px',
+      },
       colors: {
         // Déclare les couleurs basées sur tes variables CSS
         background: "hsl(var(--background))",

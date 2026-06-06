@@ -7,6 +7,8 @@ import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
 import BackButton from "@/components/BackButton";
+import { formatPrice } from "@/lib/format";
+import { User } from "lucide-react";
 
 interface Order {
   id: string;
@@ -25,6 +27,9 @@ export default function ProfilePage() {
   const [name, setName] = useState(session?.user?.name || "");
   const [email, setEmail] = useState(session?.user?.email || "");
   const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const avatarUrl = session?.user?.avatarUrl || session?.user?.image;
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -38,6 +43,33 @@ export default function ProfilePage() {
         .catch(() => setLoading(false));
     }
   }, [session, status]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 2 Mo");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("avatar", file);
+    setUploading(true);
+    try {
+      const res = await fetch("/api/user/avatar", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Avatar mis à jour");
+        await update(); // Force la session à se recharger
+        // Recharger la page pour que la navbar prenne en compte le nouvel avatar
+        window.location.reload();
+      } else {
+        toast.error(data.error || "Erreur");
+      }
+    } catch (err) {
+      toast.error("Erreur réseau");
+    }
+    setUploading(false);
+  };
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +115,7 @@ export default function ProfilePage() {
     }
   };
 
-  // Données pour le graphique (commandes par mois)
+  // Graphique
   const last6Months = () => {
     const months = [];
     const now = new Date();
@@ -104,94 +136,131 @@ export default function ProfilePage() {
   if (status === "loading" || loading) return <div className="text-center py-8">Chargement...</div>;
 
   return (
-    <div className="container-custom py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <BackButton />
-      <h1 className="text-3xl font-bold mb-8">Mon tableau de bord</h1>
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 mb-8">
+        <div className="flex items-center gap-4">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover " />
+          ) : (
+            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center ">
+              <User size={40} className="text-gray-500" />
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold">Bonjour, {session?.user?.name}</h1>
+            <p className="text-muted-foreground">{session?.user?.email}</p>
+          </div>
+        </div>
+        <div>
+          <label className="btn-secondary cursor-pointer">
+            {uploading ? "Envoi..." : "Changer l'avatar"}
+            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
+          </label>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Colonne gauche : infos et graphique */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Carte profil */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Informations personnelles</h2>
-            </div>
-            <div className="card-content">
-              {editMode ? (
-                <form onSubmit={updateProfile} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Nom</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} className="input-field mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field mt-1" />
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="btn-primary">Enregistrer</button>
-                    <button type="button" onClick={() => setEditMode(false)} className="btn-secondary">Annuler</button>
-                  </div>
-                  {message && <p className="text-green-600 text-sm">{message}</p>}
-                </form>
-              ) : (
-                <div className="space-y-2">
-                  <p><strong>Nom :</strong> {session?.user?.name}</p>
-                  <p><strong>Email :</strong> {session?.user?.email}</p>
-                  <button onClick={() => setEditMode(true)} className="btn-secondary">Modifier</button>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Informations personnelles</h2>
+            {editMode ? (
+              <form onSubmit={updateProfile} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Nom</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="input-field mt-1" />
                 </div>
-              )}
-            </div>
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field mt-1" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn-primary">Enregistrer</button>
+                  <button type="button" onClick={() => setEditMode(false)} className="btn-secondary">Annuler</button>
+                </div>
+                {message && <p className="text-green-600 text-sm">{message}</p>}
+              </form>
+            ) : (
+              <div className="space-y-2">
+                <p><strong>Nom :</strong> {session?.user?.name}</p>
+                <p><strong>Email :</strong> {session?.user?.email}</p>
+                <button onClick={() => setEditMode(true)} className="btn-secondary mt-2">Modifier</button>
+              </div>
+            )}
           </div>
 
-          {/* Graphique des commandes */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Évolution des commandes</h2>
-            </div>
-            <div className="card-content">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Évolution des commandes</h2>
+            {orders.length === 0 ? (
+              <p className="text-muted-foreground">Aucune commande pour le moment.</p>
+            ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value) => `${value.toFixed(2)} $`} />
                   <Bar dataKey="value" fill="#dc2626" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            )}
           </div>
 
-          {/* Dernières commandes */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Dernières commandes</h2>
-            </div>
-            <div className="card-content">
-              {orders.length === 0 ? (
-                <p>Aucune commande pour le moment.</p>
-              ) : (
-                <div className="space-y-4">
-                  {orders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="border-b pb-2">
-                      <p className="text-sm text-muted-foreground">#{order.id.slice(0,8)} - {new Date(order.createdAt).toLocaleDateString()}</p>
-                      <p className="font-semibold">{order.totalAmount.toFixed(2)} $ - {order.status === "pending" ? "En attente" : "Confirmée"}</p>
-                    </div>
-                  ))}
-                  {orders.length > 5 && <Link href="/orders" className="text-primary text-sm">Voir toutes</Link>}
-                </div>
-              )}
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Dernières commandes</h2>
+            {orders.length === 0 ? (
+              <p>Aucune commande pour le moment.</p>
+            ) : (
+              <div className="space-y-4">
+                {orders.slice(0, 5).map((order) => (
+                  <div key={order.id} className="border-b pb-2">
+                    <p className="text-sm text-muted-foreground">#{order.id.slice(0,8)} - {new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p className="font-semibold">{formatPrice(order.totalAmount)} $ - {order.status === "pending" ? "En attente" : "Confirmée"}</p>
+                  </div>
+                ))}
+                {orders.length > 5 && <Link href="/orders" className="text-primary text-sm">Voir toutes</Link>}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Colonne droite : Panier */}
         <div className="space-y-6">
-          <div className="card sticky top-24">
-            <div className="card-header">
-              <h2 className="card-title">Mon panier</h2>
-                          <Link href="/cart" className="text-gray-200 rounded-xl p-5 bg-gray-700 text-sm block mt-5 text-center">Ajouter des produits</Link>
-
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 sticky top-24">
+            <h2 className="text-xl font-semibold mb-4">Mon panier</h2>
+            {items.length === 0 ? (
+              <p className="text-muted-foreground">Votre panier est vide.</p>
+            ) : (
+              <>
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {items.map((item) => (
+                    <div key={item.productId} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="px-2 py-0 border rounded">-</button>
+                          <span className="text-sm">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="px-2 py-0 border rounded">+</button>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p>{formatPrice(item.price * item.quantity)} $</p>
+                        <button onClick={() => removeFromCart(item.productId)} className="text-red-500 text-xs">Supprimer</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between font-bold">
+                    <span>Total</span>
+                    <span>{formatPrice(getTotal())} $</span>
+                  </div>
+                  <button onClick={handleCheckout} className="btn-primary w-full mt-4">Valider la commande</button>
+                  <button onClick={clearCart} className="btn-secondary w-full mt-2">Vider le panier</button>
+                </div>
+              </>
+            )}
+            <Link href="/products" className="text-primary text-sm block mt-4 text-center">Ajouter des produits</Link>
           </div>
         </div>
       </div>

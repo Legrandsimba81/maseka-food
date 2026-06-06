@@ -1,10 +1,24 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import toast from "react-hot-toast";
+import { ArrowLeft } from "lucide-react";
+
+const categories = [
+  "pains",
+  "viennoiseries",
+  "pâtisseries",
+  "sandwichs",
+  "pizzas",
+  "burgers",
+  "snacks",
+  "boissons",
+];
 
 export default function NewProductPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
     description: "",
     price: "",
@@ -13,77 +27,73 @@ export default function NewProductPage() {
     isAvailable: true,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === "checkbox") {
-      setFormData({ ...formData, [name]: (e.target as HTMLInputElement).checked });
+      setForm({ ...form, [name]: (e.target as HTMLInputElement).checked });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setForm({ ...form, [name]: value });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     const res = await fetch("/api/admin/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...formData,
-        price: parseFloat(formData.price),
+        ...form,
+        price: parseFloat(form.price),
       }),
     });
     if (res.ok) {
+      toast.success("Produit créé");
       router.push("/admin/products");
-      router.refresh();
     } else {
-      const data = await res.json();
-      setError(data.error || "Erreur lors de la création");
+      toast.error("Erreur lors de la création");
     }
     setLoading(false);
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-6">Nouveau produit</h1>
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/admin/products" className="text-gray-500 hover:text-primary">
+          <ArrowLeft size={20} />
+        </Link>
+        <h1 className="text-2xl font-bold">Nouveau produit</h1>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
         <div>
-          <label className="block text-sm font-medium">Nom</label>
-          <input name="name" value={formData.name} onChange={handleChange} required className="input-field" />
+          <label className="block text-sm font-medium mb-1">Nom</label>
+          <input name="name" value={form.name} onChange={handleChange} required className="input-field" />
         </div>
         <div>
-          <label className="block text-sm font-medium">Description</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="input-field" />
+          <label className="block text-sm font-medium mb-1">Description</label>
+          <textarea name="description" rows={3} value={form.description} onChange={handleChange} className="input-field" />
         </div>
         <div>
-          <label className="block text-sm font-medium">Prix ($)</label>
-          <input type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} required className="input-field" />
+          <label className="block text-sm font-medium mb-1">Prix ($)</label>
+          <input type="number" step="0.01" name="price" value={form.price} onChange={handleChange} required className="input-field" />
         </div>
         <div>
-          <label className="block text-sm font-medium">Catégorie</label>
-          <select name="category" value={formData.category} onChange={handleChange} required className="input-field">
+          <label className="block text-sm font-medium mb-1">Catégorie</label>
+          <select name="category" value={form.category} onChange={handleChange} required className="input-field">
             <option value="">Sélectionner</option>
-            <option value="pains">Pains</option>
-            <option value="viennoiseries">Viennoiseries</option>
-            <option value="pâtisseries">Pâtisseries</option>
-            <option value="sandwichs">Sandwichs</option>
+            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium">URL de l'image (optionnelle)</label>
-          <input name="imageUrl" value={formData.imageUrl} onChange={handleChange} className="input-field" placeholder="https://..." />
+          <label className="block text-sm font-medium mb-1">URL de l’image</label>
+          <input name="imageUrl" value={form.imageUrl} onChange={handleChange} className="input-field" placeholder="/images/produits/..." />
         </div>
         <div className="flex items-center gap-2">
-          <input type="checkbox" name="isAvailable" checked={formData.isAvailable} onChange={handleChange} />
-          <label>Disponible</label>
+          <input type="checkbox" name="isAvailable" checked={form.isAvailable} onChange={handleChange} />
+          <label className="text-sm">Disponible</label>
         </div>
-        <button type="submit" disabled={loading} className="btn-primary w-full">
-          {loading ? "Création..." : "Créer le produit"}
-        </button>
+        <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? "Création..." : "Créer"}</button>
       </form>
     </div>
   );

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import DeleteProductButton from "../../../components/DeleteProductButton";
+import { formatPrice } from "@/lib/format";
 
 export default async function AdminProductsPage() {
   const session = await getServerSession(authOptions);
@@ -37,7 +38,7 @@ export default async function AdminProductsPage() {
             {products.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4">{product.name}</td>
-                <td className="px-6 py-4">{product.price.toFixed(2)} $</td>
+                <td className="px-6 py-4">{formatPrice(product.price)} $</td>
                 <td className="px-6 py-4">{product.category}</td>
                 <td className="px-6 py-4">
                   {product.isAvailable ? "Oui" : "Non"}

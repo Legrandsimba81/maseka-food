@@ -12,8 +12,10 @@
 
     --border: 214.3 31.8% 91.4%;
 
-    --primary: 25 95% 53%; /* Orange */
-    --primary-foreground: 0 0% 100%; /* Texte blanc */
+    --primary: 25 95% 53%;
+    /* Orange */
+    --primary-foreground: 0 0% 100%;
+    /* Texte blanc */
     --ring: 24 95% 53%;
 
     --secondary: 210 40% 96.1%;
@@ -37,19 +39,22 @@
     --orange-200: 28 100% 86%;
     --orange-300: 27 100% 75%;
     --orange-400: 26 96% 65%;
-    --orange-500: 25 95% 53%;   /* #f97316 */
+    --orange-500: 25 95% 53%;
+    /* #f97316 */
     --orange-600: 24 94% 47%;
     --orange-700: 23 89% 40%;
     --orange-800: 22 85% 34%;
     --orange-900: 21 79% 28%;
     --orange-950: 20 80% 18%;
 
-    --brand-50: 22 49% 95%;   /* très clair */
+    --brand-50: 22 49% 95%;
+    /* très clair */
     --brand-100: 23 43% 90%;
     --brand-200: 22 45% 80%;
     --brand-300: 22 47% 68%;
     --brand-400: 22 48% 50%;
-    --brand-500: 22 49% 32%;   /* votre couleur principale #7a472a */
+    --brand-500: 22 49% 32%;
+    /* votre couleur principale #7a472a */
     --brand-600: 22 49% 28%;
     --brand-700: 22 48% 24%;
     --brand-800: 21 47% 20%;
@@ -58,12 +63,16 @@
   }
 
   .dark {
-    --background: 0 0% 9%;        /* gris très foncé (équivalent gray-900) */
-    --foreground: 0 0% 98%;       /* blanc cassé */
-    --card: 0 0% 12%;             /* un peu plus clair que background */
+    --background: 0 0% 9%;
+    /* gris très foncé (équivalent gray-900) */
+    --foreground: 0 0% 98%;
+    /* blanc cassé */
+    --card: 0 0% 12%;
+    /* un peu plus clair que background */
     --card-foreground: 0 0% 98%;
     --border: 0 0% 83%;
-    --primary: 25 95% 53%;     /* garde le rouge/original si besoin */
+    --primary: 25 95% 53%;
+    /* garde le rouge/original si besoin */
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
@@ -77,12 +86,14 @@
 
     --orange-500: 25 95% 60%;
 
-    --brand-50: 22 49% 95%;   /* très clair */
+    --brand-50: 22 49% 95%;
+    /* très clair */
     --brand-100: 23 43% 90%;
     --brand-200: 22 45% 80%;
     --brand-300: 22 47% 68%;
     --brand-400: 22 48% 50%;
-    --brand-500: 22 49% 32%;   /* votre couleur principale #7a472a */
+    --brand-500: 22 49% 32%;
+    /* votre couleur principale #7a472a */
     --brand-600: 22 49% 28%;
     --brand-700: 22 48% 24%;
     --brand-800: 21 47% 20%;
@@ -90,6 +101,17 @@
     --brand-950: 23 45% 10%;
 
     --ring: 0 0% 83%;
+  }
+
+  @layer utilities {
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   body {
@@ -203,20 +225,31 @@
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  body, .card, .btn-primary, .btn-secondary, .input-field, .navbar, .footer {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-* {
-  transition: background-color 0.3s ease-in-out,
-              color 0.2s ease-in-out,
-              border-color 0.2s ease-in-out;
-}
+  body,
+  .card,
+  .btn-primary,
+  .btn-secondary,
+  .input-field,
+  .navbar,
+  .footer {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
 
-/* Évite les transitions sur les propriétés qui ne changent pas de thème */
-img, video, iframe {
-  transition: none;
-}
-img.custom-image {
-  transition: background-color 0.3s ease, opacity 0.3s ease; /* ou toute autre propriété */
-}
+  * {
+    transition: background-color 0.3s ease-in-out,
+      color 0.2s ease-in-out,
+      border-color 0.2s ease-in-out;
+  }
+
+  /* Évite les transitions sur les propriétés qui ne changent pas de thème */
+  img,
+  video,
+  iframe {
+    transition: none;
+  }
+
+  img.custom-image {
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    /* ou toute autre propriété */
+  }
 }

@@ -2,7 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { OrdersBarChart, OrdersPieChart } from "@/components/admin/Charts";
+import { OrdersLineChart, OrdersPieChart } from "@/components/admin/Charts";
+import { formatPrice } from "@/lib/format";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -72,7 +73,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-2 dark:border-gray-600 border-gray-200">
           <h2 className="text-lg font-semibold mb-4">Commandes par mois</h2>
-          {barData.some(d => d.value > 0) ? <OrdersBarChart data={barData} /> : <p className="text-gray-500">Aucune donnée</p>}
+          {barData.some(d => d.value > 0) ? <OrdersLineChart data={barData} /> : <p className="text-gray-500">Aucune donnée</p>}
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-2 dark:border-gray-600 border-gray-200">
           <h2 className="text-lg font-semibold mb-4">Répartition des statuts</h2>
@@ -80,7 +81,7 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-x-auto">
         <div className="p-4 border-b dark:border-gray-700"><h2 className="text-lg font-semibold">Dernières commandes</h2></div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -96,7 +97,7 @@ export default async function AdminDashboard() {
               {recentOrders.map(order => (
                 <tr key={order.id} className="border-b dark:border-gray-700">
                   <td className="px-4 py-2">{order.user.name}</td>
-                  <td className="px-4 py-2">{order.totalAmount.toFixed(2)} $</td>
+                  <td className="px-4 py-2">{formatPrice(order.totalAmount)} $</td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-xs ${order.status === "pending" ? "bg-yellow-100 text-yellow-800" : order.status === "confirmed" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                       {order.status === "pending" ? "En attente" : order.status === "confirmed" ? "Confirmée" : "Terminée"}

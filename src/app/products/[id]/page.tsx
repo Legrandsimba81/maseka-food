@@ -4,6 +4,7 @@ import Image from "next/image";
 import AddToCartButton from "../../../components/AddToCartButton";
 import BackButton from "@/components/BackButton";
 import Link from "next/link";
+import { formatPrice } from "@/lib/format";
 
 export default async function ProductDetailPage({
   params,
@@ -35,7 +36,7 @@ export default async function ProductDetailPage({
             <h1 className="text-3xl font-bold mb-2 ">{product.name}</h1>
             <p className="text-gray-600 dark:text-gray-300 mb-4">{product.description}</p>
             <div className="text-3xl font-bold text-amber-700 dark:text-orange-500 mb-4">
-              {product.price.toFixed(2)} $
+              {formatPrice(product.price)} $
             </div>
             <AddToCartButton productId={product.id} />
           </div>

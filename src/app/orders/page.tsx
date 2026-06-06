@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { formatPrice } from "@/lib/format";
 
 interface OrderItem {
   id: string;
@@ -101,6 +102,11 @@ export default function OrdersPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Mes commandes</h1>
+      <div className="w-full md:w-[700px] my-6 text-left">
+        <p className="text-gray-400 mx">
+          Votre commande sera traitée une fois confirmée par la boulangerie. Vous recevrez les instructions de paiement. par commande confirmée, vous pouvez choisir votre moyen de paiement et suivre les instructions pour finaliser votre achat. 
+        </p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {orders.map((order) => (
           <div key={order.id} className="card">
@@ -127,13 +133,13 @@ export default function OrdersPage() {
               {order.items.map((item) => (
                 <div key={item.id} className="flex justify-between py-1">
                   <span>{item.product.name} x {item.quantity}</span>
-                  <span>{(item.priceAtTime * item.quantity).toFixed(2)} $</span>
+                  <span>{formatPrice(item.priceAtTime * item.quantity)} $</span>
                 </div>
               ))}
               {order.adminNote && <p className="text-sm text-orange-500 mt-2">Note : {order.adminNote}</p>}
               <div className="border-t mt-2 pt-2 font-bold flex justify-between">
                 <span>Total</span>
-                <span>{order.totalAmount.toFixed(2)} $</span>
+                <span>{formatPrice(order.totalAmount)} $</span>
               </div>
               {order.status === "confirmed" && (
                 <div className="mt-4">
@@ -186,7 +192,7 @@ export default function OrdersPage() {
               <p className="text-sm text-green-600 mt-1">✅ Payé par USSD</p>
             )}
             <p className="text-sm text-muted-foreground mb-4">
-              Montant à payer : <strong>{selectedOrder.totalAmount.toFixed(2)} $</strong>
+              Montant à payer : <strong>{formatPrice(selectedOrder.totalAmount)} $</strong>
             </p>
             <button onClick={() => setShowInstructions(false)} className="btn-secondary w-full">
               Fermer
@@ -194,7 +200,7 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
-      <div className="w-[700px] mx-auto mt-6 text-center">
+      <div className="w-full md:w-[700px] mx-auto mt-6 md:text-center">
         <p className="text-gray-400">
           Le paiement de facture se fais en USSD cliqué pour voir les instructions <br />
           selon les operateurs, pour finaliser votre achat ou programer une livraison ou encore d'autres préocupation

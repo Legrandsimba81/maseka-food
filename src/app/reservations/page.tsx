@@ -54,11 +54,11 @@ export default function ReservationsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap justify-between items-center mb-8 space-y-3">
         <h1 className="text-3xl font-bold">Mes réservations</h1>
         <Link href="/reservation" className="btn-primary">+ Nouvelle réservation</Link>
       </div>
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {reservations.map((res) => (
           <div key={res.id} className="card">
             <div className="card-header">
