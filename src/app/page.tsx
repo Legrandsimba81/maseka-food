@@ -66,7 +66,7 @@ export default async function Home() {
   return (
     <div className="bg-white dark:bg-gray-900">
       {/* Hero */}
-      <section className="flex bg-[url('/images/produits/fond-hero-copy-2.JPG')] dark:bg-[url('/images/produits/dark-mode-fond.JPG')] dark:custom-image bg-cover bg-center bg-no-repeat h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden lg:py-0 md:py-20 sm:py-20 py-10">
+      <section className="flex bg-[url('/images/produits/fond-hero-copy-2.jpg')] dark:bg-[url('/images/produits/dark-mode-fond.jpg')] dark:custom-image bg-cover bg-center bg-no-repeat h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden lg:py-0 md:py-20 sm:py-20 py-10">
         <Contener className="flex items-center">
           <div className="w-[600px] h-auto hidden md:block">
             <img src="/images/produits/berger-plat.png" alt="Alia Kas et Isie pub maseka food promo" className="custom-image" />
