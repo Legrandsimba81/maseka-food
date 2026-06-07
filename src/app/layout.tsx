@@ -11,6 +11,13 @@ import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: 'yes',
+};
+
 // Métadonnées SEO globales
 export const metadata: Metadata = {
   title: 'Maseka Food - Boulangerie & Pâtisserie | Butembo',

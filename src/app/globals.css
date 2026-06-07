@@ -197,6 +197,13 @@
     background-color: hsl(var(--background));
   }
 
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+    /* évite le zoom automatique sur iOS */
+  }
+
   .input-field:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px hsl(var(--ring));

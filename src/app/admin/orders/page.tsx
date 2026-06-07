@@ -80,6 +80,11 @@ export default function AdminOrdersPage() {
         {orders.map(order => (
           <div key={order.id} className="border p-4 mb-4 rounded">
             <p>Client: {order.user?.name} ({order.user?.email})</p>
+            {order.items.map((item) => (
+              <li key={item.id}>
+                {item.product.name} x {item.quantity} = {(item.priceAtTime * item.quantity).toFixed(2)} €
+              </li>
+            ))}
             <p>Total: {order.totalAmount} $ - Statut: {order.status}</p>
             <p>Adresse de livraison : {order.deliveryAddress} - Heure: {order.deliveryTime}</p>
             {order.adminNote && <p className="text-sm text-gray-500">Note admin: {order.adminNote}</p>}

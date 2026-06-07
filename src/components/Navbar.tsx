@@ -40,6 +40,14 @@ export default function Navbar() {
   const avatarUrl = session?.user?.avatarUrl || session?.user?.image;
   const itemCount = getItemCount();
 
+  const [messageCount, setMessageCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/messages/unread-count")
+      .then(res => res.json())
+      .then(data => setMessageCount(data.count));
+  }, []);
+
   useEffect(() => {
     fetch("/api/promotions/count")
       .then(res => res.json())
@@ -159,8 +167,14 @@ export default function Navbar() {
                       <Link href="/reservations" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
                         <BookOpen size={16} /> Mes réservations
                       </Link>
-                      <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
-                        <MessageSquare size={16} /> Mes messages
+                      <Link href="/messages" className="relative flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition">
+                        <MessageSquare size={16} />
+                        <span>Mes messages</span>
+                        {messageCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {messageCount}
+                          </span>
+                        )}
                       </Link>
                       {session.user?.role === "admin" && (
                         <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
@@ -251,6 +265,15 @@ export default function Navbar() {
                     </Link>
                     <Link href="/reservations" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                       <BookOpen size={20} /> Mes réservations
+                    </Link>
+                    <Link href="/messages" className="relative flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition">
+                      <MessageSquare size={16} />
+                      <span>Mes messages</span>
+                      {messageCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {messageCount}
+                        </span>
+                      )}
                     </Link>
                     {session.user?.role === "admin" && (
                       <Link href="/admin" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-primary">

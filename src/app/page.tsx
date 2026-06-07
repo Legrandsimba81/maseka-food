@@ -39,7 +39,7 @@ const promoItems = [
 ];
 
 // Ordre des catégories
-const categoryOrder = ["pizzas", "burgers", "snacks"];
+const categoryOrder = [ "burgers", "pizzas", "snacks"];
 const PRODUCTS_PER_CATEGORY = 4;
 
 export default async function Home() {
