@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
+import { Copy, Check } from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -19,7 +20,6 @@ interface Order {
   createdAt: string;
   adminNote?: string | null;
   paymentStatus?: string;
-  // paymentMethod supprimé – on ne le stocke pas en base
   items: OrderItem[];
 }
 
@@ -32,7 +32,8 @@ export default function OrdersPage() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [showMethodSelector, setShowMethodSelector] = useState(false);
   const [currentOrderForMethod, setCurrentOrderForMethod] = useState<Order | null>(null);
-  const [chosenMethod, setChosenMethod] = useState<string>(""); // méthode choisie temporairement
+  const [chosenMethod, setChosenMethod] = useState<string>("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -89,6 +90,12 @@ export default function OrdersPage() {
     }
   };
 
+  const copyToClipboard = (text: string, orderId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(orderId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   if (status === "loading" || loading) return <div className="text-center py-8">Chargement...</div>;
   if (orders.length === 0) {
     return (
@@ -103,8 +110,8 @@ export default function OrdersPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Mes commandes</h1>
       <div className="w-full md:w-[700px] my-6 text-left">
-        <p className="text-gray-400 mx">
-          Votre commande sera traitée une fois confirmée par la boulangerie. Vous recevrez les instructions de paiement. par commande confirmée, vous pouvez choisir votre moyen de paiement et suivre les instructions pour finaliser votre achat. 
+        <p className="text-gray-400">
+          Votre commande sera traitée une fois confirmée par la boulangerie. Vous recevrez les instructions de paiement. Par commande confirmée, vous pouvez choisir votre moyen de paiement et suivre les instructions pour finaliser votre achat.
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -113,7 +120,16 @@ export default function OrdersPage() {
             <div className="card-header">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground">Commande #{order.id.slice(0, 8)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Commande #{order.id.slice(0, 8)}</p>
+                    <button
+                      onClick={() => copyToClipboard(order.id, order.id)}
+                      className="text-gray-400 hover:text-gray-600 transition"
+                      title="Copier l'ID complet"
+                    >
+                      {copiedId === order.id ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                    </button>
+                  </div>
                   <p className="text-sm text-muted-foreground">Le {new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <span
@@ -142,13 +158,19 @@ export default function OrdersPage() {
                 <span>{formatPrice(order.totalAmount)} $</span>
               </div>
               {order.status === "confirmed" && (
-                <div className="mt-4">
+                <div className="flex flex-wrap gap-4 mt-4">
                   <button
                     onClick={() => handleShowInstructions(order)}
-                    className="btn-primary w-full py-2"
+                    className="btn-primary py-2 px-4"
                   >
                     Instructions de paiement
                   </button>
+                  <Link
+                    href={`/tracking/${order.id}`}
+                    className="text-sm text-primary underline flex items-center gap-1"
+                  >
+                    Suivre cette commande
+                  </Link>
                 </div>
               )}
             </div>
@@ -156,50 +178,33 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      {/* Modal de sélection du moyen de paiement */}
+      {/* Modals (inchangés) */}
       {showMethodSelector && currentOrderForMethod && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">Choisissez votre moyen de paiement</h2>
             <div className="space-y-3">
-              <button onClick={() => selectPaymentMethod("mpesa")} className="btn-secondary w-full">
-                M-Pesa
-              </button>
-              <button onClick={() => selectPaymentMethod("airtel")} className="btn-secondary w-full">
-                Airtel Money
-              </button>
-              <button onClick={() => selectPaymentMethod("orange")} className="btn-secondary w-full">
-                Orange Money
-              </button>
+              <button onClick={() => selectPaymentMethod("mpesa")} className="btn-secondary w-full">M-Pesa</button>
+              <button onClick={() => selectPaymentMethod("airtel")} className="btn-secondary w-full">Airtel Money</button>
+              <button onClick={() => selectPaymentMethod("orange")} className="btn-secondary w-full">Orange Money</button>
             </div>
-            <button
-              onClick={() => setShowMethodSelector(false)}
-              className="mt-4 text-sm text-muted-foreground w-full text-center"
-            >
-              Annuler
-            </button>
+            <button onClick={() => setShowMethodSelector(false)} className="mt-4 text-sm text-muted-foreground w-full text-center">Annuler</button>
           </div>
         </div>
       )}
 
-      {/* Modal d'affichage des instructions */}
       {showInstructions && selectedOrder && chosenMethod && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">Paiement par {getPaymentMethodLabel(chosenMethod)}</h2>
             <p className="mb-4">{getPaymentInstructions(chosenMethod)}</p>
-            {selectedOrder.paymentStatus === "paid_by_ussd" && (
-              <p className="text-sm text-green-600 mt-1">✅ Payé par USSD</p>
-            )}
-            <p className="text-sm text-muted-foreground mb-4">
-              Montant à payer : <strong>{formatPrice(selectedOrder.totalAmount)} $</strong>
-            </p>
-            <button onClick={() => setShowInstructions(false)} className="btn-secondary w-full">
-              Fermer
-            </button>
+            {selectedOrder.paymentStatus === "paid_by_ussd" && <p className="text-sm text-green-600 mt-1">✅ Payé par USSD</p>}
+            <p className="text-sm text-muted-foreground mb-4">Montant à payer : <strong>{formatPrice(selectedOrder.totalAmount)} $</strong></p>
+            <button onClick={() => setShowInstructions(false)} className="btn-secondary w-full">Fermer</button>
           </div>
         </div>
       )}
+
       <div className="w-full md:w-[700px] mx-auto mt-6 md:text-center">
         <p className="text-gray-400">
           Le paiement de facture se fais en USSD cliqué pour voir les instructions <br />

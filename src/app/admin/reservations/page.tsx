@@ -130,8 +130,8 @@ export default function AdminReservationsPage() {
               </div>
               {res.status === "pending" && (
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => updateStatus(res.id, "confirmed", noteInput[res.id])} className="btn-primary text-sm py-1">Confirmer</button>
-                  <button onClick={() => updateStatus(res.id, "cancelled", noteInput[res.id])} className="btn-secondary bg-red-600 text-white text-sm py-1">Annuler</button>
+                  <button onClick={() => updateStatus(res.id, "confirmed", noteInput[res.id])} className="px-4 py-2 bg-green-500 text-white text-sm  rounded">Confirmer</button>
+                  <button onClick={() => updateStatus(res.id, "cancelled", noteInput[res.id])} className=" bg-red-500  text-white text-sm py-2 px-4 rounded">Annuler</button>
                 </div>
               )}
               <div className="mt-3">
@@ -143,8 +143,8 @@ export default function AdminReservationsPage() {
                   onChange={(e) => setNoteInput({ ...noteInput, [res.id]: e.target.value })}
                 />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => sendNote(res.id)} className="btn-secondary flex-1">Envoyer note</button>
-                  <button onClick={() => deleteReservation(res.id)} className="btn-secondary bg-red-600 text-white flex-1">Supprimer</button>
+                  <button onClick={() => sendNote(res.id)} className="px-4 py-2 bg-green-500 text-white flex-1 rounded">Envoyer note</button>
+                  <button onClick={() => deleteReservation(res.id)} className="px-4 py-2 bg-red-500 rounded text-white flex-1">Supprimer</button>
                 </div>
               </div>
             </div>

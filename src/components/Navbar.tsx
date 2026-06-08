@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { useCart } from "@/hooks/useCart";
+import { Truck } from "lucide-react";
 import {
   Home,
   Package,
@@ -33,20 +34,34 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [avatarError, setAvatarError] = useState(false); // fallback si image cassée
+  const [avatarError, setAvatarError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [promoCount, setPromoCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [pendingReservations, setPendingReservations] = useState(0);
+  const [pendingOrders, setPendingOrders] = useState(0);
 
   const avatarUrl = session?.user?.avatarUrl || session?.user?.image;
   const itemCount = getItemCount();
 
-  const [messageCount, setMessageCount] = useState(0);
+  // Récupérer tous les compteurs
+  const fetchCounts = () => {
+    if (session) {
+      fetch("/api/user/counts")
+        .then(res => res.json())
+        .then(data => {
+          setPendingReservations(data.pendingReservations || 0);
+          setPendingOrders(data.pendingOrders || 0);
+          setUnreadMessages(data.unreadMessages || 0);
+        });
+    }
+  };
 
   useEffect(() => {
-    fetch("/api/messages/unread-count")
-      .then(res => res.json())
-      .then(data => setMessageCount(data.count));
-  }, []);
+    fetchCounts();
+    window.addEventListener("counts-updated", fetchCounts);
+    return () => window.removeEventListener("counts-updated", fetchCounts);
+  }, [session]);
 
   useEffect(() => {
     fetch("/api/promotions/count")
@@ -96,7 +111,7 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Desktop menu (visible à partir de desktop: 1145px) */}
+            {/* Desktop menu (sans badges réservations/commandes) */}
             <div className="hidden desktop:flex items-center space-x-6">
               <Link href="/" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Home size={18} /> Accueil
@@ -123,6 +138,7 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
+              
               <Link href="/contact" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Phone size={18} /> Contact
               </Link>
@@ -130,6 +146,17 @@ export default function Navbar() {
                 <Users size={18} /> team
               </Link>
 
+              {/* Messages badge */}
+              <Link href="/messages" className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <MessageSquare size={20} />
+                {unreadMessages > 0 && (
+                  <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadMessages}
+                  </span>
+                )}
+              </Link>
+
+              {/* Theme toggle */}
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
@@ -161,18 +188,35 @@ export default function Navbar() {
                       <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
                         <User size={16} /> Mon profil
                       </Link>
+                      <Link href="/tracking" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
+                        <Truck size={16} /> Livraison
+                      </Link>
+                      {/* Commandes avec badge */}
                       <Link href="/orders" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
-                        <ShoppingBag size={16} /> Mes commandes
+                        <ShoppingBag size={16} />
+                        <span>Mes commandes</span>
+                        {pendingOrders > 0 && (
+                          <span className="ml-auto bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                            {pendingOrders}
+                          </span>
+                        )}
                       </Link>
+                      {/* Réservations avec badge */}
                       <Link href="/reservations" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
-                        <BookOpen size={16} /> Mes réservations
+                        <BookOpen size={16} />
+                        <span>Mes réservations</span>
+                        {pendingReservations > 0 && (
+                          <span className="ml-auto bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                            {pendingReservations}
+                          </span>
+                        )}
                       </Link>
-                      <Link href="/messages" className="relative flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition">
+                      <Link href="/messages" className="relative flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
                         <MessageSquare size={16} />
                         <span>Mes messages</span>
-                        {messageCount > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                            {messageCount}
+                        {unreadMessages > 0 && (
+                          <span className="ml-auto bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                            {unreadMessages}
                           </span>
                         )}
                       </Link>
@@ -194,7 +238,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu button (visible en dessous de 1145px) */}
+            {/* Mobile menu button */}
             <button onClick={() => setMobileMenuOpen(true)} className="desktop:hidden focus:outline-none">
               <Menu size={24} className="text-foreground" />
             </button>
@@ -202,7 +246,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile drawer avec overflow-y */}
+      {/* Mobile drawer – ajoutez les badges dans le menu déroulant comme ci-dessus (similaire à userMenuOpen) */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 desktop:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={closeMobileMenu} />
@@ -215,7 +259,6 @@ export default function Navbar() {
             </div>
             <div className="flex-1 overflow-y-auto py-4 px-6">
               <div className="flex flex-col space-y-4">
-                {/* Liens du menu mobile (identiques à avant) */}
                 <Link href="/" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Home size={20} /> Accueil
                 </Link>
@@ -225,20 +268,26 @@ export default function Navbar() {
                 <Link href="/reservations" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Calendar size={20} /> Réservation
                 </Link>
+                <Link href="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
+                  <ShoppingBag size={20} /> Commandes
+                </Link>
                 <Link href="/cart" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <ShoppingCart size={20} />
                   <span>Panier</span>
-                  {itemCount > 0 && (
-                    <span className="absolute left-20 top-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {itemCount}
-                    </span>
-                  )}
+                  {itemCount > 0 && <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">{itemCount}</span>}
                 </Link>
                 <Link href="/promotions" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary relative">
                   <Tag size={20} />
                   <span>Promotions</span>
-                  {promoCount > 0 && (
-                    <span className="ml-2 inline-block w-2 h-2 bg-orange-500 rounded-full"></span>
+                  {promoCount > 0 && <span className="ml-2 w-2 h-2 bg-orange-500 rounded-full"></span>}
+                </Link>
+                <Link href="/messages" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
+                  <MessageSquare size={20} />
+                  <span>Messages</span>
+                  {unreadMessages > 0 && (
+                    <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                      {unreadMessages}
+                    </span>
                   )}
                 </Link>
                 <Link href="/team" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
@@ -262,18 +311,11 @@ export default function Navbar() {
                     </Link>
                     <Link href="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                       <ShoppingBag size={20} /> Mes commandes
+                      {pendingOrders > 0 && <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">{pendingOrders}</span>}
                     </Link>
                     <Link href="/reservations" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                       <BookOpen size={20} /> Mes réservations
-                    </Link>
-                    <Link href="/messages" className="relative flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition">
-                      <MessageSquare size={16} />
-                      <span>Mes messages</span>
-                      {messageCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {messageCount}
-                        </span>
-                      )}
+                      {pendingReservations > 0 && <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">{pendingReservations}</span>}
                     </Link>
                     {session.user?.role === "admin" && (
                       <Link href="/admin" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-primary">

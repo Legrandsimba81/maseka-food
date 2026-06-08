@@ -33,17 +33,10 @@ export default function PromotionsPage() {
   }
 
   return (
-    <div>
-      <div className="container mx-auto px-4 pt-8">
-        {/* Bannière */}
-        <div className="bg-gradient-to-r from-red-500 to-amber-500 rounded-2xl p-8 mb-10 text-white text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Offres spéciales</h1>
-          <p className="text-lg">Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !</p>
-          {/* <p>1047466074437-vj5sf86tmgiqhqk7idejeprlmj1dhaps.apps.googleusercontent.com</p> */}
-        </div>
-
-        <section >
-          <div className="container mx-auto px-4 flex flex-col-reverse lg:flex-row items-center gap-8 lg:gap-12">
+    <div >
+      <div className="container mx-auto px-4 pt-8 ">
+        <section>
+          <div className="container  mx-auto px-4 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             {/* Texte */}
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-3xl sm:text-4xl md:text-5xl  text-gray-800 dark:text-white mb-2">
@@ -58,10 +51,10 @@ export default function PromotionsPage() {
                 sur toute la carte !
               </p>
               <div className="flex flex-wrap justify-center lg:justify-start gap-4">
-                <Link href="/products" className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl transition shadow-md">
+                <Link href="/products" className="hidden md:block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl transition shadow-md">
                   Voir nos produits
                 </Link>
-                <Link href="/products?category=pâtisseries" className="bg-transparent border-2 border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30 font-semibold px-6 py-3 rounded-xl transition">
+                <Link href="/products?category=pâtisseries" className="bg-orange-50 dark:bg-orange-900/30 border-2 border-orange-600 text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30 font-semibold px-6 py-3 rounded-xl transition">
                   Gâteaux pour cérémonies
                 </Link>
               </div>
@@ -84,7 +77,7 @@ export default function PromotionsPage() {
         </section>
       </div>
 
-      <div className="bg-gray-900 text-white py-2 text-sm mb-8">
+      <div className="bg-gray-900 text-white py-2 text-sm mb-8 dark:bg-gray-400 dark:text-gray-900">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
           <div className="flex flex-wrap justify-center gap-4">
             <span className="flex items-center gap-1.5">
@@ -93,16 +86,23 @@ export default function PromotionsPage() {
             <span className="flex items-center gap-1.5">
               <MapPin size={14} /> Butembo, Nord-Kivu
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="hidden items-center gap-1.5 md:inline-flex">
               <Clock size={14} /> 6h – 20h (Lundi – Dimanche)
             </span>
           </div>
-          <Link href="/profile" className="flex items-center gap-1.5 hover:text-orange-400 transition">
+          <Link href="/profile" className="hidden md:flex items-center gap-1.5 hover:text-orange-400 transition">
             <User size={14} /> Mon Compte
           </Link>
         </div>
       </div>
-
+      <div className="container mx-auto px-4 pt-8">
+        {/* Bannière */}
+        <div className="bg-gradient-to-r from-red-500 to-amber-500 rounded-2xl p-8 mb-10 text-white text-center">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Offres spéciales</h1>
+          <p className="text-lg">Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !</p>
+          {/* <p>1047466074437-vj5sf86tmgiqhqk7idejeprlmj1dhaps.apps.googleusercontent.com</p> */}
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-8">
         {/* Grille des produits en promo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

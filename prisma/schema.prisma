@@ -52,6 +52,7 @@ model Order {
   address         String?
   deliveryAddress String?
   deliveryTime    String?
+  deliveryStatus String @default("pending")
   adminNote String?
   paymentStatus   String      @default("pending") // pending, paid_by_ussd
   items           OrderItem[]

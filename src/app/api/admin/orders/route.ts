@@ -10,20 +10,21 @@ export async function GET(req: Request) {
   }
   const { searchParams } = new URL(req.url);
   const userName = searchParams.get("userName") || "";
+  const status = searchParams.get("status") || "";
 
-  try {
-    let orders = await prisma.order.findMany({
-      include: { user: true, items: { include: { product: true } } },
-      orderBy: { createdAt: "desc" },
-    });
-    if (userName) {
-      orders = orders.filter(order => 
-        order.user.name.toLowerCase().includes(userName.toLowerCase())
-      );
-    }
-    return NextResponse.json(orders);
-  } catch (error) {
-    console.error("Erreur API admin/orders:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  let orders = await prisma.order.findMany({
+    include: { user: true, items: { include: { product: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (userName) {
+    orders = orders.filter(order =>
+      order.user?.name?.toLowerCase().includes(userName.toLowerCase()) ||
+      order.user?.email?.toLowerCase().includes(userName.toLowerCase())
+    );
   }
+  if (status && status !== "all") {
+    orders = orders.filter(order => order.status === status);
+  }
+  return NextResponse.json(orders);
 }

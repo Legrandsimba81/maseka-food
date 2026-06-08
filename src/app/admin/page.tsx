@@ -6,6 +6,7 @@ import { OrdersLineChart, OrdersPieChart } from "@/components/admin/Charts";
 import { formatPrice } from "@/lib/format";
 
 export default async function AdminDashboard() {
+  
   const session = await getServerSession(authOptions);
   
   // Vérification explicite
