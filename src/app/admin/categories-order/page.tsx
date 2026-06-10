@@ -39,7 +39,7 @@ export default function CategoriesOrderPage() {
   };
 
   const saveOrder = async () => {
-    const res = await fetch("/api/settings", {
+    const res = await fetch("/api/admin/categories-order", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ categoryOrder: order }),
