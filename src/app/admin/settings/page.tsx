@@ -177,14 +177,14 @@ export default function AdminSettingsPage() {
                       ) : (
                         <button
                           onClick={() => changeRole(user.id, "admin")}
-                          className="text-green-600 hover:text-green-800 text-sm"
+                          className="bg- text-green-600 hover:text-green-800 text-sm"
                         >
                           Promouvoir admin
                         </button>
                       )}
                       <button
                         onClick={() => deleteUser(user.id, user.role)}
-                        className="text-red-600 hover:text-red-800 text-sm ml-2"
+                        className="bg-gray-200 p-2 text-red-600 hover:text-red-800 text-sm ml-2 mt-2"
                         disabled={user.role === "admin"}
                       >
                         Supprimer
