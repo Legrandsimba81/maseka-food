@@ -8,6 +8,7 @@ export async function GET() {
     const settings = await prisma.bakerySettings.findFirst();
     return NextResponse.json(settings || {});
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -18,18 +19,23 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
   try {
-    const data = await req.json();
-    const existing = await prisma.bakerySettings.findFirst();
-    if (existing) {
-      const updated = await prisma.bakerySettings.update({
-        where: { id: existing.id },
-        data,
-      });
-      return NextResponse.json(updated);
-    } else {
-      const created = await prisma.bakerySettings.create({ data });
-      return NextResponse.json(created);
+    const { exchangeRate } = await req.json();
+    if (typeof exchangeRate !== "number" || exchangeRate <= 0) {
+      return NextResponse.json({ error: "Taux invalide" }, { status: 400 });
     }
+    const existing = await prisma.bakerySettings.findFirst();
+    let updated;
+    if (existing) {
+      updated = await prisma.bakerySettings.update({
+        where: { id: existing.id },
+        data: { exchangeRate },
+      });
+    } else {
+      updated = await prisma.bakerySettings.create({
+        data: { exchangeRate, bakeryName: "maseka food" },
+      });
+    }
+    return NextResponse.json(updated);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
