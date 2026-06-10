@@ -1,4 +1,3 @@
-// src/app/admin/settings/page.tsx (version complète avec sécurité et changement de rôle)
 "use client";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -21,7 +20,6 @@ export default function AdminSettingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  // Charger les paramètres
   useEffect(() => {
     fetch("/api/settings")
       .then(res => res.json())
@@ -29,7 +27,6 @@ export default function AdminSettingsPage() {
       .catch(err => console.error(err));
   }, []);
 
-  // Charger les utilisateurs
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
@@ -38,6 +35,8 @@ export default function AdminSettingsPage() {
         const data = await res.json();
         setUsers(data);
       } else {
+        const text = await res.text();
+        console.error("Erreur API users:", text);
         toast.error("Erreur chargement utilisateurs");
       }
     } catch (err) {
@@ -71,7 +70,7 @@ export default function AdminSettingsPage() {
       toast.error("Suppression d'un administrateur non autorisée");
       return;
     }
-    if (!confirm("Supprimer définitivement cet utilisateur ? Toutes ses données seront effacées.")) return;
+    if (!confirm("Supprimer définitivement cet utilisateur ?")) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Utilisateur supprimé");
@@ -107,7 +106,7 @@ export default function AdminSettingsPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Paramètres</h1>
 
-      {/* Section Taux de change */}
+      {/* Taux de change */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Taux de change</h2>
         <div className="space-y-4">
@@ -128,7 +127,7 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* Section Utilisateurs */}
+      {/* Gestion utilisateurs */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Gestion des utilisateurs</h2>
         <div className="mb-4 flex gap-2">
@@ -158,7 +157,7 @@ export default function AdminSettingsPage() {
                   <th className="px-4 py-2 text-left text-xs font-medium uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody>
                 {users.map((user) => (
                   <tr key={user.id}>
                     <td className="px-4 py-2">{user.name}</td>
@@ -172,7 +171,6 @@ export default function AdminSettingsPage() {
                         <button
                           onClick={() => changeRole(user.id, "user")}
                           className="text-amber-600 hover:text-amber-800 text-sm"
-                          title="Retirer les droits admin"
                         >
                           Retirer admin
                         </button>
@@ -180,7 +178,6 @@ export default function AdminSettingsPage() {
                         <button
                           onClick={() => changeRole(user.id, "admin")}
                           className="text-green-600 hover:text-green-800 text-sm"
-                          title="Nommer administrateur"
                         >
                           Promouvoir admin
                         </button>
@@ -188,7 +185,7 @@ export default function AdminSettingsPage() {
                       <button
                         onClick={() => deleteUser(user.id, user.role)}
                         className="text-red-600 hover:text-red-800 text-sm ml-2"
-                        disabled={user.role === "admin" || user.id === session.user.id}
+                        disabled={user.role === "admin"}
                       >
                         Supprimer
                       </button>
