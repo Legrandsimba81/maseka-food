@@ -8,14 +8,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
   try {
-    // Supprimer les dépendances
-    await prisma.orderItem.deleteMany({ where: { order: { userId: params.id } } });
+    // Supprimer les dépendances : messages, cart, orders, reservations
+    await prisma.message.deleteMany({ where: { OR: [{ senderId: params.id }, { receiverId: params.id }] } });
+    await prisma.cart.deleteMany({ where: { userId: params.id } });
     await prisma.order.deleteMany({ where: { userId: params.id } });
     await prisma.reservation.deleteMany({ where: { userId: params.id } });
-    await prisma.cartItem.deleteMany({ where: { cart: { userId: params.id } } });
-    await prisma.cart.deleteMany({ where: { userId: params.id } });
-    await prisma.message.deleteMany({ where: { OR: [{ senderId: params.id }, { receiverId: params.id }] } });
     await prisma.user.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
   } catch (error) {
