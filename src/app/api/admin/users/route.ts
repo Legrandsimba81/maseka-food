@@ -1,36 +1,30 @@
+// src/app/api/admin/users/[id]/role/route.ts
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-
-  const { searchParams } = new URL(req.url);
-  const search = searchParams.get("search") || "";
-
-  const users = await prisma.user.findMany({
-    where: {
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-      ],
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      createdAt: true,
-      _count: {
-        select: { orders: true, reservations: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json(users);
+  try {
+    const { role } = await req.json();
+    if (!["user", "admin"].includes(role)) {
+      return NextResponse.json({ error: "Rôle invalide" }, { status: 400 });
+    }
+    // Empêcher de changer son propre rôle (par sécurité)
+    if (params.id === session.user.id) {
+      return NextResponse.json({ error: "Vous ne pouvez pas modifier votre propre rôle" }, { status: 403 });
+    }
+    const updated = await prisma.user.update({
+      where: { id: params.id },
+      data: { role },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

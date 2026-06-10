@@ -1,3 +1,4 @@
+// src/app/admin/settings/page.tsx (version complète avec sécurité et changement de rôle)
 "use client";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -31,9 +32,19 @@ export default function AdminSettingsPage() {
   // Charger les utilisateurs
   const fetchUsers = async () => {
     setLoadingUsers(true);
-    const res = await fetch(`/api/admin/users?search=${encodeURIComponent(searchTerm)}`);
-    if (res.ok) setUsers(await res.json());
-    setLoadingUsers(false);
+    try {
+      const res = await fetch(`/api/admin/users?search=${encodeURIComponent(searchTerm)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data);
+      } else {
+        toast.error("Erreur chargement utilisateurs");
+      }
+    } catch (err) {
+      toast.error("Erreur réseau");
+    } finally {
+      setLoadingUsers(false);
+    }
   };
 
   useEffect(() => {
@@ -55,14 +66,38 @@ export default function AdminSettingsPage() {
     setLoading(false);
   };
 
-  const deleteUser = async (id: string) => {
-    if (!confirm("Supprimer définitivement cet utilisateur ? Toutes ses commandes, réservations et messages seront également supprimés.")) return;
+  const deleteUser = async (id: string, role: string) => {
+    if (role === "admin") {
+      toast.error("Suppression d'un administrateur non autorisée");
+      return;
+    }
+    if (!confirm("Supprimer définitivement cet utilisateur ? Toutes ses données seront effacées.")) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Utilisateur supprimé");
       fetchUsers();
     } else {
-      toast.error("Erreur");
+      const err = await res.json();
+      toast.error(err.error || "Erreur");
+    }
+  };
+
+  const changeRole = async (id: string, newRole: string) => {
+    if (id === session?.user?.id) {
+      toast.error("Vous ne pouvez pas modifier votre propre rôle");
+      return;
+    }
+    const res = await fetch(`/api/admin/users/${id}/role`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: newRole }),
+    });
+    if (res.ok) {
+      toast.success(`Rôle modifié : ${newRole === "admin" ? "Admin" : "Utilisateur"}`);
+      fetchUsers();
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "Erreur");
     }
   };
 
@@ -77,9 +112,7 @@ export default function AdminSettingsPage() {
         <h2 className="text-xl font-semibold mb-4">Taux de change</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Francs Congolais → Dollar US
-            </label>
+            <label className="block text-sm font-medium mb-1">Francs Congolais → Dollar US</label>
             <input
               type="number"
               step="1"
@@ -87,9 +120,7 @@ export default function AdminSettingsPage() {
               onChange={(e) => setExchangeRate(Number(e.target.value))}
               className="input-field w-64"
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              1 USD = {exchangeRate} FC
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">1 USD = {exchangeRate} FC</p>
           </div>
           <button onClick={handleSave} disabled={loading} className="btn-primary">
             {loading ? "Enregistrement..." : "Enregistrer"}
@@ -136,10 +167,28 @@ export default function AdminSettingsPage() {
                     <td className="px-4 py-2">{user._count.orders}</td>
                     <td className="px-4 py-2">{user._count.reservations}</td>
                     <td className="px-4 py-2">{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 space-x-2">
+                      {user.role === "admin" ? (
+                        <button
+                          onClick={() => changeRole(user.id, "user")}
+                          className="text-amber-600 hover:text-amber-800 text-sm"
+                          title="Retirer les droits admin"
+                        >
+                          Retirer admin
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => changeRole(user.id, "admin")}
+                          className="text-green-600 hover:text-green-800 text-sm"
+                          title="Nommer administrateur"
+                        >
+                          Promouvoir admin
+                        </button>
+                      )}
                       <button
-                        onClick={() => deleteUser(user.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        onClick={() => deleteUser(user.id, user.role)}
+                        className="text-red-600 hover:text-red-800 text-sm ml-2"
+                        disabled={user.role === "admin" || user.id === session.user.id}
                       >
                         Supprimer
                       </button>
