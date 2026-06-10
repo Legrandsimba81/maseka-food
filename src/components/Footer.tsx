@@ -95,10 +95,6 @@ export default function Footer() {
             </p>
           </div>
         </div>
-        <p>postgresql://postgres:JCa8nSEggldnAFOU@db.dwfplbievecqohbnriam.supabase.co:5432/postgres</p>
-        <p>JCa8nSEggldnAFOU</p>
-        <p></p>
-        <p>npg_VJnByMiGmZ93</p>
 
         <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-6 text-center text-gray-500 dark:text-gray-400 text-sm">
           <p>&copy; {new Date().getFullYear()} team digital maseka food – Tous droits réservés.</p>
