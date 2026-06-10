@@ -138,7 +138,7 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-              
+
               <Link href="/contact" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Phone size={18} /> Contact
               </Link>
@@ -265,11 +265,8 @@ export default function Navbar() {
                 <Link href="/products" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Package size={20} /> Produits
                 </Link>
-                <Link href="/reservations" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
-                  <Calendar size={20} /> Réservation
-                </Link>
-                <Link href="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
-                  <ShoppingBag size={20} /> Commandes
+                <Link href="/tracking" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
+                  <Truck size={16} /> Livraison
                 </Link>
                 <Link href="/cart" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <ShoppingCart size={20} />
@@ -281,15 +278,7 @@ export default function Navbar() {
                   <span>Promotions</span>
                   {promoCount > 0 && <span className="ml-2 w-2 h-2 bg-orange-500 rounded-full"></span>}
                 </Link>
-                <Link href="/messages" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
-                  <MessageSquare size={20} />
-                  <span>Messages</span>
-                  {unreadMessages > 0 && (
-                    <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
-                      {unreadMessages}
-                    </span>
-                  )}
-                </Link>
+
                 <Link href="/team" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Users size={20} /> Équipe
                 </Link>
@@ -308,6 +297,15 @@ export default function Navbar() {
                   <>
                     <Link href="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                       <User size={20} /> Mon profil
+                    </Link>
+                    <Link href="/messages" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
+                      <MessageSquare size={20} />
+                      <span>Messages</span>
+                      {unreadMessages > 0 && (
+                        <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                          {unreadMessages}
+                        </span>
+                      )}
                     </Link>
                     <Link href="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                       <ShoppingBag size={20} /> Mes commandes
