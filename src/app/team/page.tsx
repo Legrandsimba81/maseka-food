@@ -3,18 +3,10 @@ import Image from "next/image";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope } from "react-icons/fa";
 
 const teamMembers = [
-  { name: "Jean Kasereka", role: "Fondateur & Chef Boulanger", bio: "Passionné par la boulangerie artisanale depuis 20 ans.", image: "/images/team/jean.jpg" },
-  { name: "Marie Mambo", role: "Pâtissière en chef", bio: "Spécialiste des desserts et gâteaux de mariage.", image: "/images/team/marie.jpg" },
-  { name: "Luc Bwira", role: "Responsable production", bio: "Garant de la qualité et de la fraîcheur des pains.", image: "/images/team/luc.jpg" },
-  { name: "Grace Kahindo", role: "Vendeuse", bio: "Accueil chaleureux et conseils personnalisés.", image: "/images/team/grace.jpg" },
-  { name: "David Katembo", role: "Livraison", bio: "Vos commandes livrées rapidement et en toute sécurité.", image: "/images/team/david.jpg" },
-  { name: "Esther Kavira", role: "Community Manager", bio: "Gère nos réseaux sociaux et les relations clients.", image: "/images/team/esther.jpg" },
-  { name: "Samuel Kambale", role: "Boulanger", bio: "Spécialiste des pains au levain et traditionnels.", image: "/images/team/samuel.jpg" },
-  { name: "Ruth Mumbere", role: "Pâtissière", bio: "Créatrice des desserts et viennoiseries.", image: "/images/team/ruth.jpg" },
-  { name: "Joseph Kyusa", role: "Assistant boulanger", bio: "Passionné et apprenti boulanger.", image: "/images/team/joseph.jpg" },
-  { name: "Sarah Lusi", role: "Responsable marketing", bio: "Stratégies de communication et événements.", image: "/images/team/sarah.jpg" },
-  { name: "Isaac Kikuni", role: "Technicien maintenance", bio: "Veille au bon fonctionnement des équipements.", image: "/images/team/isaac.jpg" },
-  { name: "Lydia Tusi", role: "Comptable", bio: "Gestion financière et administrative.", image: "/images/team/lydia.jpg" },
+  { name: "dorcas Beto", role: "Fondateur & Chef Boulanger", bio: "Passionné par la boulangerie artisanale depuis 20 ans.", image: "/images/personnes/dorcas.jpg" },
+  { name: "Marie Carmelle", role: "Pâtissière en chef", bio: "Spécialiste des desserts et gâteaux de mariage.", image: "/images/personnes/marie.jpg" },
+  { name: "Rica Kavira", role: "Responsable production", bio: "Garant de la qualité et de la fraîcheur des pains.", image: "/images/personnes/rica.jpg" },
+  { name: "Grace Kahindo", role: "Vendeuse", bio: "Accueil chaleureux et conseils personnalisés.", image: "/images/personnes/grace.jpg" },
 ];
 
 export default function TeamPage() {

@@ -14,26 +14,29 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo & description */}
-        <div>
-          <div className="flex items-center space-x-2 mb-4">
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
               <img src="/images/favicon.icon.png" alt="Maseka Food" width={40} height={40} />
-              <span className="text-xl font-bold text-primary dark:text-white">maseka food</span>
+              <div>
+                <div className="text-2xl font-bold text-primary dark:text-white">maseka food</div>
+                <div className="text-sm -mt-2 text-foreground/70">Boulangerie in butembo</div>
+              </div>
             </div>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-              Boulangerie artisanale à Butembo. Pains frais, viennoiseries et pâtisseries faits avec passion.
+              Maseka Food Boulangerie à Butembo. Pizza, humburger, viennoiseries et pâtisseries faits avec passion.
             </p>
-        
-          <div className="flex space-x-4">
-            <a href="#" className="text-gray-500 hover:text-primary transition">
-              <FaFacebook size={20} />
-            </a>
-            <a href="#" className="text-gray-500 hover:text-primary transition">
-              <FaTwitter size={20} />
-            </a>
-            <a href="#" className="text-gray-500 hover:text-primary transition">
-              <FaInstagram size={20} />
-            </a>
-          </div>
+
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-500 hover:text-primary transition">
+                <FaFacebook size={20} />
+              </a>
+              <a href="#" className="text-gray-500 hover:text-primary transition">
+                <FaTwitter size={20} />
+              </a>
+              <a href="#" className="text-gray-500 hover:text-primary transition">
+                <FaInstagram size={20} />
+              </a>
+            </div>
           </div>
 
           {/* Liens rapides */}
@@ -54,8 +57,8 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Horaires</h3>
             <ul className="space-y-2 text-gray-600 dark:text-gray-400 text-sm">
-              <li className="flex items-center gap-2"><Clock size={16} /> Lundi – Samedi : 7h – 20h</li>
-              <li className="flex items-center gap-2"><Clock size={16} /> Dimanche : 8h – 13h</li>
+              <li className="flex items-center gap-2"><Clock size={16} /> Lundi – Samedi : 8h00 – 19h40</li>
+              <li className="flex items-center gap-2"><Clock size={16} /> Dimanche : 8h00 – 20h </li>
             </ul>
             <div className="mt-4">
               <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Contact</h3>
@@ -92,9 +95,13 @@ export default function Footer() {
             </p>
           </div>
         </div>
+        <p>postgresql://postgres:JCa8nSEggldnAFOU@db.dwfplbievecqohbnriam.supabase.co:5432/postgres</p>
+        <p>JCa8nSEggldnAFOU</p>
+        <p></p>
+        <p>npg_VJnByMiGmZ93</p>
 
         <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-6 text-center text-gray-500 dark:text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} maseka food – Tous droits réservés.</p>
+          <p>&copy; {new Date().getFullYear()} team digital maseka food – Tous droits réservés.</p>
         </div>
       </div>
     </footer>

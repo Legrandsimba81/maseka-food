@@ -5,23 +5,10 @@ import toast from "react-hot-toast";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "pending":
-      return { label: "En attente", className: "bg-yellow-100 text-yellow-800" };
-    case "confirmed":
-      return { label: "Confirmée", className: "bg-green-100 text-green-800" };
-    case "cancelled":
-      return { label: "Annulée", className: "bg-red-100 text-red-800" };
-    default:
-      return { label: status, className: "bg-gray-100 text-gray-800" };
-  }
-};
-
-const getDeliveryStatusLabel = (status: string) => {
-  switch (status) {
-    case "pending": return "En préparation";
-    case "shipped": return "En livraison";
-    case "delivered": return "Livré";
-    default: return status;
+    case "pending": return { label: "En attente", className: "bg-yellow-100 text-yellow-800" };
+    case "confirmed": return { label: "Confirmée", className: "bg-green-100 text-green-800" };
+    case "cancelled": return { label: "Annulée", className: "bg-red-100 text-red-800" };
+    default: return { label: status, className: "bg-gray-100 text-gray-800" };
   }
 };
 
@@ -29,7 +16,6 @@ export default function AdminOrdersPage() {
   const { data: session } = useSession();
   const [orders, setOrders] = useState([]);
   const [noteInput, setNoteInput] = useState({});
-  const [deliveryStatusInput, setDeliveryStatusInput] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
@@ -90,18 +76,6 @@ export default function AdminOrdersPage() {
     } else toast.error("Erreur");
   };
 
-  const updateDeliveryStatus = async (id, newStatus) => {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ deliveryStatus: newStatus }),
-    });
-    if (res.ok) {
-      toast.success(`Statut de livraison mis à jour : ${getDeliveryStatusLabel(newStatus)}`);
-      fetchOrders();
-    } else toast.error("Erreur");
-  };
-
   const deleteOrder = async (id) => {
     if (!confirm("Supprimer définitivement cette commande ?")) return;
     const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
@@ -116,6 +90,18 @@ export default function AdminOrdersPage() {
     const res = await fetch("/api/admin/orders/delete-all", { method: "DELETE" });
     if (res.ok) {
       toast.success("Toutes les commandes supprimées");
+      fetchOrders();
+    } else toast.error("Erreur");
+  };
+
+  const updateDeliveryStatus = async (id, deliveryStatus) => {
+    const res = await fetch(`/api/admin/orders/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deliveryStatus }),
+    });
+    if (res.ok) {
+      toast.success("Statut de livraison mis à jour");
       fetchOrders();
     } else toast.error("Erreur");
   };
@@ -170,9 +156,9 @@ export default function AdminOrdersPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {orders.map(order => {
             const statusBadge = getStatusBadge(order.status);
-            const currentDeliveryStatus = order.deliveryStatus || "pending";
             return (
               <div key={order.id} className="bg-white dark:bg-gray-800 border p-4 rounded-xl shadow relative">
+                {/* Badge de statut */}
                 <div className="absolute top-4 right-4">
                   <span className={`px-2 py-1 text-xs rounded-full ${statusBadge.className}`}>
                     {statusBadge.label}
@@ -182,7 +168,6 @@ export default function AdminOrdersPage() {
                   <p><strong>Client:</strong> {order.user?.name} ({order.user?.email})</p>
                   <p><strong>Total:</strong> {order.totalAmount} $</p>
                   <p><strong>Adresse:</strong> {order.deliveryAddress} - <strong>Heure:</strong> {order.deliveryTime}</p>
-                  <p><strong>Statut livraison:</strong> {getDeliveryStatusLabel(currentDeliveryStatus)}</p>
                   {order.adminNote && <p className="text-sm text-gray-500">Note admin: {order.adminNote}</p>}
                   {order.paymentStatus === "paid_by_ussd" && <p className="text-green-600">✅ Payé par USSD</p>}
                 </div>
@@ -204,26 +189,19 @@ export default function AdminOrdersPage() {
                 {order.status === "confirmed" && order.paymentStatus !== "paid_by_ussd" && (
                   <button onClick={() => markPaid(order.id)} className="bg-green-500 text-white px-2 py-1 rounded mt-2">Marquer payé (USSD)</button>
                 )}
-                {/* Mise à jour du statut de livraison (uniquement si commande confirmée) */}
-                {order.status === "confirmed" && (
-                  <div className="mt-3 flex gap-2 items-center">
-                    <select
-                      value={deliveryStatusInput[order.id] || currentDeliveryStatus}
-                      onChange={e => setDeliveryStatusInput({ ...deliveryStatusInput, [order.id]: e.target.value })}
-                      className="border rounded p-1 text-sm"
-                    >
-                      <option value="pending">En préparation</option>
-                      <option value="shipped">En livraison</option>
-                      <option value="delivered">Livré</option>
-                    </select>
-                    <button
-                      onClick={() => updateDeliveryStatus(order.id, deliveryStatusInput[order.id] || currentDeliveryStatus)}
-                      className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-                    >
-                      Mettre à jour livraison
-                    </button>
-                  </div>
-                )}
+                {/* Statut de livraison */}
+                <div className="mt-3">
+                  <label className="block text-sm font-medium mb-1">Statut de livraison</label>
+                  <select
+                    value={order.deliveryStatus || "pending"}
+                    onChange={(e) => updateDeliveryStatus(order.id, e.target.value)}
+                    className="input-field text-sm w-full"
+                  >
+                    <option value="pending">En préparation</option>
+                    <option value="shipped">En livraison</option>
+                    <option value="delivered">Livré</option>
+                  </select>
+                </div>
                 <div className="mt-3">
                   <textarea
                     placeholder="Ajouter une note"

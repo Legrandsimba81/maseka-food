@@ -22,7 +22,7 @@ export const viewport = {
 export const metadata: Metadata = {
   title: 'Maseka Food - Boulangerie & Pâtisserie | Butembo',
   description: 'La meilleure boulangerie de Butembo, Nord-Kivu. Pains frais, gâteaux, fast-food, pizzas et bien plus. Livraison disponible.',
-  keywords: 'boulangerie Butembo, pain Butembo, gâteau cérémonie, fast-food Nord-Kivu, pizza Butembo, livraison Butembo',
+  keywords: 'boulangerie en rdc,site de boulangerie, boulangerie Butembo, pain Butembo, gâteau cérémonie, fast-food Nord-Kivu, pizza Butembo, livraison Butembo',
   authors: [{ name: 'Maseka Food' }],
   robots: 'index, follow',
   openGraph: {
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     images: ['/images/hero-bakery.jpg'],
   },
   alternates: {
-    canonical: 'https://masekafood.cd',
+    canonical: 'https://maseka-food.vercel.app',
   },
 };
 
@@ -70,16 +70,16 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Bakery",
               "name": "Maseka Food",
-              "url": "https://masekafood.cd",
+              "url": "https://maseka-food.vercel.app",
               "description": "Boulangerie et pâtisserie à Butembo, Nord-Kivu",
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "Avenue de la Paix",
+                "streetAddress": "Rue kinshasa",
                 "addressLocality": "Butembo",
                 "addressRegion": "Nord-Kivu",
                 "addressCountry": "RD Congo"
               },
-              "telephone": "+243-970-000-000",
+              "telephone": "+243-827-733-286",
               "openingHours": "Mo-Su 06:00-20:00",
               "priceRange": "$$",
               "servesCuisine": ["Française", "Congolaise", "Fast-food"]
