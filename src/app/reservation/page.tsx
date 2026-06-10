@@ -43,7 +43,6 @@ export default function ReservationPage() {
       if (res.ok) {
         toast.success("Réservation envoyée ! Vous recevrez une confirmation.");
         setFormData({ date: "", time: "", numberOfPeople: 2, specialRequests: "" });
-        // Redirection vers la liste des réservations après 1 seconde
         setTimeout(() => router.push("/reservations"), 1000);
       } else {
         toast.error(data.error || "Erreur lors de la réservation");
@@ -60,7 +59,7 @@ export default function ReservationPage() {
   }
 
   return (
-    <div className="container-custom py-8 max-w-2xl mx-auto dark:bg-gray-900">
+    <div className="container-custom py-8 max-w-2xl mx-auto">
       <div className="card">
         <div className="card-header">
           <h1 className="card-title text-center">Réserver une table</h1>
@@ -75,7 +74,8 @@ export default function ReservationPage() {
                 required
                 value={formData.date}
                 onChange={handleChange}
-                className="input-field"
+                className="input-field text-base min-w-0 w-full"
+                style={{ fontSize: "16px" }} // Empêche le zoom sur iOS
               />
             </div>
             <div>
@@ -85,7 +85,8 @@ export default function ReservationPage() {
                 required
                 value={formData.time}
                 onChange={handleChange}
-                className="input-field"
+                className="input-field text-base min-w-0 w-full"
+                style={{ fontSize: "16px" }}
               >
                 <option value="">Sélectionnez une heure</option>
                 {["12:00", "12:30", "13:00", "13:30", "19:00", "19:30", "20:00", "20:30"].map((t) => (
@@ -103,7 +104,8 @@ export default function ReservationPage() {
                 required
                 value={formData.numberOfPeople}
                 onChange={handleChange}
-                className="input-field"
+                className="input-field text-base min-w-0 w-full"
+                style={{ fontSize: "16px" }}
               />
             </div>
             <div>
@@ -113,7 +115,8 @@ export default function ReservationPage() {
                 rows={3}
                 value={formData.specialRequests}
                 onChange={handleChange}
-                className="input-field"
+                className="input-field text-base min-w-0 w-full"
+                style={{ fontSize: "16px" }}
                 placeholder="Allergies, préférences, etc."
               />
             </div>
