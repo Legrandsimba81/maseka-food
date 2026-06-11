@@ -266,7 +266,7 @@ export default function Navbar() {
                   <Package size={20} /> Produits
                 </Link>
                 <Link href="/tracking" className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
-                  <Truck size={16} /> Livraison
+                  <Truck size={20} /> Livraison
                 </Link>
                 <Link href="/cart" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <ShoppingCart size={20} />
@@ -300,7 +300,7 @@ export default function Navbar() {
                     </Link>
                     <Link href="/messages" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
                       <MessageSquare size={20} />
-                      <span>Messages</span>
+                      <span>Mes messages</span>
                       {unreadMessages > 0 && (
                         <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
                           {unreadMessages}
