@@ -9,6 +9,7 @@ import PromoCard from "@/components/PromoCard";
 import PromoSlider from "@/components/PromoSlider";
 import ServicesSection from "@/components/ServicesSection";
 import AboutSection from "@/components/AboutSection";
+import ArticleCard from "@/components/ArticleCard";
 
 
 
