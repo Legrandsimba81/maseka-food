@@ -1,4 +1,6 @@
 "use client";
+import AboutSection from "@/components/AboutSection";
+import ServicesSection from "@/components/ServicesSection";
 import Image from "next/image";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope } from "react-icons/fa";
 
@@ -61,6 +63,8 @@ export default function TeamPage() {
           </div>
         ))}
       </div>
+      <ServicesSection />
+      <AboutSection />
     </div>
   );
 }

@@ -7,6 +7,9 @@ import FoodBar from "@/components/foodBar";
 import Image from "next/image";
 import PromoCard from "@/components/PromoCard";
 import PromoSlider from "@/components/PromoSlider";
+import ServicesSection from "@/components/ServicesSection";
+import AboutSection from "@/components/AboutSection";
+
 
 
 const promoItems = [
@@ -119,7 +122,10 @@ export default async function Home() {
       ))}
       
       <PromoSlider items={promoItems} autoScrollInterval={6000} pauseOnHover />
-      <div className="mt-8"></div>
+      {/* <div className="mt-8"></div> */}
+      <ServicesSection />
+      <AboutSection />
+
     </div>
   );
 }

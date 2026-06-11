@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import Script from 'next/script';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ScrollToTop from '@/components/ScrollToTop';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -94,6 +95,7 @@ export default function RootLayout({
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">{children}</main>
+              <ScrollToTop />
               <Footer />
             </div>
           </AuthProvider>
