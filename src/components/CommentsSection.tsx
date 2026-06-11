@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function CommentsSection({ slug, initialComments }: { slug: string; initialComments: any[] }) {
   const [comments, setComments] = useState(initialComments);
@@ -11,18 +12,26 @@ export default function CommentsSection({ slug, initialComments }: { slug: strin
     e.preventDefault();
     if (!authorName.trim() || !content.trim()) return;
     setLoading(true);
-    const res = await fetch(`/api/articles/${slug}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ authorName, content }),
-    });
-    if (res.ok) {
-      const newComment = await res.json();
-      setComments([newComment, ...comments]);
-      setAuthorName("");
-      setContent("");
+    try {
+      const res = await fetch(`/api/articles/${slug}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ authorName, content }),
+      });
+      if (res.ok) {
+        const newComment = await res.json();
+        setComments([newComment, ...comments]);
+        setAuthorName("");
+        setContent("");
+        toast.success("Commentaire ajouté");
+      } else {
+        toast.error("Erreur");
+      }
+    } catch (err) {
+      toast.error("Erreur réseau");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

@@ -265,7 +265,7 @@ export default function Navbar() {
                 <Link href="/products" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Package size={20} /> Produits
                 </Link>
-                <Link href="/tracking" className="flex items-center gap-2 py-2 text-foreground hover:bg-primary/10 transition" onClick={() => setUserMenuOpen(false)}>
+                <Link href="/tracking" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Truck size={20} /> Livraison
                 </Link>
                 <Link href="/cart" onClick={closeMobileMenu} className="relative flex items-center gap-3 py-2 text-foreground hover:text-primary">
