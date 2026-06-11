@@ -42,6 +42,24 @@ async function main() {
 
   const fcToUsd = (fc: number) => parseFloat((fc / exchangeRate).toFixed(2))
 
+  // Vérifier si des articles existent
+const articleCount = await prisma.article.count();
+if (articleCount === 0) {
+  const admin = await prisma.user.findFirst({ where: { role: "admin" } });
+  if (admin) {
+    await prisma.article.create({
+      data: {
+        title: "Notre premier article",
+        slug: "notre-premier-article",
+        content: "<p>Bienvenue sur le blog de Maseka Food. Suivez nos actualités.</p>",
+        excerpt: "Bienvenue sur le blog de Maseka Food.",
+        authorId: admin.id,
+      },
+    });
+    console.log("✅ Article de démonstration créé");
+  }
+}
+
   // Définition des produits (après avoir le taux de change)
   const products = [
     // Pains (FC)
