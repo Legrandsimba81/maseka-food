@@ -8,9 +8,15 @@ import LikeButton from "@/components/LikeButton";
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const article = await prisma.article.findUnique({
     where: { slug: params.slug },
-    include: { comments: { orderBy: { createdAt: "desc" } }, author: { select: { name: true } } },
+    include: {
+      comments: { orderBy: { createdAt: "desc" } },
+      author: { select: { name: true } },
+    },
   });
   if (!article) notFound();
+
+  // Conversion explicite pour imagesSecondary
+  const imagesSecondary = article.imagesSecondary as string[] | null;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -24,14 +30,17 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <span className="flex items-center gap-1"><Calendar size={16} /> {new Date(article.publishedAt).toLocaleDateString()}</span>
         <span className="flex items-center gap-1"><Eye size={16} /> {article.views} vues</span>
         <span className="flex items-center gap-1"><Heart size={16} /> {article.likes} likes</span>
-        <button onClick={() => navigator.share?.({ title: article.title, url: window.location.href })} className="flex items-center gap-1 hover:text-primary">
+        <button
+          onClick={() => navigator.share?.({ title: article.title, url: window.location.href })}
+          className="flex items-center gap-1 hover:text-primary"
+        >
           <Share2 size={16} /> Partager
         </button>
       </div>
       <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
-      {article.imagesSecondary && Array.isArray(article.imagesSecondary) && article.imagesSecondary.length > 0 && (
+      {imagesSecondary && imagesSecondary.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
-          {article.imagesSecondary.map((img, idx) => (
+          {imagesSecondary.map((img, idx) => (
             <img key={idx} src={img} alt={`Illustration ${idx+1}`} className="rounded-lg shadow-md" />
           ))}
         </div>
