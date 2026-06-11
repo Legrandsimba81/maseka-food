@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Calendar, Eye, Heart, Share2 } from "lucide-react";
-import CommentsSection from "@/components/CommentsSection";
 import LikeButton from "@/components/LikeButton";
+import CommentsSection from "@/components/CommentsSection";
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const article = await prisma.article.findUnique({
@@ -15,8 +15,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   });
   if (!article) notFound();
 
-  // Conversion explicite pour imagesSecondary
-  const imagesSecondary = article.imagesSecondary as string[] | null;
+  // S'assurer que imagesSecondary est un tableau de chaînes
+  const imagesSecondary: string[] = Array.isArray(article.imagesSecondary) 
+    ? article.imagesSecondary.filter((img): img is string => typeof img === "string")
+    : [];
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -25,23 +27,20 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <img src={article.imageMain} alt={article.title} className="object-cover w-full h-full" />
         </div>
       )}
-      <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+      <h1 className="text-3xl md:text-4xl font-bold mb-4">{article.title}</h1>
       <div className="flex flex-wrap gap-4 text-gray-500 text-sm mb-6">
         <span className="flex items-center gap-1"><Calendar size={16} /> {new Date(article.publishedAt).toLocaleDateString()}</span>
         <span className="flex items-center gap-1"><Eye size={16} /> {article.views} vues</span>
         <span className="flex items-center gap-1"><Heart size={16} /> {article.likes} likes</span>
-        <button
-          onClick={() => navigator.share?.({ title: article.title, url: window.location.href })}
-          className="flex items-center gap-1 hover:text-primary"
-        >
+        <button onClick={() => navigator.share?.({ title: article.title, url: window.location.href })} className="flex items-center gap-1 hover:text-primary">
           <Share2 size={16} /> Partager
         </button>
       </div>
       <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
-      {imagesSecondary && imagesSecondary.length > 0 && (
+      {imagesSecondary.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
           {imagesSecondary.map((img, idx) => (
-            <img key={idx} src={img} alt={`Illustration ${idx+1}`} className="rounded-lg shadow-md" />
+            <img key={idx} src={img} alt={`Illustration ${idx + 1}`} className="rounded-lg shadow-md" />
           ))}
         </div>
       )}
