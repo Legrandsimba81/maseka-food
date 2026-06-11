@@ -3,6 +3,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Package, ShoppingCart, Calendar, MessageSquare, Tag, ListOrdered, Settings } from "lucide-react";
+import { Newspaper } from "lucide-react";
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -37,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/products", label: "Produits", icon: Package },
     { href: "/admin/orders", label: "Commandes", icon: ShoppingCart, badge: counts.pendingOrders > 0 ? counts.pendingOrders : undefined },
     { href: "/admin/reservations", label: "Réservations", icon: Calendar, badge: counts.pendingReservations > 0 ? counts.pendingReservations : undefined },
+    { href: "/admin/articles", label: "Articles", icon: Newspaper },
     { href: "/admin/messages", label: "Messages", icon: MessageSquare, badge: counts.unreadMessages > 0 ? counts.unreadMessages : undefined },
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
     { href: "/admin/categories-order", label: "Catégories", icon: ListOrdered },
