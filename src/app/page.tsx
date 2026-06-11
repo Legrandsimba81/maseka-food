@@ -37,12 +37,12 @@ const promoItems = [
     productId: "cmq0ywoa9000p9ui394lhstha",
     description: "Savoureux burger artisanal",
   },
-  
+
   // ...
 ];
 
 // Ordre des catégories
-const categoryOrder = [ "burgers", "pizzas", "snacks"];
+const categoryOrder = ["burgers", "pizzas", "snacks"];
 const PRODUCTS_PER_CATEGORY = 4;
 
 export default async function Home() {
@@ -65,6 +65,14 @@ export default async function Home() {
       name: cat,
       products: grouped[cat].slice(0, PRODUCTS_PER_CATEGORY),
     }));
+
+  // section d'article
+  const latestArticles = await prisma.article.findMany({
+    take: 4,
+    orderBy: { publishedAt: "desc" },
+    include: { _count: { select: { comments: true } } },
+  });
+  const lastArticle = latestArticles[0];
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -91,7 +99,41 @@ export default async function Home() {
       <FoodBar />
 
       <PromoSlider items={promoItems} autoScrollInterval={6000} pauseOnHover />
-
+      
+      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Derniers articles</h2>
+          {lastArticle && (
+            <Link href={`/articles/${lastArticle.slug}`} className="block mb-12 group">
+              <div className="relative overflow-hidden rounded-xl shadow-lg">
+                {lastArticle.imageMain ? (
+                  <img src={lastArticle.imageMain} alt={lastArticle.title} className="w-full h-80 object-cover" />
+                ) : (
+                  <div className="w-full h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">
+                    Aucune image
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
+                  <div className="text-white">
+                    <p className="text-sm">{new Date(lastArticle.publishedAt).toLocaleDateString()}</p>
+                    <h3 className="text-3xl font-bold mt-2">{lastArticle.title}</h3>
+                    <p className="mt-2 line-clamp-2">{lastArticle.excerpt}</p>
+                    <span className="inline-block mt-4 text-amber-400 group-hover:underline">Lire l'article →</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {latestArticles.slice(1).map(article => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link href="/articles" className="btn-primary">Voir tous les articles →</Link>
+          </div>
+        </div>
+      </section>
 
       {/* Produits vedettes */}
       <section className=" md:pt-14 container mx-auto px-8 md:px-4">
@@ -120,7 +162,7 @@ export default async function Home() {
           </div>
         </section>
       ))}
-      
+
       <PromoSlider items={promoItems} autoScrollInterval={6000} pauseOnHover />
       {/* <div className="mt-8"></div> */}
       <ServicesSection />
