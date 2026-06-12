@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { Calendar, Eye, Heart, Share2 } from "lucide-react";
 import LikeButton from "@/components/LikeButton";
 import CommentsSection from "@/components/CommentsSection";
+import { Calendar, Eye, Heart, Share2 } from "lucide-react";
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   try {
@@ -30,7 +29,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <span className="flex items-center gap-1"><Calendar size={16} /> {new Date(article.publishedAt).toLocaleDateString()}</span>
           <span className="flex items-center gap-1"><Eye size={16} /> {article.views} vues</span>
           <span className="flex items-center gap-1"><Heart size={16} /> {article.likes} likes</span>
-          <button onClick={() => navigator.share?.({ title: article.title, url: window.location.href })} className="flex items-center gap-1 hover:text-primary">
+          <button
+            onClick={() => navigator.share?.({ title: article.title, url: window.location.href })}
+            className="flex items-center gap-1 hover:text-primary"
+          >
             <Share2 size={16} /> Partager
           </button>
         </div>

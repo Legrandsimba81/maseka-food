@@ -10,9 +10,10 @@ export async function GET(req: Request) {
   const skip = parseInt(searchParams.get("skip") || "0");
   const search = searchParams.get("search") || "";
   const sortBy = searchParams.get("sort") || "publishedAt";
-  const order = (searchParams.get("order") as "asc" | "desc") || "desc";
+  const order = searchParams.get("order") || "desc";
 
-  let where: any = {};
+  // Construction du filtre WHERE sans `mode: insensitive`
+  const where: any = {};
   if (search) {
     where.OR = [
       { title: { contains: search } },
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
   return NextResponse.json({ articles, total });
 }
 
-// POST – création par l'admin
+// POST – création (admin)
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
       slug,
       content,
       excerpt: excerpt || content.slice(0, 160),
-      imageMain,
+      imageMain: imageMain || null,
       imagesSecondary: imagesSecondary || [],
       authorId: author.id,
     },
