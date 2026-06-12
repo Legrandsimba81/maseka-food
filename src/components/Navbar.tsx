@@ -233,10 +233,21 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu button */}
-            <button onClick={() => setMobileMenuOpen(true)} className="desktop:hidden focus:outline-none">
-              <Menu size={24} className="text-foreground" />
-            </button>
+            <div className="flex items-center gap-3 desktop:hidden">
+              {/* Icône panier avec badge (mobile) */}
+              <Link href="/cart" className="relative flex items-center text-foreground hover:text-primary transition">
+                <ShoppingCart size={22} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
+              {/* Bouton burger */}
+              <button onClick={() => setMobileMenuOpen(true)} className="focus:outline-none">
+                <Menu size={24} className="text-foreground" />
+              </button>
+            </div>
           </div>
         </div>
       </nav>
