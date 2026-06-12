@@ -24,6 +24,12 @@ export default function AdminSettingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
 
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Charger les paramètres
   useEffect(() => {
     fetch("/api/settings")
@@ -156,7 +162,7 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* Image de bannière (accueil) */}
+      {/* Image de bannière (accueil) - CORRECTED SECTION */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Image de bannière (accueil)</h2>
         <ImageUploadWithCrop
@@ -176,7 +182,7 @@ export default function AdminSettingsPage() {
           </button>
         )}
         <p className="text-sm text-muted-foreground mt-2">
-          Cette image s'affichera sur la page d'accueil dans une section dédiée. Cliquez sur l'image pour l'agrandir.
+          Cette image s'affichera sur la page d'accueil. Cliquez sur l'image pour l'agrandir.
         </p>
       </div>
 

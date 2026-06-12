@@ -1,3 +1,4 @@
+// src/app/api/settings/route.ts
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,21 +19,22 @@ export async function PUT(req: Request) {
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
   try {
     const body = await req.json();
-    const { exchangeRate, heroImage, categoryOrder, ...rest } = body;
+    const { exchangeRate, heroImage } = body;
 
-    // Vérifications simples
     if (exchangeRate !== undefined && (typeof exchangeRate !== "number" || exchangeRate <= 0)) {
       return NextResponse.json({ error: "Taux invalide" }, { status: 400 });
     }
 
     const existing = await prisma.bakerySettings.findFirst();
+
     let updated;
     if (existing) {
       updated = await prisma.bakerySettings.update({
         where: { id: existing.id },
-        data: { ...rest, exchangeRate, heroImage, categoryOrder },
+        data: { ...(exchangeRate !== undefined && { exchangeRate }), ...(heroImage !== undefined && { heroImage }) },
       });
     } else {
       updated = await prisma.bakerySettings.create({
@@ -40,8 +42,6 @@ export async function PUT(req: Request) {
           bakeryName: "maseka food",
           exchangeRate: exchangeRate ?? 2300,
           heroImage: heroImage ?? "",
-          categoryOrder: categoryOrder ?? [],
-          ...rest,
         },
       });
     }
