@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Package, ShoppingCart, Calendar, MessageSquare, Tag, ListOrdered, Settings } from "lucide-react";
 import { Newspaper } from "lucide-react";
+import { QrCode } from "lucide-react";
+
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/articles", label: "Articles", icon: Newspaper },
     { href: "/admin/messages", label: "Messages", icon: MessageSquare, badge: counts.unreadMessages > 0 ? counts.unreadMessages : undefined },
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
+    { href: "/admin/qrcode", label: "QR Codes", icon: QrCode },
     { href: "/admin/categories-order", label: "Catégories", icon: ListOrdered },
     { href: "/admin/settings", label: "Paramètres", icon: Settings },
   ];

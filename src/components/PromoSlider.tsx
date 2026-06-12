@@ -96,7 +96,7 @@ export default function PromoSlider({
       </button> */}
 
       {/* Dots de navigation */}
-      <div className="flex justify-center gap-2 mt-4">
+      <div className="flex justify-center gap-2 mt-4 mb-4">
         {items.map((_, idx) => (
           <button
             key={idx}
