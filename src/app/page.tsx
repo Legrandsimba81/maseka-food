@@ -70,13 +70,14 @@ export default async function Home() {
       products: grouped[cat].slice(0, PRODUCTS_PER_CATEGORY),
     }));
 
-  // Récupérer les 2 derniers articles (pour la grille)
+  // Dans la fonction du composant Home, après avoir récupéré les données
   const latestArticles = await prisma.article.findMany({
-    take: 2,
+    take: 3, // 1 pour l'image principale + 2 pour la grille
     orderBy: { publishedAt: "desc" },
     include: { _count: { select: { comments: true } } },
   });
-  const lastArticle = latestArticles[0]; // premier article (le plus récent)
+  const lastArticle = latestArticles[0];
+  const remainingArticles = latestArticles.slice(1);
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -108,7 +109,7 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Derniers articles</h2>
 
-          {/* Image principale du dernier article (cliquable, seule l'image) */}
+          {/* Image principale (cliquable) - uniquement l'image */}
           {lastArticle && (
             <Link href={`/articles/${lastArticle.slug}`} className="block mb-12">
               <div className="relative w-full h-96 overflow-hidden rounded-xl shadow-lg">
@@ -123,47 +124,12 @@ export default async function Home() {
             </Link>
           )}
 
-          {/* Grille des deux derniers articles (inclut le même dernier article) */}
+          {/* Grille des deux articles suivants (le dernier article apparaît aussi dans la grille si vous le souhaitez) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {latestArticles.map((article) => (
-              <div key={article.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                {article.imageMain && (
-                  <img src={article.imageMain} alt={article.title} className="w-full h-48 object-cover" />
-                )}
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">{article.title}</h3>
-                  {/* Extrait : utilise excerpt ou troncation du contenu */}
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3">
-                    {article.excerpt || article.content?.replace(/<[^>]*>/g, '').slice(0, 120) + '...' || "Aucune description"}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} /> {new Date(article.publishedAt).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart size={14} /> {article.likes}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle size={14} /> {article._count.comments}
-                    </span>
-                    <button
-                      onClick={() => navigator.share?.({ title: article.title, url: `/articles/${article.slug}` })}
-                      className="flex items-center gap-1 hover:text-primary"
-                    >
-                      <Share2 size={14} /> Partager
-                    </button>
-                    <Link href={`/articles/${article.slug}`} className="flex items-center gap-1 text-primary hover:underline ml-auto">
-                      Lire <ArrowRight size={14} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
+            {remainingArticles.map((article) => (
+              <ArticleCardClient key={article.id} article={article} />
             ))}
           </div>
-
-          {latestArticles.length === 0 && (
-            <p className="text-center text-gray-500">Aucun article pour le moment.</p>
-          )}
 
           <div className="text-center mt-12">
             <Link href="/articles" className="btn-primary">Voir tous les articles →</Link>
