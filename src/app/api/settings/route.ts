@@ -19,20 +19,30 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
   try {
-    const { exchangeRate } = await req.json();
-    if (typeof exchangeRate !== "number" || exchangeRate <= 0) {
+    const body = await req.json();
+    const { exchangeRate, heroImage, categoryOrder, ...rest } = body;
+
+    // Vérifications simples
+    if (exchangeRate !== undefined && (typeof exchangeRate !== "number" || exchangeRate <= 0)) {
       return NextResponse.json({ error: "Taux invalide" }, { status: 400 });
     }
+
     const existing = await prisma.bakerySettings.findFirst();
     let updated;
     if (existing) {
       updated = await prisma.bakerySettings.update({
         where: { id: existing.id },
-        data: { exchangeRate },
+        data: { ...rest, exchangeRate, heroImage, categoryOrder },
       });
     } else {
       updated = await prisma.bakerySettings.create({
-        data: { exchangeRate, bakeryName: "maseka food" },
+        data: {
+          bakeryName: "maseka food",
+          exchangeRate: exchangeRate ?? 2300,
+          heroImage: heroImage ?? "",
+          categoryOrder: categoryOrder ?? [],
+          ...rest,
+        },
       });
     }
     return NextResponse.json(updated);

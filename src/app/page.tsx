@@ -108,6 +108,7 @@ export default async function Home() {
       <FoodBar />
 
       <PromoSlider items={promoItems} autoScrollInterval={6000} pauseOnHover />
+      
       {heroImage && (
         <section className="py-8">
           <div className="container mx-auto px-4">

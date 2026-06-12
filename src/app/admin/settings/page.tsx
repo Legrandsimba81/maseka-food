@@ -17,7 +17,9 @@ export default function AdminSettingsPage() {
   const { data: session } = useSession();
   const [exchangeRate, setExchangeRate] = useState<number>(2300);
   const [heroImage, setHeroImage] = useState("");
+  const [heroImageTemp, setHeroImageTemp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [savingHero, setSavingHero] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -29,6 +31,7 @@ export default function AdminSettingsPage() {
       .then(data => {
         setExchangeRate(data.exchangeRate || 2300);
         setHeroImage(data.heroImage || "");
+        setHeroImageTemp(data.heroImage || "");
       })
       .catch(err => console.error(err));
   }, []);
@@ -41,8 +44,6 @@ export default function AdminSettingsPage() {
         const data = await res.json();
         setUsers(data);
       } else {
-        const text = await res.text();
-        console.error("Erreur API users:", text);
         toast.error("Erreur chargement utilisateurs");
       }
     } catch (err) {
@@ -73,19 +74,24 @@ export default function AdminSettingsPage() {
   };
 
   // Sauvegarde de l'image de bannière
-  const saveHeroImage = async (url: string) => {
-    setLoading(true);
+  const saveHeroImage = async () => {
+    if (heroImageTemp === heroImage) {
+      toast("Aucun changement", { icon: "ℹ️" });
+      return;
+    }
+    setSavingHero(true);
     const res = await fetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ heroImage: url }),
+      body: JSON.stringify({ heroImage: heroImageTemp }),
     });
     if (res.ok) {
+      setHeroImage(heroImageTemp);
       toast.success("Image de bannière mise à jour");
     } else {
       toast.error("Erreur");
     }
-    setLoading(false);
+    setSavingHero(false);
   };
 
   const deleteUser = async (id: string, role: string) => {
@@ -155,17 +161,20 @@ export default function AdminSettingsPage() {
         <h2 className="text-xl font-semibold mb-4">Image de bannière (accueil)</h2>
         <ImageUploadWithCrop
           label="Image de la bannière"
-          onUpload={(url) => {
-            setHeroImage(url);
-            saveHeroImage(url);
-          }}
-          onRemove={() => {
-            setHeroImage("");
-            saveHeroImage("");
-          }}
-          currentImage={heroImage}
+          onUpload={(url) => setHeroImageTemp(url)}
+          onRemove={() => setHeroImageTemp("")}
+          currentImage={heroImageTemp || heroImage}
           aspect={16 / 9}
         />
+        {heroImageTemp !== heroImage && (
+          <button
+            onClick={saveHeroImage}
+            className="btn-primary mt-4"
+            disabled={savingHero}
+          >
+            {savingHero ? "Enregistrement..." : "Enregistrer l'image"}
+          </button>
+        )}
         <p className="text-sm text-muted-foreground mt-2">
           Cette image s'affichera sur la page d'accueil dans une section dédiée. Cliquez sur l'image pour l'agrandir.
         </p>
