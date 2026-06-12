@@ -94,6 +94,7 @@ model BakerySettings {
   address       String?
   openingHours  String?
   categoryOrder Json?
+  heroImage String?
   exchangeRate Float? @default(2300)
   primaryColor  String   @default("#fbbf24")
   secondaryColor String  @default("#78350f")

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import ImageUploadWithCrop from "@/components/ImageUploadWithCrop";
 
 interface User {
   id: string;
@@ -15,15 +16,20 @@ interface User {
 export default function AdminSettingsPage() {
   const { data: session } = useSession();
   const [exchangeRate, setExchangeRate] = useState<number>(2300);
+  const [heroImage, setHeroImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
 
+  // Charger les paramètres
   useEffect(() => {
     fetch("/api/settings")
       .then(res => res.json())
-      .then(data => setExchangeRate(data.exchangeRate || 2300))
+      .then(data => {
+        setExchangeRate(data.exchangeRate || 2300);
+        setHeroImage(data.heroImage || "");
+      })
       .catch(err => console.error(err));
   }, []);
 
@@ -50,6 +56,7 @@ export default function AdminSettingsPage() {
     fetchUsers();
   }, [searchTerm]);
 
+  // Sauvegarde du taux de change
   const handleSave = async () => {
     setLoading(true);
     const res = await fetch("/api/settings", {
@@ -59,6 +66,22 @@ export default function AdminSettingsPage() {
     });
     if (res.ok) {
       toast.success("Taux de change mis à jour");
+    } else {
+      toast.error("Erreur");
+    }
+    setLoading(false);
+  };
+
+  // Sauvegarde de l'image de bannière
+  const saveHeroImage = async (url: string) => {
+    setLoading(true);
+    const res = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ heroImage: url }),
+    });
+    if (res.ok) {
+      toast.success("Image de bannière mise à jour");
     } else {
       toast.error("Erreur");
     }
@@ -127,6 +150,27 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
+      {/* Image de bannière (accueil) */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">Image de bannière (accueil)</h2>
+        <ImageUploadWithCrop
+          label="Image de la bannière"
+          onUpload={(url) => {
+            setHeroImage(url);
+            saveHeroImage(url);
+          }}
+          onRemove={() => {
+            setHeroImage("");
+            saveHeroImage("");
+          }}
+          currentImage={heroImage}
+          aspect={16 / 9}
+        />
+        <p className="text-sm text-muted-foreground mt-2">
+          Cette image s'affichera sur la page d'accueil dans une section dédiée. Cliquez sur l'image pour l'agrandir.
+        </p>
+      </div>
+
       {/* Gestion utilisateurs */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Gestion des utilisateurs</h2>
@@ -177,14 +221,14 @@ export default function AdminSettingsPage() {
                       ) : (
                         <button
                           onClick={() => changeRole(user.id, "admin")}
-                          className="bg- text-green-600 hover:text-green-800 text-sm"
+                          className="text-green-600 hover:text-green-800 text-sm"
                         >
                           Promouvoir admin
                         </button>
                       )}
                       <button
                         onClick={() => deleteUser(user.id, user.role)}
-                        className="bg-gray-200 p-2 text-red-600 hover:text-red-800 text-sm ml-2 mt-2"
+                        className="text-red-600 hover:text-red-800 text-sm ml-2"
                         disabled={user.role === "admin"}
                       >
                         Supprimer

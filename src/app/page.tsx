@@ -12,6 +12,9 @@ import AboutSection from "@/components/AboutSection";
 import ArticleCard from "@/components/ArticleCard";
 import { Calendar, Heart, MessageCircle, Share2, ArrowRight } from "lucide-react";
 import ArticleCardClient from "@/components/ArticleCardClient";
+import PopupImage from "@/components/PopupImage";
+import LatestArticlesGrid from "@/components/LatestArticlesGrid";
+
 
 
 
@@ -69,15 +72,16 @@ export default async function Home() {
       name: cat,
       products: grouped[cat].slice(0, PRODUCTS_PER_CATEGORY),
     }));
+    // pour afficher l'image barriere
+  const settings = await prisma.bakerySettings.findFirst();
+  const heroImage = settings?.heroImage;
 
-  // Dans la fonction du composant Home, après avoir récupéré les données
+  // Récupérer les 2 derniers articles
   const latestArticles = await prisma.article.findMany({
-    take: 3, // 1 pour l'image principale + 2 pour la grille
+    take: 2,
     orderBy: { publishedAt: "desc" },
     include: { _count: { select: { comments: true } } },
   });
-  const lastArticle = latestArticles[0];
-  const remainingArticles = latestArticles.slice(1);
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -104,33 +108,18 @@ export default async function Home() {
       <FoodBar />
 
       <PromoSlider items={promoItems} autoScrollInterval={6000} pauseOnHover />
+      {heroImage && (
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <PopupImage src={heroImage} alt="Bannière promotionnelle" />
+          </div>
+        </section>
+      )}
 
       <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Derniers articles</h2>
-
-          {/* Image principale (cliquable) - uniquement l'image */}
-          {lastArticle && (
-            <Link href={`/articles/${lastArticle.slug}`} className="block mb-12">
-              <div className="relative w-full h-96 overflow-hidden rounded-xl shadow-lg">
-                {lastArticle.imageMain ? (
-                  <img src={lastArticle.imageMain} alt={lastArticle.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">
-                    Aucune image
-                  </div>
-                )}
-              </div>
-            </Link>
-          )}
-
-          {/* Grille des deux articles suivants (le dernier article apparaît aussi dans la grille si vous le souhaitez) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {remainingArticles.map((article) => (
-              <ArticleCardClient key={article.id} article={article} />
-            ))}
-          </div>
-
+          <LatestArticlesGrid articles={latestArticles} />
           <div className="text-center mt-12">
             <Link href="/articles" className="btn-primary">Voir tous les articles →</Link>
           </div>
