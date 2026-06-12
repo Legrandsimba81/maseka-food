@@ -43,7 +43,7 @@ export default function LatestArticlesGrid({ articles }: { articles: Article[] }
                 <Share2 size={14} /> Partager
               </button>
               <Link href={`/articles/${article.slug}`} className="flex items-center gap-1 text-primary hover:underline ml-auto">
-                Lire <ArrowRight size={14} />
+                Lire l'article... <ArrowRight size={14} />
               </Link>
             </div>
           </div>
