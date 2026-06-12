@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
-import { Upload, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Upload, X, Crop } from "lucide-react";
 import toast from "react-hot-toast";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "@/lib/cropImage"; // à créer
 
 interface ImageUploadProps {
   onUpload: (url: string) => void;
@@ -13,18 +15,42 @@ interface ImageUploadProps {
 export default function ImageUpload({ onUpload, onRemove, currentImage, label = "Image" }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentImage || "");
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("L'image ne doit pas dépasser 2 Mo");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 5 Mo");
       return;
     }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+    // Reset input value to allow re-upload of same file
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleCropConfirm = async () => {
+    if (!imageSrc || !croppedAreaPixels) return;
+    setCropModalOpen(false);
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
     try {
+      const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      const formData = new FormData();
+      formData.append("file", croppedImageBlob, "cropped-image.jpg");
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok) {
@@ -35,9 +61,11 @@ export default function ImageUpload({ onUpload, onRemove, currentImage, label = 
         toast.error(data.error || "Erreur");
       }
     } catch (error) {
-      toast.error("Erreur réseau");
+      toast.error("Erreur lors du recadrage");
+    } finally {
+      setUploading(false);
+      setImageSrc(null);
     }
-    setUploading(false);
   };
 
   const handleRemove = () => {
@@ -65,10 +93,41 @@ export default function ImageUpload({ onUpload, onRemove, currentImage, label = 
             <Upload size={24} className="text-gray-400" />
             <p className="text-sm text-gray-500">Cliquer pour uploader</p>
           </div>
-          <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={uploading} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
         </label>
       )}
       {uploading && <p className="text-sm text-gray-500">Envoi en cours...</p>}
+
+      {/* Modal de recadrage */}
+      {cropModalOpen && imageSrc && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-4">
+            <h3 className="text-lg font-semibold mb-4">Recadrer l'image</h3>
+            <div className="relative h-64 w-full">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={16 / 9}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setCropModalOpen(false)} className="btn-secondary">Annuler</button>
+              <button onClick={handleCropConfirm} className="btn-primary">Recadrer & uploader</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

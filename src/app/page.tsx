@@ -15,7 +15,7 @@ import ArticleCardClient from "@/components/ArticleCardClient";
 
 
 
-
+export const dynamic = 'force-dynamic';
 const promoItems = [
   {
     imageSrc: "/images/produits/cake-birthday.png",
@@ -70,12 +70,13 @@ export default async function Home() {
       products: grouped[cat].slice(0, PRODUCTS_PER_CATEGORY),
     }));
 
-  // Récupérer les 2 derniers articles
   const latestArticles = await prisma.article.findMany({
-    take: 2,
+    take: 3, // 1 pour l'image principale + 2 pour la grille (ou 3 au total)
     orderBy: { publishedAt: "desc" },
     include: { _count: { select: { comments: true } } },
   });
+  const lastArticle = latestArticles[0];
+  const remainingArticles = latestArticles.slice(1);
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -106,20 +107,35 @@ export default async function Home() {
       <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Derniers articles</h2>
-          {latestArticles.length === 0 ? (
-            <p className="text-center text-gray-500">Aucun article pour le moment.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {latestArticles.map((article) => (
-                <ArticleCardClient key={article.id} article={article} />
-              ))}
-            </div>
+
+          {/* Image principale du dernier article (sans texte) */}
+          {lastArticle && (
+            <Link href={`/articles/${lastArticle.slug}`} className="block mb-12">
+              <div className="relative w-full h-96 overflow-hidden rounded-xl shadow-lg">
+                {lastArticle.imageMain ? (
+                  <img src={lastArticle.imageMain} alt={lastArticle.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">
+                    Aucune image
+                  </div>
+                )}
+              </div>
+            </Link>
           )}
+
+          {/* Grille des deux articles suivants */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {remainingArticles.map((article) => (
+              <ArticleCardClient key={article.id} article={article} />
+            ))}
+          </div>
+
           <div className="text-center mt-12">
             <Link href="/articles" className="btn-primary">Voir tous les articles →</Link>
           </div>
         </div>
       </section>
+      );
 
       {/* Produits vedettes */}
       <section className=" md:pt-14 container mx-auto px-8 md:px-4">

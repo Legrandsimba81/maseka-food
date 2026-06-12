@@ -17,6 +17,9 @@ importers:
       cloudinary:
         specifier: ^2.10.0
         version: 2.10.0
+      cropperjs:
+        specifier: ^2.1.1
+        version: 2.1.1
       lucide-react:
         specifier: ^1.17.0
         version: 1.17.0(react@18.3.1)
@@ -38,9 +41,15 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.3.1
+      react-cropper:
+        specifier: ^2.3.3
+        version: 2.3.3(react@18.3.1)
       react-dom:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
+      react-easy-crop:
+        specifier: ^6.0.2
+        version: 6.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-hook-form:
         specifier: ^7.49.2
         version: 7.77.0(react@18.3.1)
@@ -121,6 +130,39 @@ packages:
 
   '@cloudinary/url-gen@1.15.0':
     resolution: {integrity: sha512-bjU67eZxLUgoRy/Plli4TQio7q6P31OYqnEgXxeN9TKXrzr6h0DeEdIUhKI9gy3HkEBWXWWJIPh7j7gkOJPnyA==}
+
+  '@cropper/element-canvas@2.1.1':
+    resolution: {integrity: sha512-QHiHnPHsykkc4salOiCLOIKWPK3sLQ1SzpJYFE/yQPvqTPu6ERZNcxVwB1x7WhNN+SdP0S0CEHPYIkgIfUo7VA==}
+
+  '@cropper/element-crosshair@2.1.1':
+    resolution: {integrity: sha512-DtZnOiY2RZSizDZzMUvya3wZ55YnWclf3hmIrLW6jdcFlQkYEbX6bkOyOJzQmEX0yIbmwMkXfFcMkEZ9dE1rJQ==}
+
+  '@cropper/element-grid@2.1.1':
+    resolution: {integrity: sha512-MZdPBh5QMU10T78nqG+5cK+gq4DHoWZvdOo+/wZ9/z3VH0u21sROeHOCnf0QAdxguPHSSFsPjzARK+ffS4Loog==}
+
+  '@cropper/element-handle@2.1.1':
+    resolution: {integrity: sha512-TmSSphyMr2NEA0DqUTf9PCN8kcpzM0BxreOMyzbfuq1NUUePV1LxYgSOUT7dftMjZnTcu8cHQeFYa69U2BZnBA==}
+
+  '@cropper/element-image@2.1.1':
+    resolution: {integrity: sha512-cldzN3hVJo0Luui+FDSIkmbQtwIjxWiTcTMLCMSi3hqIq6lc7YOBz+rC5R8AYnYV7YvsWonE6PrJZS+iZpBkdQ==}
+
+  '@cropper/element-selection@2.1.1':
+    resolution: {integrity: sha512-QtMYhcuR+8JG3QEv8iSRCfQEVYljor61vLPrnGCFIkDJhvcyEWDx4H/Kfn6Jrdo90PyXf2VbpTG7TgH8i/EZFg==}
+
+  '@cropper/element-shade@2.1.1':
+    resolution: {integrity: sha512-MhJVc3jC87TjQu4EfBnNFddL3LxvA+Wzjy1Qhyi0wNdeTAzs97uYJ3KwGVtvzPYP/4JaSU4JDpw+BfIdUqR0bg==}
+
+  '@cropper/element-viewer@2.1.1':
+    resolution: {integrity: sha512-RpXTGW/rTtJVNd3/R3imdCBJzyZRhA/OeWNo7RID4qW7UYEiL6Lwh7Six3QhFIci/IaUAyL9NAAN10av2YWqog==}
+
+  '@cropper/element@2.1.1':
+    resolution: {integrity: sha512-pthgIQq3PFAFRGUts96yrMgmMY/4rS/zKEq/Vvw7L0Ur09MgzrUg15z4k96K53bJ8XvNeXdQ0qIDw90gh4Xcug==}
+
+  '@cropper/elements@2.1.1':
+    resolution: {integrity: sha512-cHShk4l6iExM4S6B1xx7+09gtDs+kdxWqe7Yv6DEbAyWhxVIVJyJAPpKlzLfA5MYnlSnkvCvY66hLLQPwooRMQ==}
+
+  '@cropper/utils@2.1.1':
+    resolution: {integrity: sha512-0eQs08WyQUNFMfU3ieE091dEQkrW0YdgZ3n6Thnk1EUQv45ypfiL+MevHwr7UzNnUlqUYR2FNSCgE6qBxK0sFw==}
 
   '@esbuild/aix-ppc64@0.28.0':
     resolution: {integrity: sha512-lhRUCeuOyJQURhTxl4WkpFTjIsbDayJHih5kZC1giwE+MhIzAb7mEsQMqMf18rHLsrb5qI1tafG20mLxEWcWlA==}
@@ -536,6 +578,12 @@ packages:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
 
+  cropperjs@1.6.2:
+    resolution: {integrity: sha512-nhymn9GdnV3CqiEHJVai54TULFAE3VshJTXSqSJKa8yXAKyBKDWdhHarnlIPrshJ0WMFTGuFvG02YjLXfPiuOA==}
+
+  cropperjs@2.1.1:
+    resolution: {integrity: sha512-FDJMarkY+/SepYarPZsvkG2LmI2PElecciMFnvBiBIoKnFYua/scprC5qejCLLyuX2jEqJRS2njbAsHxfjtIXA==}
+
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
@@ -805,6 +853,9 @@ packages:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
 
+  normalize-wheel@1.0.1:
+    resolution: {integrity: sha512-1OnlAPZ3zgrk8B91HyRj+eVv+kS5u+Z0SCsak6Xil/kmgEia50ga7zfkumayonZrImffAxPU/5WcyGhzetHNPA==}
+
   oauth@0.9.15:
     resolution: {integrity: sha512-a5ERWK1kh38ExDEfoO6qUHJb32rd7aYmPHuyCu3Fta/cnICvYmgd2uhuKXvPD+PXB+gCEYYEaQdIRAjCOwAKNA==}
 
@@ -919,10 +970,21 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  react-cropper@2.3.3:
+    resolution: {integrity: sha512-zghiEYkUb41kqtu+2jpX2Ntigf+Jj1dF9ew4lAobPzI2adaPE31z0p+5TcWngK6TvmWQUwK3lj4G+NDh1PDQ1w==}
+    peerDependencies:
+      react: '>=17.0.2'
+
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
       react: ^18.3.1
+
+  react-easy-crop@6.0.2:
+    resolution: {integrity: sha512-nY/YiNEuRjc851+/PsOR6Q7XoshmnXMl+oEOsxp3Ah0PrhECi5388jjRnHwsTFx3W0o2zPwvq85oljzUqZNpEw==}
+    peerDependencies:
+      react: '>=16.4.0'
+      react-dom: '>=16.4.0'
 
   react-hook-form@7.77.0:
     resolution: {integrity: sha512-Sslh9YDYc0GDlWT/lxasnIduNo4v3yyvqRGvmGKUre5AFjDs/HV9/OafHGD8d+sB2yoL4UIL9L8X9i0WlZZebg==}
@@ -1146,6 +1208,72 @@ snapshots:
   '@cloudinary/url-gen@1.15.0':
     dependencies:
       '@cloudinary/transformation-builder-sdk': 1.21.2
+
+  '@cropper/element-canvas@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-crosshair@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-grid@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-handle@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-image@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/element-canvas': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-selection@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/element-canvas': 2.1.1
+      '@cropper/element-image': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-shade@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/element-canvas': 2.1.1
+      '@cropper/element-selection': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element-viewer@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/element-canvas': 2.1.1
+      '@cropper/element-image': 2.1.1
+      '@cropper/element-selection': 2.1.1
+      '@cropper/utils': 2.1.1
+
+  '@cropper/element@2.1.1':
+    dependencies:
+      '@cropper/utils': 2.1.1
+
+  '@cropper/elements@2.1.1':
+    dependencies:
+      '@cropper/element': 2.1.1
+      '@cropper/element-canvas': 2.1.1
+      '@cropper/element-crosshair': 2.1.1
+      '@cropper/element-grid': 2.1.1
+      '@cropper/element-handle': 2.1.1
+      '@cropper/element-image': 2.1.1
+      '@cropper/element-selection': 2.1.1
+      '@cropper/element-shade': 2.1.1
+      '@cropper/element-viewer': 2.1.1
+
+  '@cropper/utils@2.1.1': {}
 
   '@esbuild/aix-ppc64@0.28.0':
     optional: true
@@ -1445,6 +1573,13 @@ snapshots:
 
   cookie@0.7.2: {}
 
+  cropperjs@1.6.2: {}
+
+  cropperjs@2.1.1:
+    dependencies:
+      '@cropper/elements': 2.1.1
+      '@cropper/utils': 2.1.1
+
   cssesc@3.0.0: {}
 
   csstype@3.2.3: {}
@@ -1699,6 +1834,8 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
+  normalize-wheel@1.0.1: {}
+
   oauth@0.9.15: {}
 
   object-assign@4.1.1: {}
@@ -1789,11 +1926,22 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
+  react-cropper@2.3.3(react@18.3.1):
+    dependencies:
+      cropperjs: 1.6.2
+      react: 18.3.1
+
   react-dom@18.3.1(react@18.3.1):
     dependencies:
       loose-envify: 1.4.0
       react: 18.3.1
       scheduler: 0.23.2
+
+  react-easy-crop@6.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      normalize-wheel: 1.0.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   react-hook-form@7.77.0(react@18.3.1):
     dependencies:
