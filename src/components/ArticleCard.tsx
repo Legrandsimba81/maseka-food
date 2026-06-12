@@ -21,7 +21,7 @@ export default function ArticleCard({ article }: { article: any }) {
           </div>
         </div>
         <Link href={`/articles/${article.slug}`} className="mt-4 inline-block text-primary hover:underline">
-          Lire la suite →
+          Lire la suite ...
         </Link>
       </div>
     </div>

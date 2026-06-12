@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { useCart } from "@/hooks/useCart";
-import { Truck } from "lucide-react";
+import { Newspaper, Truck } from "lucide-react";
 import {
   Home,
   Package,
@@ -138,7 +138,9 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-
+              <Link href="/articles" className="flex items-center gap-1 text-foreground hover:text-primary transition">
+                <Newspaper size={18} /> Articles
+              </Link>
               <Link href="/contact" className="flex items-center gap-1 text-foreground hover:text-primary transition">
                 <Phone size={18} /> Contact
               </Link>
@@ -146,15 +148,8 @@ export default function Navbar() {
                 <Users size={18} /> team
               </Link>
 
-              {/* Messages badge */}
-              <Link href="/messages" className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                <MessageSquare size={20} />
-                {unreadMessages > 0 && (
-                  <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadMessages}
-                  </span>
-                )}
-              </Link>
+
+
 
               {/* Theme toggle */}
               <button
@@ -278,7 +273,9 @@ export default function Navbar() {
                   <span>Promotions</span>
                   {promoCount > 0 && <span className="ml-2 w-2 h-2 bg-orange-500 rounded-full"></span>}
                 </Link>
-
+                <Link href="/articles" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
+                  <Newspaper size={20} /> Articles
+                </Link>
                 <Link href="/team" onClick={closeMobileMenu} className="flex items-center gap-3 py-2 text-foreground hover:text-primary">
                   <Users size={20} /> Équipe
                 </Link>

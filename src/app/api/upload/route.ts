@@ -10,16 +10,21 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "admin") {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
     if (!file) {
       return NextResponse.json({ error: "Aucun fichier" }, { status: 400 });
+    }
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Le fichier doit être une image" }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -36,8 +41,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ url: uploadResult.secure_url });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur upload:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Erreur serveur" },
+      { status: 500 }
+    );
   }
 }
