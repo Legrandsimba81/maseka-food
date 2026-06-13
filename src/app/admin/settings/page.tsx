@@ -66,8 +66,8 @@ export default function AdminSettingsPage() {
   // Sauvegarde du taux de change
   const handleSave = async () => {
     setLoading(true);
-    const res = await fetch("/api/settings", {
-      method: "PUT",
+    const res = await fetch("/api/settings/exchange", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ exchangeRate }),
     });
@@ -78,28 +78,27 @@ export default function AdminSettingsPage() {
     }
     setLoading(false);
   };
-  
 
   // Sauvegarde de l'image de bannière
   const saveHeroImage = async () => {
-  if (heroImageTemp === heroImage) {
-    toast("Aucun changement", { icon: "ℹ️" });
-    return;
-  }
-  setSavingHero(true);
-  const res = await fetch("/api/settings/hero", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ heroImage: heroImageTemp }),
-  });
-  if (res.ok) {
-    setHeroImage(heroImageTemp);
-    toast.success("Image de bannière mise à jour");
-  } else {
-    toast.error("Erreur");
-  }
-  setSavingHero(false);
-};
+    if (heroImageTemp === heroImage) {
+      toast("Aucun changement", { icon: "ℹ️" });
+      return;
+    }
+    setSavingHero(true);
+    const res = await fetch("/api/settings/hero", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ heroImage: heroImageTemp }),
+    });
+    if (res.ok) {
+      setHeroImage(heroImageTemp);
+      toast.success("Image de bannière mise à jour");
+    } else {
+      toast.error("Erreur");
+    }
+    setSavingHero(false);
+  };
 
   const deleteUser = async (id: string, role: string) => {
     if (role === "admin") {
