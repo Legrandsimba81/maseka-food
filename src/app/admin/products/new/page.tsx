@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { ArrowLeft } from "lucide-react";
+import ImageUploadWithCrop from "@/components/ImageUploadWithCrop";
 
 const categories = [
   "pains",
@@ -86,8 +87,14 @@ export default function NewProductPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">URL de l’image</label>
-          <input name="imageUrl" value={form.imageUrl} onChange={handleChange} className="input-field" placeholder="/images/produits/..." />
+          <label className="block text-sm font-medium mb-1">Image du produit</label>
+          <ImageUploadWithCrop
+            onUpload={(url) => setForm({ ...form, imageUrl: url })}
+            onRemove={() => setForm({ ...form, imageUrl: "" })}
+            currentImage={form.imageUrl}
+            aspect={1 / 1} // carré pour les produits (vous pouvez ajuster)
+            label="Télécharger une image"
+          />
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" name="isAvailable" checked={form.isAvailable} onChange={handleChange} />
