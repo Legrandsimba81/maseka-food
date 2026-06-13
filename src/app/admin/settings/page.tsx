@@ -78,6 +78,7 @@ export default function AdminSettingsPage() {
     }
     setLoading(false);
   };
+  
 
   // Sauvegarde de l'image de bannière
   const saveHeroImage = async () => {
