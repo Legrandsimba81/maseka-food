@@ -77,7 +77,7 @@ export default function ProductsPage() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition ${isActive
                     ? "bg-primary text-white"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700"
                   }`}
               >
                 {Icon && <Icon size={16} />}

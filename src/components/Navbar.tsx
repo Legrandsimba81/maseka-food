@@ -175,8 +175,8 @@ export default function Navbar() {
                     ) : (
                       <User size={18} />
                     )}
-                    <span className="hidden md:inline">{session.user?.name}</span>
-                    <ChevronDown size={16} className={`transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
+                    {/* <span className="hidden md:inline">{session.user?.name}</span> */}
+                    {/* <ChevronDown size={16} className={`transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} /> */}
                   </button>
                   {userMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg py-1 z-10 border border-border">

@@ -8,7 +8,8 @@ export async function GET() {
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  const messages = await prisma.contactMessage.findMany({
+  const messages = await prisma.message.findMany({
+    include: { sender: { select: { name: true, image: true, avatarUrl: true } } },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(messages);
@@ -20,9 +21,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
   const { id } = await req.json();
-  if (!id) {
-    return NextResponse.json({ error: "ID manquant" }, { status: 400 });
-  }
-  await prisma.contactMessage.delete({ where: { id } });
+  if (!id) return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+  await prisma.message.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

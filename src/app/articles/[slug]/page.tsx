@@ -12,11 +12,19 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   });
   if (!article) return notFound();
 
-  // Incrémentation des vues côté serveur
+  // Incrémentation des vues
   await prisma.article.update({
     where: { id: article.id },
     data: { views: { increment: 1 } },
   });
 
-  return <ArticleClient article={article} />;
+  // Récupération des articles similaires (4 derniers, hors article courant)
+  const similarArticles = await prisma.article.findMany({
+    where: { id: { not: article.id } },
+    take: 4,
+    orderBy: { publishedAt: "desc" },
+    include: { _count: { select: { comments: true } } },
+  });
+
+  return <ArticleClient article={article} similarArticles={similarArticles} />;
 }

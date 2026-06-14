@@ -21,7 +21,7 @@ export default function LatestArticlesGrid({ articles }: { articles: Article[] }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {articles.map((article) => (
-        <div key={article.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div key={article.id} className="bg-white dark:bg-gray-800 rounded-lg border-2 overflow-hidden">
           {article.imageMain && (
             <img src={article.imageMain} alt={article.title} className="w-full h-48 object-cover" />
           )}

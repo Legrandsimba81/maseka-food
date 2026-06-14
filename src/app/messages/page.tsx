@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import { User } from "lucide-react";
 
 interface Message {
   id: string;
   content: string;
   createdAt: string;
-  sender: { name: string };
+  sender: { name: string; image?: string | null; avatarUrl?: string | null };
 }
 
 export default function MessagesPage() {
@@ -22,7 +23,6 @@ export default function MessagesPage() {
       setMessages(data);
       // Marquer comme lus
       await fetch("/api/messages/mark-read", { method: "POST" });
-      // Notifier la navbar pour rafraîchir le compteur
       window.dispatchEvent(new Event("messages-read"));
     }
     setLoading(false);
@@ -38,7 +38,6 @@ export default function MessagesPage() {
     if (res.ok) {
       toast.success("Message supprimé");
       setMessages((prev) => prev.filter((msg) => msg.id !== id));
-      // Mettre à jour le compteur (re-fetch ou événement)
       window.dispatchEvent(new Event("messages-read"));
     } else {
       toast.error("Erreur lors de la suppression");
@@ -56,19 +55,34 @@ export default function MessagesPage() {
       ) : (
         <div className="space-y-4">
           {messages.map((msg) => (
-            <div key={msg.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow relative">
-              <div className="pr-16">
-                <p className="text-sm text-muted-foreground">
-                  De : {msg.sender.name} - le {new Date(msg.createdAt).toLocaleString()}
-                </p>
-                <p className="mt-2">{msg.content}</p>
+            <div key={msg.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 relative">
+              <div className="flex items-start gap-3 pr-16">
+                <div className="flex-shrink-0">
+                  {(msg.sender.avatarUrl || msg.sender.image) ? (
+                    <img
+                      src={msg.sender.avatarUrl || msg.sender.image}
+                      alt={msg.sender.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                      <User size={20} className="text-gray-500" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>{msg.sender.name}</strong> - le {new Date(msg.createdAt).toLocaleString()}
+                  </p>
+                  <p className="mt-2">{msg.content}</p>
+                </div>
               </div>
               <button
                 onClick={() => deleteMessage(msg.id)}
                 className="absolute top-4 right-4 text-red-500 hover:text-red-700 transition"
                 aria-label="Supprimer"
               >
-                supprimer
+                Supprimer
               </button>
             </div>
           ))}

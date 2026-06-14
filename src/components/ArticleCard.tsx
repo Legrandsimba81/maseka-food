@@ -3,7 +3,7 @@ import { Calendar, Eye, Heart, MessageCircle } from "lucide-react";
 
 export default function ArticleCard({ article }: { article: any }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
+    <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border-2 ">
       {article.imageMain && (
         <img src={article.imageMain} alt={article.title} className="w-full h-48 object-cover" />
       )}

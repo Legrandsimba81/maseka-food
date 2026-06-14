@@ -28,6 +28,10 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(session?.user?.email || "");
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [changePasswordMode, setChangePasswordMode] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const avatarUrl = session?.user?.avatarUrl || session?.user?.image;
 
@@ -59,8 +63,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (res.ok) {
         toast.success("Avatar mis à jour");
-        await update(); // Force la session à se recharger
-        // Recharger la page pour que la navbar prenne en compte le nouvel avatar
+        await update();
         window.location.reload();
       } else {
         toast.error(data.error || "Erreur");
@@ -85,6 +88,33 @@ export default function ProfilePage() {
       setTimeout(() => setMessage(""), 3000);
     } else {
       setMessage("Erreur lors de la mise à jour");
+    }
+  };
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+    const res = await fetch("/api/user/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast.success("Mot de passe modifié");
+      setChangePasswordMode(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      toast.error(data.error || "Erreur");
     }
   };
 
@@ -115,7 +145,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Graphique
   const last6Months = () => {
     const months = [];
     const now = new Date();
@@ -139,18 +168,18 @@ export default function ProfilePage() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <BackButton />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 mb-8 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4">
         <div className="flex items-center gap-4">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover " />
+            <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
           ) : (
-            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center ">
+            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
               <User size={40} className="text-gray-500" />
             </div>
           )}
           <div>
             <h1 className="text-2xl font-bold">Bonjour, {session?.user?.name}</h1>
-            <p className="text-muted-foreground">{session?.user?.email}</p>
+            {/* Email affiché uniquement ici (pas à côté du nom) */}
           </div>
         </div>
         <div>
@@ -163,7 +192,7 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Informations personnelles</h2>
             {editMode ? (
               <form onSubmit={updateProfile} className="space-y-4">
@@ -185,12 +214,35 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <p><strong>Nom :</strong> {session?.user?.name}</p>
                 <p><strong>Email :</strong> {session?.user?.email}</p>
-                <button onClick={() => setEditMode(true)} className="btn-secondary mt-2">Modifier</button>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setEditMode(true)} className="btn-secondary">Modifier</button>
+                  <button onClick={() => setChangePasswordMode(true)} className="btn-secondary">Changer le mot de passe</button>
+                </div>
               </div>
+            )}
+            {changePasswordMode && (
+              <form onSubmit={changePassword} className="mt-4 space-y-3 border-t pt-4">
+                <div>
+                  <label className="text-sm font-medium">Mot de passe actuel</label>
+                  <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="input-field mt-1" required />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Nouveau mot de passe</label>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="input-field mt-1" required />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Confirmer le mot de passe</label>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field mt-1" required />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn-primary">Changer</button>
+                  <button type="button" onClick={() => setChangePasswordMode(false)} className="btn-secondary">Annuler</button>
+                </div>
+              </form>
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Évolution des commandes</h2>
             {orders.length === 0 ? (
               <p className="text-muted-foreground">Aucune commande pour le moment.</p>
@@ -207,7 +259,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Dernières commandes</h2>
             {orders.length === 0 ? (
               <p>Aucune commande pour le moment.</p>
@@ -226,7 +278,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 sticky top-24">
+          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Mon panier</h2>
             {items.length === 0 ? (
               <p className="text-muted-foreground">Votre panier est vide.</p>

@@ -76,7 +76,7 @@ export default function Footer() {
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
               Recevez nos offres spéciales et actualités.
             </p>
-            <form className="flex flex-col sm:flex-row gap-2">
+            <form className="flex flex-col sm:flex-wrap gap-2">
               <input
                 type="email"
                 placeholder="Votre email"

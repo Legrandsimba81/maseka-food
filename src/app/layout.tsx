@@ -88,7 +88,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+<body className={`${inter.className} bg-gray-50`}>
         <Toaster position="top-center" reverseOrder={false} />
         <ThemeProvider>
           <AuthProvider>

@@ -40,7 +40,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition p-4">
+    <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden p-4">
       <div className="relative dark:bg-gray-300 bg-amber-50 h-48 rounded-md overflow-hidden">
         <Image
           src={product.imageUrl || "/images/produits/placeholder-bread.jpg"}

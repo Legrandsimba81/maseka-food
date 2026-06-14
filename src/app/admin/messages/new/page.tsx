@@ -1,14 +1,24 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import toast from "react-hot-toast";
+import { ArrowLeft, Search, User, Mail, Send, X } from "lucide-react";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  image?: string | null;
+}
 
 export default function NewMessagePage() {
   const { data: session } = useSession();
-  const [allUsers, setAllUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +40,7 @@ export default function NewMessagePage() {
     setFilteredUsers(filtered);
   };
 
-  const selectUser = (user) => {
+  const selectUser = (user: User) => {
     setSelectedUser(user);
     setFilteredUsers([]);
     setSearchTerm("");
@@ -58,7 +68,7 @@ export default function NewMessagePage() {
       setSearchTerm("");
       setFilteredUsers([]);
     } else {
-      toast.error("Erreur");
+      toast.error("Erreur lors de l'envoi");
     }
     setLoading(false);
   };
@@ -66,65 +76,112 @@ export default function NewMessagePage() {
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Envoyer un message à un client</h1>
+    <div className="max-w-3xl mx-auto p-6">
+      {/* En-tête avec bouton retour */}
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/admin/messages" className="text-gray-500 hover:text-primary transition">
+          <ArrowLeft size={20} />
+        </Link>
+        <h1 className="text-2xl font-bold">Envoyer un message à un client</h1>
+      </div>
 
-      {selectedUser && (
-        <div className="mb-4 p-2 bg-green-100 dark:bg-green-900 rounded flex justify-between items-center">
-          <span>Destinataire : <strong>{selectedUser.name}</strong> ({selectedUser.email})</span>
-          <button onClick={() => setSelectedUser(null)} className="text-red-600 text-sm">Changer</button>
-        </div>
-      )}
-
-      {!selectedUser && (
-        <div className="mb-4">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Rechercher par nom ou email"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field flex-1"
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <button onClick={handleSearch} className="btn-primary">Rechercher</button>
-          </div>
-
-          {filteredUsers.length > 0 && (
-            <div className="mt-2 border rounded-lg overflow-hidden">
-              {filteredUsers.map(user => (
-                <div
-                  key={user.id}
-                  onClick={() => selectUser(user)}
-                  className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 border-b last:border-b-0"
-                >
-                  <span className="font-medium">{user.name}</span> - {user.email}
+      {/* Carte principale */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Sélection du destinataire */}
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold mb-3">Destinataire</h2>
+          {selectedUser ? (
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center overflow-hidden">
+                  {(selectedUser.avatarUrl || selectedUser.image) ? (
+                    <img src={selectedUser.avatarUrl || selectedUser.image} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={20} className="text-gray-500" />
+                  )}
                 </div>
-              ))}
+                <div>
+                  <p className="font-medium">{selectedUser.name}</p>
+                  <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="text-red-500 hover:text-red-700 p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="flex gap-2 mb-4">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Rechercher par nom ou email"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="input-field pr-10"
+                  />
+                  <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                </div>
+                <button onClick={handleSearch} className="btn-primary">Rechercher</button>
+              </div>
+
+              {filteredUsers.length > 0 && (
+                <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-64 overflow-y-auto">
+                  {filteredUsers.map(user => (
+                    <button
+                      key={user.id}
+                      onClick={() => selectUser(user)}
+                      className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                        {(user.avatarUrl || user.image) ? (
+                          <img src={user.avatarUrl || user.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={18} className="text-gray-500" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searchTerm && filteredUsers.length === 0 && (
+                <p className="text-center text-gray-500 py-4">Aucun utilisateur trouvé.</p>
+              )}
             </div>
           )}
-          {searchTerm && filteredUsers.length === 0 && (
-            <p className="text-sm text-muted-foreground mt-2">Aucun utilisateur trouvé.</p>
-          )}
         </div>
-      )}
 
-      <textarea
-        rows={4}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className="input-field"
-        placeholder="Votre message..."
-        disabled={!selectedUser}
-      />
-
-      <button
-        onClick={handleSend}
-        disabled={loading || !selectedUser || !content.trim()}
-        className="btn-primary w-full mt-4"
-      >
-        {loading ? "Envoi..." : "Envoyer"}
-      </button>
+        {/* Zone de message */}
+        <div className="p-6">
+          <label className="block text-sm font-medium mb-2">Message</label>
+          <textarea
+            rows={6}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="input-field"
+            placeholder="Écrivez votre message ici..."
+            disabled={!selectedUser}
+          />
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleSend}
+              disabled={loading || !selectedUser || !content.trim()}
+              className="btn-primary flex items-center gap-2"
+            >
+              {loading ? "Envoi en cours..." : "Envoyer"}
+              <Send size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
