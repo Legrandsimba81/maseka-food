@@ -127,9 +127,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Produits vedettes */}
+      {/* Produits vedettes
       <section className=" md:pt-14 container mx-auto px-8 md:px-4">
-        <div className="flex flex-wrap gap-4 items-center justify-between mb-8">
+        <div className="flex flex-wrap gap-4 items-center justify-center md:justify-between mb-8">
           <div>
             <h2 className="text-3xl text-[#6d4429] dark:text-white font-bold sm:text-center"><span className="hidden md:inline">Nos spécialités, </span>Produits & Promotions</h2>
           </div>
@@ -137,10 +137,10 @@ export default async function Home() {
             <Link href="/products" className="font-medium">Voir tous les produits</Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {featured.map((section) => (
-        <section key={section.name} className="pb-8 container mx-auto px-4">
+        <section key={section.name} className="pb-8 mt-4 container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-6 capitalize">{section.name}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {section.products.map((product) => (

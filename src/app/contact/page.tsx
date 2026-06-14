@@ -46,45 +46,45 @@ export default function ContactPage() {
       <h1 className="text-3xl font-bold mb-6 text-center">Contactez-nous</h1>
       <div className="grid md:grid-cols-2 gap-8">
         {/* Informations de contact */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl">
           <h2 className="text-xl font-semibold mb-4">Nos coordonnées</h2>
           <div className="space-y-4">
-  <div className="flex gap-3 items-start">
-    <MapPin className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-    <div>
-      <p className="font-semibold">Adresse</p>
-      <p className="text-gray-600 dark:text-gray-300">
+            <div className="flex gap-3 items-start">
+              <MapPin className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Adresse</p>
+                <p className="text-gray-600 dark:text-gray-300">
                   Commune de Bulengera, Butembo,<br />
                   République Démocratique du Congo
                 </p>
 
-    </div>
-  </div>
-  <div className="flex gap-3 items-start">
-    <Phone className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-    <div>
-      <p className="font-semibold">Téléphone</p>
-      <p className="text-gray-600 dark:text-gray-300">+33 1 23 45 67 89</p>
-    </div>
-  </div>
-  <div className="flex gap-3 items-start">
-    <Mail className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-    <div>
-      <p className="font-semibold">Email</p>
-      <p className="text-gray-600 dark:text-gray-300">contact@masekafood.com</p>
-    </div>
-  </div>
-  <div className="flex gap-3 items-start">
-    <Clock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-    <div>
-      <p className="font-semibold">Horaires</p>
-      <p className="text-gray-600 dark:text-gray-300">Lundi – Samedi : 7h – 20h<br />Dimanche : 8h – 13h</p>
-    </div>
-  </div>
-</div>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <Phone className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Téléphone</p>
+                <p className="text-gray-600 dark:text-gray-300">+33 1 23 45 67 89</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <Mail className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Email</p>
+                <p className="text-gray-600 dark:text-gray-300">contact@masekafood.com</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <Clock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Horaires</p>
+                <p className="text-gray-600 dark:text-gray-300">Lundi – Samedi : 7h – 20h<br />Dimanche : 8h – 13h</p>
+              </div>
+            </div>
+          </div>
           <div className="mt-6">
             <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15900.987654321!2d29.283333!3d0.150000!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwMDknMDQuMCJOIDI5wrAxNyc1Ni4wIkU!5e0!3m2!1sfr!2scd!4v0000000000000"              width="100%"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15900.987654321!2d29.283333!3d0.150000!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwMDknMDQuMCJOIDI5wrAxNyc1Ni4wIkU!5e0!3m2!1sfr!2scd!4v0000000000000" width="100%"
               height="200"
               style={{ border: 0 }}
               allowFullScreen

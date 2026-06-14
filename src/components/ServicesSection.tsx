@@ -37,7 +37,7 @@ const services = [
 
 export default function ServicesSection() {
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-amber-50 dark:from-gray-900 dark:to-gray-800">
+    <section className="py-16 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-amber-800 dark:text-amber-400 mb-4">
           Pourquoi nous choisir ?

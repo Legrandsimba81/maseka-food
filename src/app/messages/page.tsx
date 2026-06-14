@@ -72,7 +72,7 @@ export default function MessagesPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">
-                    <strong>{msg.sender.name}</strong> - le {new Date(msg.createdAt).toLocaleString()}
+                    <strong>{msg.sender.name}</strong> <br/> - le {new Date(msg.createdAt).toLocaleString()}
                   </p>
                   <p className="mt-2">{msg.content}</p>
                 </div>
