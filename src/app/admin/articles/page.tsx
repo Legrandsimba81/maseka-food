@@ -70,7 +70,7 @@ export default function AdminArticlesPage() {
                   <td className="px-4 py-2">{article.views}</td>
                   <td className="px-4 py-2">{article.likes}</td>
                   <td className="px-4 py-2 space-x-2">
-                    <Link href={`/admin/articles/${article.slug}`} className="text-blue-500 hover:underline">Modifier</Link>
+                    <Link href={`/admin/articles/${article.slug}/edit`} className="text-blue-500 hover:underline">Modifier</Link>
                     <button onClick={() => deleteArticle(article.slug)} className="text-red-500 hover:underline">Supprimer</button>
                   </td>
                 </tr>
