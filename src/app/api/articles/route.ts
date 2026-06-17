@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET – liste paginée avec recherche
+// GET – Liste paginée avec recherche
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") || "10");
@@ -12,7 +12,6 @@ export async function GET(req: Request) {
   const sortBy = searchParams.get("sort") || "publishedAt";
   const order = searchParams.get("order") || "desc";
 
-  // Construction du filtre WHERE sans `mode: insensitive`
   const where: any = {};
   if (search) {
     where.OR = [
@@ -38,34 +37,56 @@ export async function GET(req: Request) {
   return NextResponse.json({ articles, total });
 }
 
-// POST – création (admin)
+// POST – Créer un article (admin uniquement)
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  const data = await req.json();
-  const { title, content, excerpt, imageMain, imagesSecondary } = data;
-  if (!title || !content) {
-    return NextResponse.json({ error: "Titre et contenu requis" }, { status: 400 });
+
+  try {
+    const body = await req.json();
+    const { title, content, excerpt, imageMain, imagesSecondary } = body;
+
+    if (!title || !content) {
+      return NextResponse.json({ error: "Titre et contenu requis" }, { status: 400 });
+    }
+
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const existing = await prisma.article.findUnique({ where: { slug } });
+    if (existing) {
+      return NextResponse.json({ error: "Un article avec ce titre existe déjà" }, { status: 409 });
+    }
+
+    const author = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+    if (!author) {
+      return NextResponse.json({ error: "Auteur non trouvé" }, { status: 404 });
+    }
+
+    const article = await prisma.article.create({
+      data: {
+        title,
+        slug,
+        content,
+        excerpt: excerpt || content.slice(0, 160),
+        imageMain: imageMain || null,
+        imagesSecondary: Array.isArray(imagesSecondary) ? imagesSecondary : [],
+        authorId: author.id,
+      },
+    });
+
+    return NextResponse.json(article, { status: 201 });
+  } catch (error: any) {
+    console.error("Erreur POST article:", error);
+    return NextResponse.json(
+      { error: "Erreur serveur", details: error.message },
+      { status: 500 }
+    );
   }
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const existing = await prisma.article.findUnique({ where: { slug } });
-  if (existing) {
-    return NextResponse.json({ error: "Un article avec ce titre existe déjà" }, { status: 409 });
-  }
-  const author = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!author) return NextResponse.json({ error: "Auteur non trouvé" }, { status: 404 });
-  const article = await prisma.article.create({
-    data: {
-      title,
-      slug,
-      content,
-      excerpt: excerpt || content.slice(0, 160),
-      imageMain: imageMain || null,
-      imagesSecondary: imagesSecondary || [],
-      authorId: author.id,
-    },
-  });
-  return NextResponse.json(article, { status: 201 });
 }
