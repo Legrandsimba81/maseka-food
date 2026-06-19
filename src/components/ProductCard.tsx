@@ -63,7 +63,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               disabled={loading}
               className="btn-primary text-sm py-1 px-5"
             >
-              {loading ? "..." : "Ajouter"}
+              {loading ? "..." : "Acheter"}
             </button>
           </div>
         </div>
