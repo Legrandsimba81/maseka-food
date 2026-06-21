@@ -98,8 +98,8 @@ export default async function Home() {
               Bienvenue chez maseka food !<br /> votre boulangerie de référence à <br /> Butembo. Découvrez nos pains artisanaux, viennoiseries dorées et pâtisseries gourmandes, préparés avec passion pour ravir vos papilles.
             </p>
             <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-4">
-              <Link href="/products" className="hidden sm:block bg-orange-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-800 transition">Commander maintenant</Link>
-              <Link href="/reservation" className="bg-orange-500/50 border border-orange-400 dark:text-white text-orange-950 px-6 py-3 rounded-xl font-medium dark:hover:bg-orange-900 hover:bg-orange-300 transition">Réserver une table</Link>
+              <Link href="/reservation" className="hidden sm:block bg-orange-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-800 transition">Réserver une table</Link>
+              <Link href="/products" className="bg-orange-500/50 border border-orange-400 dark:text-white text-orange-950 px-6 py-3 rounded-xl font-medium dark:hover:bg-orange-900 hover:bg-orange-300 transition">Acheter un prduit</Link>
             </div>
           </div>
         </Contener>
