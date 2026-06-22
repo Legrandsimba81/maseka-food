@@ -23,7 +23,6 @@ export default function AdminSettingsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
-
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -162,16 +161,18 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* Image de bannière (accueil) - CORRECTED SECTION */}
+      {/* Image de bannière (accueil) */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Image de bannière (accueil)</h2>
-        <ImageUploadWithCrop
-          label="Image de la bannière"
-          onUpload={(url) => setHeroImageTemp(url)}
-          onRemove={() => setHeroImageTemp("")}
-          currentImage={heroImageTemp || heroImage}
-          aspect={16 / 9}
-        />
+        {isClient && (
+          <ImageUploadWithCrop
+            label="Image de la bannière"
+            onUpload={(url) => setHeroImageTemp(url)}
+            onRemove={() => setHeroImageTemp("")}
+            currentImage={heroImageTemp || heroImage}
+            aspect={16 / 9}
+          />
+        )}
         {heroImageTemp !== heroImage && (
           <button
             onClick={saveHeroImage}
@@ -217,40 +218,49 @@ export default function AdminSettingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-4 py-2">{user.name}</td>
-                    <td className="px-4 py-2">{user.email}</td>
-                    <td className="px-4 py-2 capitalize">{user.role}</td>
-                    <td className="px-4 py-2">{user._count.orders}</td>
-                    <td className="px-4 py-2">{user._count.reservations}</td>
-                    <td className="px-4 py-2">{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-2 space-x-2">
-                      {user.role === "admin" ? (
-                        <button
-                          onClick={() => changeRole(user.id, "user")}
-                          className="text-amber-600 hover:text-amber-800 text-sm"
-                        >
-                          Retirer admin
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => changeRole(user.id, "admin")}
-                          className="text-green-600 hover:text-green-800 text-sm"
-                        >
-                          Promouvoir admin
-                        </button>
-                      )}
-                      <button
-                        onClick={() => deleteUser(user.id, user.role)}
-                        className="text-red-600 hover:text-red-800 text-sm ml-2"
-                        disabled={user.role === "admin"}
-                      >
-                        Supprimer
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const isSuperAdmin = user.email === "admin@masekafood.com";
+                  return (
+                    <tr key={user.id}>
+                      <td className="px-4 py-2">{user.name}</td>
+                      <td className="px-4 py-2">{user.email}</td>
+                      <td className="px-4 py-2 capitalize">{user.role}</td>
+                      <td className="px-4 py-2">{user._count.orders}</td>
+                      <td className="px-4 py-2">{user._count.reservations}</td>
+                      <td className="px-4 py-2">{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">
+                        {isSuperAdmin ? (
+                          <span className="text-sm text-amber-600 font-semibold">⭐ Super Admin</span>
+                        ) : (
+                          <div className="space-x-2">
+                            {user.role === "admin" ? (
+                              <button
+                                onClick={() => changeRole(user.id, "user")}
+                                className="text-amber-600 hover:text-amber-800 text-sm"
+                              >
+                                Retirer admin
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => changeRole(user.id, "admin")}
+                                className="text-green-600 hover:text-green-800 text-sm"
+                              >
+                                Promouvoir admin
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteUser(user.id, user.role)}
+                              className="text-red-600 hover:text-red-800 text-sm ml-2"
+                              disabled={user.role === "admin"}
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
