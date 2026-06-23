@@ -207,7 +207,7 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      // Dans le JSX, ajoutez cette nouvelle section
+      {/* // Dans le JSX, ajoutez cette nouvelle section */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Contacter les clients</h2>
         <form
