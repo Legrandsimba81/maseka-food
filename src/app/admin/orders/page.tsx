@@ -94,16 +94,24 @@ export default function AdminOrdersPage() {
     } else toast.error("Erreur");
   };
 
-  const updateDeliveryStatus = async (id, deliveryStatus) => {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ deliveryStatus }),
-    });
-    if (res.ok) {
-      toast.success("Statut de livraison mis à jour");
-      fetchOrders();
-    } else toast.error("Erreur");
+  const updateDeliveryStatus = async (id: string, deliveryStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deliveryStatus }),
+      });
+
+      if (res.ok) {
+        toast.success("Statut de livraison mis à jour");
+        fetchOrders(); // Recharger la liste
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Erreur");
+      }
+    } catch (error) {
+      toast.error("Erreur réseau");
+    }
   };
 
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
