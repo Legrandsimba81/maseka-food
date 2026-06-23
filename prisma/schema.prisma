@@ -165,3 +165,9 @@ model Comment {
   article   Article  @relation(fields: [articleId], references: [id])
   createdAt DateTime @default(now())
 }
+model PageView {
+  id        String   @id @default(cuid())
+  visitorId String   // identifiant unique du visiteur (cookie)
+  page      String?  // chemin de la page visitée
+  createdAt DateTime @default(now())
+}

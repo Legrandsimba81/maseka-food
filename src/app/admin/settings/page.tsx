@@ -133,7 +133,21 @@ export default function AdminSettingsPage() {
       toast.error(err.error || "Erreur");
     }
   };
+  const [stats, setStats] = useState({
+    totalViews: 0,
+    todayViews: 0,
+    monthViews: 0,
+    uniqueVisitorsTotal: 0,
+    uniqueVisitorsToday: 0,
+    uniqueVisitorsMonth: 0,
+  });
 
+  useEffect(() => {
+    fetch("/api/stats")
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.error(err));
+  }, []);
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
 
   return (
@@ -185,6 +199,36 @@ export default function AdminSettingsPage() {
         <p className="text-sm text-muted-foreground mt-2">
           Cette image s'affichera sur la page d'accueil. Cliquez sur l'image pour l'agrandir.
         </p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">Statistiques de visite</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-gray-500">Pages vues (total)</p>
+            <p className="text-2xl font-bold">{stats.totalViews}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Aujourd'hui</p>
+            <p className="text-2xl font-bold">{stats.todayViews}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Ce mois-ci</p>
+            <p className="text-2xl font-bold">{stats.monthViews}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Visiteurs uniques (total)</p>
+            <p className="text-2xl font-bold">{stats.uniqueVisitorsTotal}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Visiteurs uniques aujourd'hui</p>
+            <p className="text-2xl font-bold">{stats.uniqueVisitorsToday}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Visiteurs uniques ce mois-ci</p>
+            <p className="text-2xl font-bold">{stats.uniqueVisitorsMonth}</p>
+          </div>
+        </div>
       </div>
 
       {/* Gestion utilisateurs */}
