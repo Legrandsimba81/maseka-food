@@ -171,3 +171,15 @@ model PageView {
   page      String?  // chemin de la page visitée
   createdAt DateTime @default(now())
 }
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  bio       String?
+  image     String?
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
