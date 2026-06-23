@@ -142,6 +142,12 @@ export default function AdminSettingsPage() {
     uniqueVisitorsMonth: 0,
   });
 
+  // Ajoutez ces états
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   useEffect(() => {
     fetch("/api/stats")
       .then(res => res.json())
@@ -199,6 +205,87 @@ export default function AdminSettingsPage() {
         <p className="text-sm text-muted-foreground mt-2">
           Cette image s'affichera sur la page d'accueil. Cliquez sur l'image pour l'agrandir.
         </p>
+      </div>
+
+      // Dans le JSX, ajoutez cette nouvelle section
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">Contacter les clients</h2>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!emailSubject || !emailMessage) {
+              toast.error("Sujet et message requis");
+              return;
+            }
+            setSendingEmail(true);
+            try {
+              const res = await fetch("/api/admin/send-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId: selectedUserId || "all",
+                  subject: emailSubject,
+                  message: emailMessage,
+                }),
+              });
+              if (res.ok) {
+                toast.success("Email(s) envoyé(s)");
+                setEmailSubject("");
+                setEmailMessage("");
+                setSelectedUserId("");
+              } else {
+                const err = await res.json();
+                toast.error(err.error || "Erreur");
+              }
+            } catch (err) {
+              toast.error("Erreur réseau");
+            }
+            setSendingEmail(false);
+          }}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Destinataire</label>
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className="input-field w-full"
+                required
+              >
+                <option value="">Sélectionner un client</option>
+                <option value="all">Tous les clients</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Sujet</label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                className="input-field w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Message</label>
+              <textarea
+                rows={5}
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                className="input-field w-full"
+                required
+              />
+            </div>
+            <button type="submit" disabled={sendingEmail} className="btn-primary w-full">
+              {sendingEmail ? "Envoi..." : "Envoyer"}
+            </button>
+          </div>
+        </form>
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
