@@ -26,12 +26,6 @@ export default function SplashScreen() {
           className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain"
           priority
         />
-        <p className="mt-3 sm:mt-4 text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary dark:text-white text-center">
-          maseka food
-        </p>
-        <p className="text-xs sm:text-sm md:text-base text-gray-500 dark:text-gray-400 text-center">
-          Boulangerie & Pâtisserie
-        </p>
       </div>
     </div>
   );
