@@ -274,7 +274,7 @@ export default function AdminSettingsPage() {
                       <td className="px-4 py-2">{new Date(user.createdAt).toLocaleDateString()}</td>
                       <td className="px-4 py-2">
                         {isSuperAdmin ? (
-                          <span className="text-sm text-amber-600 font-semibold">⭐ Super Admin</span>
+                          <span className="text-sm text-amber-600 font-semibold">Super Admin</span>
                         ) : (
                           <div className="space-x-2">
                             {user.role === "admin" ? (
