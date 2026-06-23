@@ -68,55 +68,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-      {/* Barre horizontale fixe (sticky) */}
+      {/* Barre horizontale fixe (sticky) avec menu horizontal */}
       <div className="sticky top-16 z-40 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-300 dark:border-gray-700">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            {/* Version desktop : menu horizontal classique */}
-            <div className="hidden lg:flex items-center gap-1 overflow-x-auto py-2">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="flex items-center h-14">
+            {/* Bouton burger (visible sur mobile) */}
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 mr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
+              aria-label="Ouvrir le menu"
+            >
+              <Menu size={22} className="text-gray-600 dark:text-gray-300" />
+            </button>
+
+            {/* Menu horizontal (toujours visible, compact sur mobile) */}
+            <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-1.5 flex-1">
               {mainNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                     pathname === item.href
                       ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   <item.icon size={18} />
-                  <span>{item.label}</span>
+                  <span className="hidden sm:inline">{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-1 bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    <span className="ml-0.5 bg-orange-500 text-white text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   )}
                 </Link>
               ))}
             </div>
-
-            {/* Version mobile : bouton burger + titre */}
-            <div className="flex lg:hidden items-center gap-3">
-              <button
-                onClick={toggleSidebar}
-                className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                aria-label="Ouvrir le menu"
-              >
-                <Menu size={22} className="text-gray-600 dark:text-gray-300" />
-              </button>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                Administration
-              </span>
-            </div>
-
-            {/* Placeholder pour l'alignement à droite (rien) */}
-            <div className="hidden lg:block w-auto"></div>
           </div>
         </div>
       </div>
 
       <div className="flex flex-1">
-        {/* Sidebar vertical (visible sur desktop, cachée sur mobile sauf si ouverte) */}
+        {/* Sidebar vertical (affichée sur desktop, ouverte via burger sur mobile) */}
         <aside
           className={`
             fixed lg:sticky top-32 left-0 z-30

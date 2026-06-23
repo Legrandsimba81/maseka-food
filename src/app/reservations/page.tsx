@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
+export const dynamic = "force-dynamic";
+
 interface Reservation {
   id: string;
   date: string;
