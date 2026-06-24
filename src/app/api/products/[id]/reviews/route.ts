@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET – Récupérer les avis d’un produit
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const reviews = await prisma.productReview.findMany({
@@ -18,7 +17,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-// POST – Ajouter ou modifier un avis
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -45,7 +43,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
     }
 
-    // Vérifier si l’utilisateur a déjà laissé un avis
+    // Vérifier si l'utilisateur a déjà laissé un avis
     const existing = await prisma.productReview.findFirst({
       where: { productId: params.id, userId: user.id },
     });
@@ -70,7 +68,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
-    console.error(error);
+    console.error("Erreur POST avis produit:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
