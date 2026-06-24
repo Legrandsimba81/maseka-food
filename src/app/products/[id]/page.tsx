@@ -30,23 +30,21 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             />
           </div>
           <div className="p-6 md:w-1/2 flex flex-col justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-                {product.name}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-base mb-4">
-                {product.description}
-              </p>
-              <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-lg text-gray-400 line-through">
-                  {formatPrice(product.price)} $
-                </span>
-                {product.isPromo && product.promoPrice && (
-                  <span className="text-3xl font-bold text-primary ">
+            <div className="flex items-baseline gap-3 mb-6">
+              {product.isPromo && product.promoPrice ? (
+                <>
+                  <span className="text-lg text-gray-400 line-through">
+                    {formatPrice(product.price)} $
+                  </span>
+                  <span className="text-3xl font-bold text-primary">
                     {formatPrice(product.promoPrice)} $
                   </span>
-                )}
-              </div>
+                </>
+              ) : (
+                <span className="text-3xl font-bold text-primary">
+                  {formatPrice(product.price)} $
+                </span>
+              )}
             </div>
             <AddToCartButton productId={product.id} />
             <div className="mt-4 text-sm text-gray-500 text-center">

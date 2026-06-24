@@ -61,7 +61,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/categories-order", label: "Catégories", icon: ListOrdered },
     { href: "/admin/qrcode", label: "QR Codes", icon: QrCode },
     { href: "/admin/products", label: "Produits", icon: Package },
-    { href: "/admin/reviews", label: "Avis", icon: Star },
+    { href: "/admin/reviews", label: "Avis Produits", icon: Star },
+    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star },,
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
     { href: "/admin/team", label: "Équipe", icon: Users },
   ];

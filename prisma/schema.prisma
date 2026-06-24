@@ -20,6 +20,7 @@ model User {
   orders            Order[]
   reservations      Reservation[]
   reviews Review[]
+  productReviews ProductReview[]
   bakeryReviews  BakeryReview[]
   cart    Cart?
   sentMessages      Message[] @relation("sentMessages")
