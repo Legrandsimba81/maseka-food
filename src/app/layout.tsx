@@ -10,7 +10,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
 import VisitTracker from "@/components/VisitTracker";
-import SplashScreen from '@/components/SplashScreen';
+// import SplashScreen from '@/components/SplashScreen';
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -97,7 +97,7 @@ export default function RootLayout({
         <Toaster position="top-center" reverseOrder={false} />
         <ThemeProvider>
           <AuthProvider>
-            <SplashScreen />
+            {/* <SplashScreen /> */}
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">{children}</main>

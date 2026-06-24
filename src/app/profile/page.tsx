@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import toast from "react-hot-toast";
 import BackButton from "@/components/BackButton";
 import { formatPrice } from "@/lib/format";
-import { User } from "lucide-react";
+import { BookOpen, User } from "lucide-react";
 
 interface Order {
   id: string;
@@ -168,22 +168,28 @@ export default function ProfilePage() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <BackButton />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 mb-8 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 mt-4 mb-8 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 bg-gradient-to-r from-transparent to-amber-50/30 dark:to-gray-800/30">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
+            <img src={avatarUrl} alt="Avatar" className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-amber-500/30" />
           ) : (
-            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <User size={40} className="text-gray-500" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center ring-2 ring-amber-500/30">
+              <User size={32} className="text-gray-500" />
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold">Bonjour, {session?.user?.name}</h1>
-            {/* Email affiché uniquement ici (pas à côté du nom) */}
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
+              Bonjour, {session?.user?.name}
+            </h1>
+            {session?.user?.email && (
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-0.5">
+                {session.user.email}
+              </p>
+            )}
           </div>
         </div>
-        <div>
-          <label className="btn-secondary cursor-pointer">
+        <div className="mt-2 sm:mt-0">
+          <label className="btn-secondary cursor-pointer text-sm sm:text-base px-3 py-1.5 sm:px-4 sm:py-2">
             {uploading ? "Envoi..." : "Changer l'avatar"}
             <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
           </label>
@@ -217,6 +223,9 @@ export default function ProfilePage() {
                 <div className="flex gap-2 mt-4">
                   <button onClick={() => setEditMode(true)} className="btn-secondary">Modifier</button>
                   <button onClick={() => setChangePasswordMode(true)} className="btn-secondary">Changer le mot de passe</button>
+                  <Link href="/guide" className="flex items-center gap-2 text-primary hover:underline mt-4">
+                    <BookOpen size={18} /> Guide d'utilisation
+                  </Link>
                 </div>
               </div>
             )}
@@ -267,7 +276,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 {orders.slice(0, 5).map((order) => (
                   <div key={order.id} className="border-b pb-2">
-                    <p className="text-sm text-muted-foreground">#{order.id.slice(0,8)} - {new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p className="text-sm text-muted-foreground">#{order.id.slice(0, 8)} - {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="font-semibold">{formatPrice(order.totalAmount)} $ - {order.status === "pending" ? "En attente" : "Confirmée"}</p>
                   </div>
                 ))}
