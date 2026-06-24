@@ -14,6 +14,10 @@ import { Calendar, Heart, MessageCircle, Share2, ArrowRight } from "lucide-react
 import ArticleCardClient from "@/components/ArticleCardClient";
 import PopupImage from "@/components/PopupImage";
 import LatestArticlesGrid from "@/components/LatestArticlesGrid";
+import BakeryReviews from "@/components/BakeryReviews";
+import BakeryReviewModal from "@/components/BakeryReviewModal";
+import BakeryReviewsList from "@/components/BakeryReviewsList";
+import BakeryReviewPopup from "@/components/BakeryReviewPopup";
 
 
 
@@ -72,7 +76,7 @@ export default async function Home() {
       name: cat,
       products: grouped[cat].slice(0, PRODUCTS_PER_CATEGORY),
     }));
-    // pour afficher l'image barriere
+  // pour afficher l'image barriere
   const settings = await prisma.bakerySettings.findFirst();
   const heroImage = settings?.heroImage;
 
@@ -158,7 +162,11 @@ export default async function Home() {
       <PromoSlider items={promoItems} autoScrollInterval={6000} pauseOnHover />
       {/* <div className="mt-8"></div> */}
       <ServicesSection />
+
       <AboutSection />
+
+      <BakeryReviewsList />
+      <BakeryReviewPopup />
 
     </div>
   );

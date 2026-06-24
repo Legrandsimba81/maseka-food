@@ -20,6 +20,7 @@ model User {
   orders            Order[]
   reservations      Reservation[]
   reviews Review[]
+  bakeryReviews  BakeryReview[]
   cart    Cart?
   sentMessages      Message[] @relation("sentMessages")
   receivedMessages  Message[] @relation("receivedMessages")
@@ -198,4 +199,14 @@ model Review {
   updatedAt DateTime @updatedAt
 
   @@map("reviews")
+}
+
+model BakeryReview {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

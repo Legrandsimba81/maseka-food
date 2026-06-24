@@ -38,11 +38,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                 {product.description}
               </p>
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-3xl font-bold text-primary">
+                <span className="text-lg text-gray-400 line-through">
                   {formatPrice(product.price)} $
                 </span>
                 {product.isPromo && product.promoPrice && (
-                  <span className="text-lg text-gray-400 line-through">
+                  <span className="text-3xl font-bold text-primary ">
                     {formatPrice(product.promoPrice)} $
                   </span>
                 )}

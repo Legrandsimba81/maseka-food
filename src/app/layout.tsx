@@ -10,6 +10,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
 import VisitTracker from "@/components/VisitTracker";
+import BakeryReviewPopup from "@/components/BakeryReviewPopup";
+
 // import SplashScreen from '@/components/SplashScreen';
 
 
@@ -94,6 +96,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-50 dark:bg-gray-900`}>
         <VisitTracker />
 
+
         <Toaster position="top-center" reverseOrder={false} />
         <ThemeProvider>
           <AuthProvider>
@@ -104,6 +107,8 @@ export default function RootLayout({
               <ScrollToTop />
               <Footer />
             </div>
+            <BakeryReviewPopup />
+
           </AuthProvider>
         </ThemeProvider>
       </body>
