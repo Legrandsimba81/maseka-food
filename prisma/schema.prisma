@@ -19,6 +19,7 @@ model User {
   resetTokenExpiry  DateTime?
   orders            Order[]
   reservations      Reservation[]
+  reviews Review[]
   cart    Cart?
   sentMessages      Message[] @relation("sentMessages")
   receivedMessages  Message[] @relation("receivedMessages")
@@ -37,6 +38,7 @@ model Product {
   cartItems CartItem[]
   isPromo    Boolean  @default(false)
   promoPrice Float?
+  reviews Review[]
   isAvailable Boolean   @default(true)
   orderItems  OrderItem[]
   createdAt   DateTime  @default(now())
@@ -182,4 +184,18 @@ model TeamMember {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1 à 5 étoiles
+  comment   String?
+  productId String
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reviews")
 }
