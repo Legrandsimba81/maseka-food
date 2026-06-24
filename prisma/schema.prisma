@@ -8,43 +8,42 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  name              String
-  password          String
-  role              String    @default("user")
-  image String?   // URL de l'avatar
-  avatarUrl         String?
-  resetToken        String?
-  resetTokenExpiry  DateTime?
-  orders            Order[]
-  reservations      Reservation[]
-  reviews Review[]
-  productReviews ProductReview[]
-  bakeryReviews  BakeryReview[]
-  cart    Cart?
-  sentMessages      Message[] @relation("sentMessages")
-  receivedMessages  Message[] @relation("receivedMessages")
-  articles Article[]  // relation avec les articles
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String          @id @default(cuid())
+  email            String          @unique
+  name             String
+  password         String
+  role             String          @default("user")
+  image            String?
+  avatarUrl        String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  orders           Order[]
+  reservations     Reservation[]
+  cart             Cart?
+  sentMessages     Message[]       @relation("sentMessages")
+  receivedMessages Message[]       @relation("receivedMessages")
+  articles         Article[]
+  productReviews   ProductReview[] // avis sur les produits
+  bakeryReviews    BakeryReview[] // avis sur la boulangerie
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  name String @unique
+  id          String          @id @default(cuid())
+  name        String          @unique
   description String
   price       Float
   category    String
   imageUrl    String?
-  cartItems CartItem[]
-  isPromo    Boolean  @default(false)
-  promoPrice Float?
-  reviews Review[]
-  isAvailable Boolean   @default(true)
+  cartItems   CartItem[]
+  isPromo     Boolean         @default(false)
+  promoPrice  Float?
+  reviews     ProductReview[]
+  isAvailable Boolean         @default(true)
   orderItems  OrderItem[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }
 
 model Order {
@@ -57,8 +56,8 @@ model Order {
   address         String?
   deliveryAddress String?
   deliveryTime    String?
-  deliveryStatus String @default("pending")
-  adminNote String?
+  deliveryStatus  String      @default("pending")
+  adminNote       String?
   paymentStatus   String      @default("pending") // pending, paid_by_ussd
   items           OrderItem[]
   createdAt       DateTime    @default(now())
@@ -66,43 +65,43 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  quantity    Int
   priceAtTime Float
 }
 
 model Reservation {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id])
-  date           DateTime
-  time           String
-  numberOfPeople Int
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  date            DateTime
+  time            String
+  numberOfPeople  Int
   specialRequests String?
-  status         String   @default("pending")
-  adminNote      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  status          String   @default("pending")
+  adminNote       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model BakerySettings {
-  id            String   @id @default(cuid())
-  bakeryName    String   @default("Ma Boulangerie")
-  logoUrl       String?
-  contactEmail  String?
-  contactPhone  String?
-  address       String?
-  openingHours  String?
-  categoryOrder Json?
-  heroImage String?
-  exchangeRate Float? @default(2300)
-  primaryColor  String   @default("#fbbf24")
-  secondaryColor String  @default("#78350f")
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  bakeryName     String   @default("Ma Boulangerie")
+  logoUrl        String?
+  contactEmail   String?
+  contactPhone   String?
+  address        String?
+  openingHours   String?
+  categoryOrder  Json?
+  heroImage      String?
+  exchangeRate   Float?   @default(2300)
+  primaryColor   String   @default("#fbbf24")
+  secondaryColor String   @default("#78350f")
+  updatedAt      DateTime @updatedAt
 }
 
 model ContactMessage {
@@ -126,12 +125,12 @@ model Message {
 }
 
 model Cart {
-  id        String      @id @default(cuid())
-  userId    String      @unique
-  user      User        @relation(fields: [userId], references: [id])
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
   items     CartItem[]
-  updatedAt DateTime    @updatedAt
-  createdAt DateTime    @default(now())
+  updatedAt DateTime   @updatedAt
+  createdAt DateTime   @default(now())
 }
 
 model CartItem {
@@ -148,10 +147,10 @@ model Article {
   id              String    @id @default(cuid())
   title           String
   slug            String    @unique
-  content         String    // HTML ou Markdown
-  excerpt         String?   // résumé
-  imageMain       String?   // URL image principale
-  imagesSecondary Json?     // tableau d'URLs
+  content         String // HTML ou Markdown
+  excerpt         String? // résumé
+  imageMain       String? // URL image principale
+  imagesSecondary Json? // tableau d'URLs
   publishedAt     DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   views           Int       @default(0)
@@ -162,17 +161,18 @@ model Article {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id         String   @id @default(cuid())
   authorName String
-  content   String
-  articleId String
-  article   Article  @relation(fields: [articleId], references: [id])
-  createdAt DateTime @default(now())
+  content    String
+  articleId  String
+  article    Article  @relation(fields: [articleId], references: [id])
+  createdAt  DateTime @default(now())
 }
+
 model PageView {
   id        String   @id @default(cuid())
-  visitorId String   // identifiant unique du visiteur (cookie)
-  page      String?  // chemin de la page visitée
+  visitorId String // identifiant unique du visiteur (cookie)
+  page      String? // chemin de la page visitée
   createdAt DateTime @default(now())
 }
 
@@ -188,23 +188,21 @@ model TeamMember {
   updatedAt DateTime @updatedAt
 }
 
-model Review {
+model ProductReview {
   id        String   @id @default(cuid())
-  rating    Int      // 1 à 5 étoiles
+  rating    Int
   comment   String?
   productId String
   userId    String
-  product   Product  @relation(fields: [productId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@map("reviews")
 }
 
 model BakeryReview {
   id        String   @id @default(cuid())
-  rating    Int      // 1-5
+  rating    Int
   comment   String?
   userId    String
   user      User     @relation(fields: [userId], references: [id])

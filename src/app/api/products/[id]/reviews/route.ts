@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // GET – Récupérer les avis d’un produit
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const reviews = await prisma.review.findMany({
+    const reviews = await prisma.productReview.findMany({
       where: { productId: params.id },
       include: { user: { select: { name: true, avatarUrl: true } } },
       orderBy: { createdAt: "desc" },
@@ -46,13 +46,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     // Vérifier si l’utilisateur a déjà laissé un avis
-    const existing = await prisma.review.findFirst({
+    const existing = await prisma.productReview.findFirst({
       where: { productId: params.id, userId: user.id },
     });
 
     if (existing) {
       // Mise à jour
-      const updated = await prisma.review.update({
+      const updated = await prisma.productReview.update({
         where: { id: existing.id },
         data: { rating, comment },
       });
@@ -60,7 +60,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     // Création
-    const review = await prisma.review.create({
+    const review = await prisma.productReview.create({
       data: {
         rating,
         comment,

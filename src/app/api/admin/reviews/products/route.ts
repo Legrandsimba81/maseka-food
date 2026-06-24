@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const reviews = await prisma.review.findMany({
+    const reviews = await prisma.productReview.findMany({
       include: {
         user: { select: { name: true, email: true, avatarUrl: true } },
         product: { select: { name: true, imageUrl: true } },
@@ -35,7 +35,7 @@ export async function DELETE(req: Request) {
     if (!id) {
       return NextResponse.json({ error: "ID requis" }, { status: 400 });
     }
-    await prisma.review.delete({ where: { id } });
+    await prisma.productReview.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

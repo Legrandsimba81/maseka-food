@@ -10,7 +10,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   }
 
   try {
-    await prisma.review.delete({
+    await prisma.productReview.delete({
       where: { id: params.id },
     });
     return NextResponse.json({ success: true });

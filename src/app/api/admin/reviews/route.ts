@@ -10,15 +10,42 @@ export async function GET(req: Request) {
   }
 
   try {
-    const reviews = await prisma.review.findMany({
+    // Récupérer les avis sur les produits
+    const productReviews = await prisma.productReview.findMany({
       include: {
         user: { select: { name: true, email: true, avatarUrl: true } },
-        product: { select: { name: true } },
+        product: { select: { name: true, imageUrl: true } },
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json(reviews);
+
+    // Récupérer les avis sur la boulangerie
+    const bakeryReviews = await prisma.bakeryReview.findMany({
+      include: {
+        user: { select: { name: true, email: true, avatarUrl: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Ajouter un champ `type` pour distinguer
+    const formattedProductReviews = productReviews.map(r => ({
+      ...r,
+      type: "product",
+      productName: r.product?.name,
+    }));
+    const formattedBakeryReviews = bakeryReviews.map(r => ({
+      ...r,
+      type: "bakery",
+      productName: null,
+    }));
+
+    const allReviews = [...formattedProductReviews, ...formattedBakeryReviews];
+    // Trier par date décroissante
+    allReviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return NextResponse.json(allReviews);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -30,13 +57,22 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    const { id } = await req.json();
-    if (!id) {
-      return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+    const { id, type } = await req.json();
+    if (!id || !type) {
+      return NextResponse.json({ error: "ID et type requis" }, { status: 400 });
     }
-    await prisma.review.delete({ where: { id } });
+
+    if (type === "product") {
+      await prisma.productReview.delete({ where: { id } });
+    } else if (type === "bakery") {
+      await prisma.bakeryReview.delete({ where: { id } });
+    } else {
+      return NextResponse.json({ error: "Type invalide" }, { status: 400 });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
