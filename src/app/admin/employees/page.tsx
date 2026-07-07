@@ -8,7 +8,6 @@ import QRCode from "qrcode";
 import html2canvas from "html2canvas";
 import Link from "next/link";
 
-
 interface Employee {
   id: string;
   firstName: string;
@@ -132,6 +131,7 @@ export default function AdminEmployeesPage() {
   const generateQR = async (qrCode: string) => {
     try {
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+      // ⚠️ Assurez-vous que l'URL contient bien le paramètre `qr`
       const data = `${baseUrl}/admin/attendance?qr=${qrCode}`;
       const qr = await QRCode.toDataURL(data, { width: 200, margin: 2 });
       setQrDataUrl(qr);
@@ -176,7 +176,10 @@ export default function AdminEmployeesPage() {
           >
             <Award size={18} /> {showRanking ? "Masquer classement" : "Voir classement"}
           </button>
-          <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true }); }} className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => { setShowForm(true); setEditingId(null); setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true }); }}
+            className="btn-primary flex items-center gap-2"
+          >
             <Plus size={18} /> Ajouter un employé
           </button>
         </div>
@@ -274,7 +277,7 @@ export default function AdminEmployeesPage() {
         </div>
       )}
 
-      {/* Liste des employés (design amélioré) */}
+      {/* Liste des employés */}
       {loading ? (
         <p>Chargement...</p>
       ) : employees.length === 0 ? (
@@ -312,10 +315,13 @@ export default function AdminEmployeesPage() {
                 <div className="flex flex-wrap gap-2 mt-3">
                   <button onClick={() => editEmployee(emp)} className="text-blue-500 hover:text-blue-700 p-1"><Edit size={16} /></button>
                   <button onClick={() => deleteEmployee(emp.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16} /></button>
-                  <Link href={`/admin/employees/${emp.id}/card`} className="text-gray-500 hover:text-gray-700 p-1">
-                    <Eye size={16} /> voir la carte
-                  </Link>                
-                  </div>
+                  <Link
+                    href={`/admin/employees/${emp.id}/card`}
+                    className="text-gray-500 hover:text-gray-700 p-1 flex items-center gap-1"
+                  >
+                    <Eye size={16} /> Voir carte
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
@@ -332,7 +338,6 @@ export default function AdminEmployeesPage() {
             >
               ✕
             </button>
-            {/* Carte de service rectangulaire */}
             <div ref={cardRef} className="w-full bg-white rounded-xl overflow-hidden shadow-lg border-2 border-red-600">
               <div className="bg-red-600 text-white px-6 py-3 flex justify-between items-center">
                 <span className="font-bold text-lg">MASEKA FOOD</span>

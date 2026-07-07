@@ -17,37 +17,16 @@ export default function ScanPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerRunningRef = useRef(false);
   const isMounted = useRef(true);
-  const onScanSuccessRef = useRef<(decodedText: string) => void>(() => {});
-
-  // Fonction de succès (appelée par le scanner)
-  const onScanSuccess = useCallback(async (decodedText: string) => {
-    const qrCode = decodedText.trim();
-    if (!qrCode) return;
-    await processQrCode(qrCode);
-  }, []);
 
   // Fonction de traitement du QR (commune au scan et à la saisie manuelle)
-  const processQrCode = async (qrCode: string) => {
-    // Éviter les doubles traitements
-    if (isProcessing || !scannerRunningRef.current) {
-      // Si le scanner n'est pas actif, on traite quand même (cas manuel)
-      if (!isProcessing) {
-        // on continue
-      } else {
-        return;
-      }
-    }
-
-    // Si le scanner est actif, on le met en pause
+  const processQrCode = useCallback(async (qrCode: string) => {
+    if (isProcessing) return;
     if (scannerRef.current && scannerRunningRef.current) {
       try {
         await scannerRef.current.pause();
         if (isMounted.current) setCameraActive(false);
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
-
     if (isMounted.current) setIsProcessing(true);
 
     try {
@@ -99,22 +78,34 @@ export default function ScanPage() {
             await scannerRef.current.start(
               { facingMode: "environment" },
               { fps: 10, qrbox: { width: 250, height: 250 } },
-              onScanSuccessRef.current,
+              onScanSuccess,
               () => {}
             );
             if (isMounted.current) setCameraActive(true);
-          } catch {
-            // ignore
-          }
+          } catch {}
         }
       }
     }, 3000);
-  };
+  }, [type, isProcessing]);
 
-  // Mise à jour de la référence de la fonction de succès
-  useEffect(() => {
-    onScanSuccessRef.current = onScanSuccess;
-  }, [onScanSuccess]);
+  // Fonction de succès du scanner (extrait le QR du texte décodé)
+  const onScanSuccess = useCallback(async (decodedText: string) => {
+    let qrCode = decodedText.trim();
+    // Si c'est une URL, extraire le paramètre 'qr'
+    if (qrCode.startsWith("http://") || qrCode.startsWith("https://")) {
+      try {
+        const url = new URL(qrCode);
+        qrCode = url.searchParams.get("qr") || qrCode;
+      } catch {
+        // Si l'URL est mal formée, garder la chaîne brute
+      }
+    }
+    if (!qrCode) {
+      toast.error("QR Code invalide");
+      return;
+    }
+    await processQrCode(qrCode);
+  }, [processQrCode]);
 
   // Fonction de démarrage du scanner
   const startScanner = useCallback(async () => {
@@ -127,7 +118,7 @@ export default function ScanPage() {
       await scanner.start(
         { facingMode: "environment" },
         config,
-        onScanSuccessRef.current,
+        onScanSuccess,
         () => {}
       );
       scannerRunningRef.current = true;
@@ -137,7 +128,7 @@ export default function ScanPage() {
         toast.error("Erreur d'accès à la caméra : " + err);
       }
     }
-  }, []);
+  }, [onScanSuccess]);
 
   // Nettoyage
   useEffect(() => {
@@ -164,9 +155,7 @@ export default function ScanPage() {
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualQr.trim()) return;
-    scannerRunningRef.current = false; // désactiver le scanner pendant le traitement manuel
     await processQrCode(manualQr.trim());
-    // Après le traitement, on réactive le scanner si nécessaire (déjà fait dans le timeout)
   };
 
   if (!session || session.user.role !== "admin") {
