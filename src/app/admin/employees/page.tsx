@@ -6,6 +6,8 @@ import ImageUpload from "@/components/ImageUpload";
 import { Search, Plus, Edit, Trash2, Eye, Award, Download, User, Clock } from "lucide-react";
 import QRCode from "qrcode";
 import html2canvas from "html2canvas";
+import Link from "next/link";
+
 
 interface Employee {
   id: string;
@@ -202,7 +204,7 @@ export default function AdminEmployeesPage() {
                 {ranking.map((item, idx) => (
                   <tr key={item.id} className="border-b dark:border-gray-700">
                     <td className="px-4 py-2 flex items-center gap-2">
-                      <span className="font-medium">{idx+1}.</span>
+                      <span className="font-medium">{idx + 1}.</span>
                       {item.image ? (
                         <img src={item.image} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
                       ) : (
@@ -216,11 +218,10 @@ export default function AdminEmployeesPage() {
                     <td className="px-4 py-2 text-green-600">{item.onTimeCount}</td>
                     <td className="px-4 py-2 text-red-600">{item.lateCount}</td>
                     <td className="px-4 py-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        item.punctualityRate >= 90 ? "bg-green-100 text-green-800" :
-                        item.punctualityRate >= 70 ? "bg-yellow-100 text-yellow-800" :
-                        "bg-red-100 text-red-800"
-                      }`}>
+                      <span className={`px-2 py-1 text-xs rounded-full ${item.punctualityRate >= 90 ? "bg-green-100 text-green-800" :
+                          item.punctualityRate >= 70 ? "bg-yellow-100 text-yellow-800" :
+                            "bg-red-100 text-red-800"
+                        }`}>
                         {item.punctualityRate}%
                       </span>
                     </td>
@@ -257,14 +258,14 @@ export default function AdminEmployeesPage() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8 border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-4">{editingId ? "Modifier" : "Ajouter"} un employé</h2>
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="block text-sm font-medium">Prénom *</label><input value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} className="input-field" required /></div>
-            <div><label className="block text-sm font-medium">Nom *</label><input value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} className="input-field" required /></div>
-            <div><label className="block text-sm font-medium">Email</label><input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} className="input-field" /></div>
-            <div><label className="block text-sm font-medium">Téléphone</label><input value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="input-field" /></div>
-            <div><label className="block text-sm font-medium">Poste *</label><input value={form.position} onChange={(e) => setForm({...form, position: e.target.value})} className="input-field" required /></div>
-            <div><label className="block text-sm font-medium">Département</label><input value={form.department} onChange={(e) => setForm({...form, department: e.target.value})} className="input-field" /></div>
-            <div className="md:col-span-2"><ImageUpload label="Photo" onUpload={(url) => setForm({...form, image: url})} onRemove={() => setForm({...form, image: ""})} currentImage={form.image} /></div>
-            <div className="md:col-span-2 flex items-center gap-2"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm({...form, isActive: e.target.checked})} /><label>Actif</label></div>
+            <div><label className="block text-sm font-medium">Prénom *</label><input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} className="input-field" required /></div>
+            <div><label className="block text-sm font-medium">Nom *</label><input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className="input-field" required /></div>
+            <div><label className="block text-sm font-medium">Email</label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field" /></div>
+            <div><label className="block text-sm font-medium">Téléphone</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-field" /></div>
+            <div><label className="block text-sm font-medium">Poste *</label><input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} className="input-field" required /></div>
+            <div><label className="block text-sm font-medium">Département</label><input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className="input-field" /></div>
+            <div className="md:col-span-2"><ImageUpload label="Photo" onUpload={(url) => setForm({ ...form, image: url })} onRemove={() => setForm({ ...form, image: "" })} currentImage={form.image} /></div>
+            <div className="md:col-span-2 flex items-center gap-2"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} /><label>Actif</label></div>
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" disabled={saving} className="btn-primary">{saving ? "Enregistrement..." : "Enregistrer"}</button>
               <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="btn-secondary">Annuler</button>
@@ -311,8 +312,10 @@ export default function AdminEmployeesPage() {
                 <div className="flex flex-wrap gap-2 mt-3">
                   <button onClick={() => editEmployee(emp)} className="text-blue-500 hover:text-blue-700 p-1"><Edit size={16} /></button>
                   <button onClick={() => deleteEmployee(emp.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16} /></button>
-                  <button onClick={() => openCardModal(emp)} className="text-gray-500 hover:text-gray-700 p-1"><Eye size={16} /></button>
-                </div>
+                  <Link href={`/admin/employees/${emp.id}/card`} className="text-gray-500 hover:text-gray-700 p-1">
+                    <Eye size={16} /> voir la carte
+                  </Link>                
+                  </div>
               </div>
             </div>
           ))}
