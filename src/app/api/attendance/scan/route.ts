@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "QR Code et type requis" }, { status: 400 });
     }
 
-    // ⚠️ RECHERCHE PAR qrCode (et non par token ou id)
+    // Recherche de l'employé par qrCode
     const employee = await prisma.employee.findUnique({
       where: { qrCode },
     });
@@ -29,21 +29,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Employé inactif" }, { status: 403 });
     }
 
-    // Vérifier que l'employé n'a pas déjà pointé aujourd'hui
+    // Vérifier si un pointage du même type a déjà été enregistré aujourd'hui
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const existingAttendance = await prisma.attendance.findFirst({
+    const existing = await prisma.attendance.findFirst({
       where: {
         employeeId: employee.id,
-        type: type, // "entree" ou "sortie"
+        type: type,
         timestamp: { gte: today, lt: tomorrow },
       },
     });
 
-    if (existingAttendance) {
+    if (existing) {
       return NextResponse.json(
         { error: `Pointage ${type === "entree" ? "entrée" : "sortie"} déjà enregistré aujourd'hui` },
         { status: 400 }

@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Html5Qrcode } from "html5-qrcode";
-import { Scan, LogIn, LogOut, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { Scan, LogIn, LogOut, CheckCircle, XCircle, Clock, Loader2, QrCode, ArrowRight } from "lucide-react";
 
 export default function ScanPage() {
   const { data: session } = useSession();
@@ -13,26 +13,35 @@ export default function ScanPage() {
   const [result, setResult] = useState<{ employee: any; type: string; status: "success" | "error" } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
+  const [manualQr, setManualQr] = useState("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerRunningRef = useRef(false);
   const isMounted = useRef(true);
-
-  // Référence pour appeler onScanSuccess depuis le scanner
   const onScanSuccessRef = useRef<(decodedText: string) => void>(() => {});
 
-  // 1. Fonction de succès (appelée par le scanner)
-  const onScanSuccess = async (decodedText: string) => {
+  // Fonction de succès (appelée par le scanner)
+  const onScanSuccess = useCallback(async (decodedText: string) => {
     const qrCode = decodedText.trim();
     if (!qrCode) return;
+    await processQrCode(qrCode);
+  }, []);
 
+  // Fonction de traitement du QR (commune au scan et à la saisie manuelle)
+  const processQrCode = async (qrCode: string) => {
     // Éviter les doubles traitements
-    if (isProcessing || !scannerRunningRef.current) return;
-    scannerRunningRef.current = false;
+    if (isProcessing || !scannerRunningRef.current) {
+      // Si le scanner n'est pas actif, on traite quand même (cas manuel)
+      if (!isProcessing) {
+        // on continue
+      } else {
+        return;
+      }
+    }
 
-    // Arrêter le scanner pendant le traitement
-    if (scannerRef.current) {
+    // Si le scanner est actif, on le met en pause
+    if (scannerRef.current && scannerRunningRef.current) {
       try {
-        await scannerRef.current.stop();
+        await scannerRef.current.pause();
         if (isMounted.current) setCameraActive(false);
       } catch {
         // ignore
@@ -74,35 +83,41 @@ export default function ScanPage() {
       if (isMounted.current) setIsProcessing(false);
     }
 
-    // Réinitialiser et redémarrer le scan après 3 secondes
+    // Réinitialiser après 3 secondes
     setTimeout(async () => {
       if (!isMounted.current) return;
       setResult(null);
-      scannerRunningRef.current = true;
-      if (scannerRef.current) {
+      setManualQr("");
+      // Reprendre le scanner s'il était actif
+      if (scannerRef.current && scannerRunningRef.current) {
         try {
-          await scannerRef.current.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccessRef.current,
-            () => {}
-          );
+          await scannerRef.current.resume();
           if (isMounted.current) setCameraActive(true);
         } catch {
-          scannerRef.current = null;
-          await startScannerRef.current();
+          // Si la reprise échoue, on redémarre
+          try {
+            await scannerRef.current.start(
+              { facingMode: "environment" },
+              { fps: 10, qrbox: { width: 250, height: 250 } },
+              onScanSuccessRef.current,
+              () => {}
+            );
+            if (isMounted.current) setCameraActive(true);
+          } catch {
+            // ignore
+          }
         }
-      } else {
-        await startScannerRef.current();
       }
     }, 3000);
   };
 
-  // Référence pour startScanner
-  const startScannerRef = useRef<() => Promise<void>>(async () => {});
+  // Mise à jour de la référence de la fonction de succès
+  useEffect(() => {
+    onScanSuccessRef.current = onScanSuccess;
+  }, [onScanSuccess]);
 
-  // 2. Fonction de démarrage du scanner
-  const startScanner = async () => {
+  // Fonction de démarrage du scanner
+  const startScanner = useCallback(async () => {
     if (scannerRef.current || scannerRunningRef.current) return;
 
     try {
@@ -122,15 +137,9 @@ export default function ScanPage() {
         toast.error("Erreur d'accès à la caméra : " + err);
       }
     }
-  };
+  }, []);
 
-  // Mettre à jour les refs
-  useEffect(() => {
-    onScanSuccessRef.current = onScanSuccess;
-    startScannerRef.current = startScanner;
-  }, [onScanSuccess, startScanner]);
-
-  // Nettoyage du scanner au démontage
+  // Nettoyage
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -151,6 +160,15 @@ export default function ScanPage() {
     startScanner();
   }, [startScanner]);
 
+  // Gestion de la soumission manuelle
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualQr.trim()) return;
+    scannerRunningRef.current = false; // désactiver le scanner pendant le traitement manuel
+    await processQrCode(manualQr.trim());
+    // Après le traitement, on réactive le scanner si nécessaire (déjà fait dans le timeout)
+  };
+
   if (!session || session.user.role !== "admin") {
     return <div className="text-center py-8 text-red-500">Accès refusé</div>;
   }
@@ -160,7 +178,7 @@ export default function ScanPage() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Pointage par QR Code</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Scannez le QR Code d’un employé pour enregistrer son pointage
+          Scannez le QR Code d’un employé ou saisissez-le manuellement
         </p>
       </div>
 
@@ -188,7 +206,7 @@ export default function ScanPage() {
           </button>
         </div>
 
-        {/* ⚠️ Le conteneur #qr-camera-feed est TOUJOURS présent dans le DOM */}
+        {/* Scanner vidéo */}
         <div className="relative">
           <div
             id="qr-camera-feed"
@@ -197,7 +215,6 @@ export default function ScanPage() {
             }`}
           />
 
-          {/* Messages affichés par-dessus le conteneur (pas à l'intérieur) */}
           {!cameraActive && !isProcessing && !result && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 pointer-events-none">
               <Scan size={48} className="mb-2" />
@@ -224,6 +241,29 @@ export default function ScanPage() {
         )}
       </div>
 
+      {/* Saisie manuelle */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <form onSubmit={handleManualSubmit} className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={manualQr}
+            onChange={(e) => setManualQr(e.target.value)}
+            placeholder="QR Code (ex: ABCD1234)"
+            className="flex-1 input-field"
+            disabled={isProcessing}
+          />
+          <button
+            type="submit"
+            disabled={isProcessing}
+            className="btn-primary flex items-center justify-center gap-2"
+          >
+            <QrCode size={18} /> Valider <ArrowRight size={16} />
+          </button>
+        </form>
+        <p className="text-xs text-gray-400 mt-2">Entrez le code QR (identifiant unique de l’employé)</p>
+      </div>
+
+      {/* Résultat */}
       {result && (
         <div
           className={`p-6 rounded-xl shadow-lg ${
