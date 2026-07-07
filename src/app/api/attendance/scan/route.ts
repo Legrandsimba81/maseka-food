@@ -11,7 +11,6 @@ export async function POST(req: Request) {
 
   try {
     const { qrCode, type, device, ipAddress, location } = await req.json();
-
     if (!qrCode || !type || !["entree", "sortie"].includes(type)) {
       return NextResponse.json({ error: "QR Code et type requis" }, { status: 400 });
     }
@@ -19,31 +18,29 @@ export async function POST(req: Request) {
     const employee = await prisma.employee.findUnique({
       where: { qrCode },
     });
-
     if (!employee) {
       return NextResponse.json({ error: "Employé non trouvé" }, { status: 404 });
     }
-
     if (!employee.isActive) {
       return NextResponse.json({ error: "Employé inactif" }, { status: 403 });
     }
 
-    // Vérifier si l'employé a déjà pointé aujourd'hui pour ce type
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const existingAttendance = await prisma.attendance.findFirst({
-      where: {
-        employeeId: employee.id,
-        type,
-        date: { gte: today },
-      },
-    });
+    // Vérifier si l'employé a déjà pointé aujourd'hui pour le type "entree"
+    if (type === "entree") {
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
-    if (existingAttendance) {
-      return NextResponse.json(
-        { error: `L'employé a déjà enregistré une ${type === "entree" ? "entrée" : "sortie"} aujourd'hui` },
-        { status: 409 }
-      );
+      const existingEntry = await prisma.attendance.findFirst({
+        where: {
+          employeeId: employee.id,
+          type: "entree",
+          timestamp: { gte: startOfDay, lt: endOfDay },
+        },
+      });
+      if (existingEntry) {
+        return NextResponse.json({ error: "Présence déjà enregistrée aujourd'hui" }, { status: 409 });
+      }
     }
 
     // Enregistrer le pointage
@@ -51,8 +48,8 @@ export async function POST(req: Request) {
       data: {
         employeeId: employee.id,
         type,
-        device: device || null,
-        ipAddress: ipAddress || null,
+        device: device || "Web",
+        ipAddress: ipAddress || "unknown",
         location: location || null,
         date: new Date(),
       },
@@ -63,11 +60,13 @@ export async function POST(req: Request) {
       success: true,
       attendance,
       employee: {
+        id: employee.id,
         firstName: employee.firstName,
         lastName: employee.lastName,
         position: employee.position,
         image: employee.image,
       },
+      type,
     });
   } catch (error) {
     console.error(error);

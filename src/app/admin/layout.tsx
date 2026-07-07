@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Clock,
+  TrendingUp,
 } from "lucide-react";
 import { Star } from "lucide-react";
 
@@ -72,6 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/employees", label: "Employés", icon: Users },
     { href: "/admin/attendance/scan", label: "Scanner", icon: QrCode },
     { href: "/admin/attendance", label: "Pointages", icon: Clock },
+    { href: "/admin/attendance/stats", label: "Statistiques", icon: TrendingUp },
   ];
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
