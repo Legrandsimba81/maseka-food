@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -16,20 +16,23 @@ export default function ScanPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerRunningRef = useRef(false);
   const isMounted = useRef(true);
-  const onScanSuccessRef = useRef<(decodedText: string) => void>(() => {});
-  const startScannerRef = useRef<() => Promise<void>>(async () => {});
 
-  // Définition de onScanSuccess
-  const onScanSuccess = useCallback(async (decodedText: string) => {
+  // Référence pour appeler onScanSuccess depuis le scanner
+  const onScanSuccessRef = useRef<(decodedText: string) => void>(() => {});
+
+  // 1. Fonction de succès (appelée par le scanner)
+  const onScanSuccess = async (decodedText: string) => {
     const qrCode = decodedText.trim();
     if (!qrCode) return;
 
+    // Éviter les doubles traitements
     if (isProcessing || !scannerRunningRef.current) return;
     scannerRunningRef.current = false;
 
+    // Arrêter le scanner pendant le traitement
     if (scannerRef.current) {
       try {
-        await scannerRef.current.pause();
+        await scannerRef.current.stop();
         if (isMounted.current) setCameraActive(false);
       } catch {
         // ignore
@@ -39,7 +42,7 @@ export default function ScanPage() {
     if (isMounted.current) setIsProcessing(true);
 
     try {
-      const res = await fetch("/api/attendance", {
+      const res = await fetch("/api/attendance/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -71,38 +74,35 @@ export default function ScanPage() {
       if (isMounted.current) setIsProcessing(false);
     }
 
-    // Réinitialiser et reprendre le scan après 3 secondes
+    // Réinitialiser et redémarrer le scan après 3 secondes
     setTimeout(async () => {
       if (!isMounted.current) return;
       setResult(null);
       scannerRunningRef.current = true;
       if (scannerRef.current) {
         try {
-          await scannerRef.current.resume();
+          await scannerRef.current.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccessRef.current,
+            () => {}
+          );
           if (isMounted.current) setCameraActive(true);
         } catch {
-          // Si la reprise échoue, on redémarre complètement
-          try {
-            await scannerRef.current?.start(
-              { facingMode: "environment" },
-              { fps: 10, qrbox: { width: 250, height: 250 } },
-              onScanSuccessRef.current,
-              () => {}
-            );
-            if (isMounted.current) setCameraActive(true);
-          } catch {
-            scannerRef.current = null;
-            await startScannerRef.current();
-          }
+          scannerRef.current = null;
+          await startScannerRef.current();
         }
       } else {
         await startScannerRef.current();
       }
     }, 3000);
-  }, [type, isProcessing]);
+  };
 
-  // Définition de startScanner
-  const startScanner = useCallback(async () => {
+  // Référence pour startScanner
+  const startScannerRef = useRef<() => Promise<void>>(async () => {});
+
+  // 2. Fonction de démarrage du scanner
+  const startScanner = async () => {
     if (scannerRef.current || scannerRunningRef.current) return;
 
     try {
@@ -122,7 +122,7 @@ export default function ScanPage() {
         toast.error("Erreur d'accès à la caméra : " + err);
       }
     }
-  }, []);
+  };
 
   // Mettre à jour les refs
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function ScanPage() {
     startScannerRef.current = startScanner;
   }, [onScanSuccess, startScanner]);
 
-  // Nettoyage
+  // Nettoyage du scanner au démontage
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -188,6 +188,7 @@ export default function ScanPage() {
           </button>
         </div>
 
+        {/* ⚠️ Le conteneur #qr-camera-feed est TOUJOURS présent dans le DOM */}
         <div className="relative">
           <div
             id="qr-camera-feed"
@@ -196,6 +197,7 @@ export default function ScanPage() {
             }`}
           />
 
+          {/* Messages affichés par-dessus le conteneur (pas à l'intérieur) */}
           {!cameraActive && !isProcessing && !result && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 pointer-events-none">
               <Scan size={48} className="mb-2" />
@@ -215,7 +217,7 @@ export default function ScanPage() {
         {!cameraActive && !isProcessing && !result && (
           <button
             onClick={startScanner}
-            className="mt-4 w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition"
+            className="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition"
           >
             Activer la caméra
           </button>

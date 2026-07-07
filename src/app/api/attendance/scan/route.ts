@@ -11,63 +11,58 @@ export async function POST(req: Request) {
 
   try {
     const { qrCode, type, device, ipAddress, location } = await req.json();
-    if (!qrCode || !type || !["entree", "sortie"].includes(type)) {
+
+    if (!qrCode || !type) {
       return NextResponse.json({ error: "QR Code et type requis" }, { status: 400 });
     }
 
+    // ⚠️ RECHERCHE PAR qrCode (et non par token ou id)
     const employee = await prisma.employee.findUnique({
       where: { qrCode },
     });
+
     if (!employee) {
       return NextResponse.json({ error: "Employé non trouvé" }, { status: 404 });
     }
+
     if (!employee.isActive) {
       return NextResponse.json({ error: "Employé inactif" }, { status: 403 });
     }
 
-    // Vérifier si l'employé a déjà pointé aujourd'hui pour le type "entree"
-    if (type === "entree") {
-      const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    // Vérifier que l'employé n'a pas déjà pointé aujourd'hui
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const existingEntry = await prisma.attendance.findFirst({
-        where: {
-          employeeId: employee.id,
-          type: "entree",
-          timestamp: { gte: startOfDay, lt: endOfDay },
-        },
-      });
-      if (existingEntry) {
-        return NextResponse.json({ error: "Présence déjà enregistrée aujourd'hui" }, { status: 409 });
-      }
+    const existingAttendance = await prisma.attendance.findFirst({
+      where: {
+        employeeId: employee.id,
+        type: type, // "entree" ou "sortie"
+        timestamp: { gte: today, lt: tomorrow },
+      },
+    });
+
+    if (existingAttendance) {
+      return NextResponse.json(
+        { error: `Pointage ${type === "entree" ? "entrée" : "sortie"} déjà enregistré aujourd'hui` },
+        { status: 400 }
+      );
     }
 
-    // Enregistrer le pointage
     const attendance = await prisma.attendance.create({
       data: {
         employeeId: employee.id,
         type,
         device: device || "Web",
-        ipAddress: ipAddress || "unknown",
+        ipAddress: ipAddress || null,
         location: location || null,
         date: new Date(),
       },
       include: { employee: true },
     });
 
-    return NextResponse.json({
-      success: true,
-      attendance,
-      employee: {
-        id: employee.id,
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        position: employee.position,
-        image: employee.image,
-      },
-      type,
-    });
+    return NextResponse.json(attendance, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
