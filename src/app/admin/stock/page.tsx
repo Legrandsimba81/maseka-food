@@ -48,6 +48,7 @@ export default function AdminStockPage() {
     expirationDate: "",
   });
   const [saving, setSaving] = useState(false);
+  const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -79,6 +80,74 @@ export default function AdminStockPage() {
       toast.success("Produit supprimé");
       fetchProducts();
     } else toast.error("Erreur");
+  };
+
+  // ✅ Fonction de génération automatique du SKU
+  const generateSKU = (name: string): string => {
+    if (!name || name.trim() === "") return "";
+    // Prendre les premières lettres de chaque mot (en majuscules)
+    const words = name.trim().split(/\s+/);
+    let prefix = words.map(word => word.charAt(0).toUpperCase()).join("");
+    // Limiter à 4 caractères maximum
+    if (prefix.length > 4) prefix = prefix.substring(0, 4);
+    // Ajouter un timestamp court pour l'unicité
+    const timestamp = Date.now().toString().slice(-4);
+    return `${prefix}${timestamp}`;
+  };
+
+  // ✅ Quand le nom change, générer le SKU automatiquement (sauf si l'utilisateur l'a modifié manuellement)
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setForm({ ...form, name: newName });
+    if (!isSkuManuallyEdited) {
+      setForm(prev => ({ ...prev, sku: generateSKU(newName) }));
+    }
+  };
+
+  // ✅ Quand l'utilisateur modifie le SKU manuellement, marquer comme édité
+  const handleSkuChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, sku: e.target.value });
+    setIsSkuManuallyEdited(true);
+  };
+
+  // ✅ Réinitialiser le flag quand on ouvre le formulaire
+  const openForm = (product?: StockProduct) => {
+    if (product) {
+      // Édition : pré-remplir et marquer comme édité
+      setForm({
+        sku: product.sku,
+        name: product.name,
+        category: product.category,
+        imageUrl: product.imageUrl || "",
+        quantity: product.quantity,
+        unit: product.unit,
+        minStock: product.minStock,
+        price: product.price?.toString() || "",
+        status: product.status,
+        manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString().split("T")[0] : "",
+        expirationDate: product.expirationDate ? new Date(product.expirationDate).toISOString().split("T")[0] : "",
+      });
+      setEditingId(product.id);
+      setIsSkuManuallyEdited(true); // En édition, le SKU est déjà défini
+    } else {
+      // Création : réinitialiser
+      setForm({
+        sku: "",
+        name: "",
+        category: "",
+        imageUrl: "",
+        quantity: 0,
+        unit: "pièce",
+        minStock: 5,
+        price: "",
+        status: "disponible",
+        manufacturingDate: "",
+        expirationDate: "",
+      });
+      setEditingId(null);
+      setIsSkuManuallyEdited(false);
+    }
+    setShowForm(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -114,6 +183,7 @@ export default function AdminStockPage() {
         manufacturingDate: "",
         expirationDate: "",
       });
+      setIsSkuManuallyEdited(false);
       fetchProducts();
     } else {
       toast.error("Erreur");
@@ -122,21 +192,7 @@ export default function AdminStockPage() {
   };
 
   const editProduct = (product: StockProduct) => {
-    setForm({
-      sku: product.sku,
-      name: product.name,
-      category: product.category,
-      imageUrl: product.imageUrl || "",
-      quantity: product.quantity,
-      unit: product.unit,
-      minStock: product.minStock,
-      price: product.price?.toString() || "",
-      status: product.status,
-      manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString().split("T")[0] : "",
-      expirationDate: product.expirationDate ? new Date(product.expirationDate).toISOString().split("T")[0] : "",
-    });
-    setEditingId(product.id);
-    setShowForm(true);
+    openForm(product);
   };
 
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
@@ -145,7 +201,7 @@ export default function AdminStockPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Gestion des stocks</h1>
-        <button onClick={() => { setShowForm(true); setEditingId(null); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => openForm()} className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Ajouter un produit
         </button>
       </div>
@@ -191,8 +247,26 @@ export default function AdminStockPage() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8 border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-4">{editingId ? "Modifier" : "Ajouter"} un produit</h2>
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="block text-sm font-medium">SKU *</label><input value={form.sku} onChange={(e) => setForm({...form, sku: e.target.value})} className="input-field" required /></div>
-            <div><label className="block text-sm font-medium">Nom *</label><input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="input-field" required /></div>
+            <div>
+              <label className="block text-sm font-medium">Nom *</label>
+              <input
+                value={form.name}
+                onChange={handleNameChange}
+                className="input-field"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">SKU *</label>
+              <input
+                value={form.sku}
+                onChange={handleSkuChange}
+                className="input-field"
+                required
+                placeholder="Généré automatiquement"
+              />
+              <p className="text-xs text-gray-400 mt-1">Généré automatiquement, modifiable</p>
+            </div>
             <div><label className="block text-sm font-medium">Catégorie *</label><select value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="input-field" required><option value="">Sélectionner</option>{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
             <div><label className="block text-sm font-medium">Image</label><ImageUpload onUpload={(url) => setForm({...form, imageUrl: url})} onRemove={() => setForm({...form, imageUrl: ""})} currentImage={form.imageUrl} label="Image" /></div>
             <div><label className="block text-sm font-medium">Quantité *</label><input type="number" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseInt(e.target.value) || 0})} className="input-field" required /></div>
@@ -233,7 +307,7 @@ export default function AdminStockPage() {
             <tbody>
               {products.map((p) => (
                 <tr key={p.id} className="border-b dark:border-gray-700">
-                  <td className="px-4 py-2 text-sm">{p.sku}</td>
+                  <td className="px-4 py-2 text-sm font-mono">{p.sku}</td>
                   <td className="px-4 py-2 text-sm font-medium">{p.name}</td>
                   <td className="px-4 py-2 text-sm">{p.category}</td>
                   <td className="px-4 py-2 text-sm">{p.quantity}</td>
