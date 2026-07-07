@@ -4,13 +4,15 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Html5Qrcode } from "html5-qrcode";
+import { Scan, LogIn, LogOut, User, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
 
 export default function ScanPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
   const [type, setType] = useState<"entree" | "sortie">("entree");
-  const [result, setResult] = useState<{ employee: any; type: string } | null>(null);
+  const [result, setResult] = useState<{ employee: any; type: string; status: "success" | "error" } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
@@ -51,10 +53,10 @@ export default function ScanPage() {
   }, [session, router]);
 
   const onScanSuccess = async (decodedText: string) => {
-    // decodedText est l'URL contenant le token
-    const url = new URL(decodedText);
-    const token = url.searchParams.get("token");
-    if (!token) {
+    // Le QR contient le QR Code directement (pas d'URL)
+    const qrCode = decodedText.trim();
+
+    if (!qrCode) {
       toast.error("QR Code invalide");
       return;
     }
@@ -65,70 +67,149 @@ export default function ScanPage() {
       setScanning(false);
     }
 
+    setIsProcessing(true);
+
     try {
-      const res = await fetch("/api/admin/attendance", {
+      const res = await fetch("/api/attendance/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token,
+          qrCode,
           type,
-          deviceInfo: navigator.userAgent,
-          ipAddress: "", // sera ajouté côté serveur ou via IP publique
-          location: "", // optionnel, via geolocation API
+          device: navigator.userAgent || "Web",
+          ipAddress: "",
+          location: "",
         }),
       });
       const data = await res.json();
       if (res.ok) {
-        setResult({ employee: data.employee, type: data.type });
-        toast.success(`Pointage ${type} enregistré pour ${data.employee.firstName} ${data.employee.lastName}`);
+        setResult({ employee: data.employee, type: data.type, status: "success" });
+        toast.success(`Pointage ${type === "entree" ? "entrée" : "sortie"} enregistré`);
       } else {
+        setResult({ employee: null, type: "", status: "error" });
         toast.error(data.error || "Erreur");
       }
     } catch (err) {
       toast.error("Erreur réseau");
+      setResult({ employee: null, type: "", status: "error" });
+    } finally {
+      setIsProcessing(false);
     }
 
-    // Réinitialiser pour un nouveau scan
+    // Réinitialiser pour un nouveau scan après 3 secondes
     setTimeout(() => {
       setResult(null);
       if (scannerRef.current) {
-        scannerRef.current.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, onScanError);
+        scannerRef.current.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          onScanSuccess,
+          onScanError
+        );
         setScanning(true);
       }
     }, 3000);
   };
 
   const onScanError = (err: any) => {
-    // ignore les erreurs de scan (pas de QR détecté)
+    // Ignorer les erreurs de scan
   };
 
-  if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
+  if (!session || session.user.role !== "admin") return <div className="text-center py-8 text-red-500">Accès refusé</div>;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">Pointage par QR Code</h1>
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setType("entree")}
-          className={`btn-primary ${type === "entree" ? "bg-green-600" : ""}`}
-        >
-          🟢 Entrée
-        </button>
-        <button
-          onClick={() => setType("sortie")}
-          className={`btn-primary ${type === "sortie" ? "bg-red-600" : ""}`}
-        >
-          🔴 Sortie
-        </button>
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Pointage par QR Code</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">Scannez le QR Code d'un employé pour enregistrer son pointage</p>
       </div>
 
-      <div id="reader" className="w-full max-w-md mx-auto border rounded-lg overflow-hidden"></div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <div className="flex gap-4 justify-center mb-6">
+          <button
+            onClick={() => setType("entree")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition ${
+              type === "entree"
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            <LogIn size={20} /> Arrivée
+          </button>
+          <button
+            onClick={() => setType("sortie")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition ${
+              type === "sortie"
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            <LogOut size={20} /> Sortie
+          </button>
+        </div>
+
+        <div className="relative">
+          <div id="reader" className="w-full max-w-sm mx-auto border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+            {!scanning && !isProcessing && (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                <Scan size={48} className="mb-2" />
+                <p>En attente du scan...</p>
+              </div>
+            )}
+            {isProcessing && (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                <Loader2 size={48} className="animate-spin mb-2" />
+                <p>Traitement en cours...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {result && (
-        <div className="mt-6 p-4 bg-green-100 dark:bg-green-900 rounded-lg">
-          <p className="font-semibold">{result.employee.firstName} {result.employee.lastName}</p>
-          <p>Pointage : {result.type === "entree" ? "✅ Entrée" : "❌ Sortie"}</p>
-          <p className="text-sm text-gray-600">Poste : {result.employee.position}</p>
+        <div className={`p-6 rounded-xl shadow-lg ${
+          result.status === "success"
+            ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800"
+            : "bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800"
+        }`}>
+          {result.status === "success" ? (
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <CheckCircle className="text-green-600 dark:text-green-400" size={28} />
+                <span className="text-lg font-semibold text-green-700 dark:text-green-300">
+                  Pointage {result.type === "entree" ? "entrée" : "sortie"} enregistré
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                {result.employee.image ? (
+                  <img src={result.employee.image} alt={result.employee.firstName} className="w-16 h-16 rounded-full object-cover" />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-2xl text-gray-600">
+                    {result.employee.firstName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="font-bold text-lg">{result.employee.firstName} {result.employee.lastName}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{result.employee.position}</p>
+                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <Clock size={14} />
+                    <span>{new Date().toLocaleTimeString()}</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-3">
+              <XCircle className="text-red-600 dark:text-red-400" size={28} />
+              <span className="text-lg font-semibold text-red-700 dark:text-red-300">Erreur lors du pointage</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!result && !isProcessing && scanning && (
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+          <Scan className="inline mr-1" size={16} /> Scannez le QR Code de l'employé
         </div>
       )}
     </div>
