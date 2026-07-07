@@ -4,19 +4,21 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Html5Qrcode } from "html5-qrcode";
-import { Scan, LogIn, LogOut, CheckCircle, XCircle, Clock, Loader2, QrCode, ArrowRight } from "lucide-react";
+import { Scan, LogIn, CheckCircle, XCircle, Clock, Loader2, QrCode, ArrowRight } from "lucide-react";
 
 export default function ScanPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [type, setType] = useState<"entree" | "sortie">("entree");
-  const [result, setResult] = useState<{ employee: any; type: string; status: "success" | "error" } | null>(null);
+  const [result, setResult] = useState<{ employee: any; status: "success" | "error" } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [manualQr, setManualQr] = useState("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerRunningRef = useRef(false);
   const isMounted = useRef(true);
+
+  // Type de pointage : toujours "entree"
+  const type = "entree";
 
   // Fonction de traitement du QR (commune au scan et à la saisie manuelle)
   const processQrCode = useCallback(async (qrCode: string) => {
@@ -30,6 +32,9 @@ export default function ScanPage() {
     if (isMounted.current) setIsProcessing(true);
 
     try {
+      // Envoyer le timestamp du client
+      const clientTimestamp = new Date().toISOString();
+
       const res = await fetch("/api/attendance/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,24 +44,25 @@ export default function ScanPage() {
           device: navigator.userAgent || "Web",
           ipAddress: "",
           location: "",
+          timestamp: clientTimestamp,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         if (isMounted.current) {
-          setResult({ employee: data.employee, type: data.type, status: "success" });
-          toast.success(`Pointage ${type === "entree" ? "entrée" : "sortie"} enregistré`);
+          setResult({ employee: data.employee, status: "success" });
+          toast.success(`Pointage entrée enregistré à ${new Date(clientTimestamp).toLocaleTimeString()}`);
         }
       } else {
         if (isMounted.current) {
-          setResult({ employee: null, type: "", status: "error" });
+          setResult({ employee: null, status: "error" });
           toast.error(data.error || "Erreur");
         }
       }
     } catch {
       if (isMounted.current) {
         toast.error("Erreur réseau");
-        setResult({ employee: null, type: "", status: "error" });
+        setResult({ employee: null, status: "error" });
       }
     } finally {
       if (isMounted.current) setIsProcessing(false);
@@ -86,7 +92,7 @@ export default function ScanPage() {
         }
       }
     }, 3000);
-  }, [type, isProcessing]);
+  }, [isProcessing]);
 
   // Fonction de succès du scanner (extrait le QR du texte décodé)
   const onScanSuccess = useCallback(async (decodedText: string) => {
@@ -165,27 +171,13 @@ export default function ScanPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Pointage par QR Code</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Pointage – Arrivée</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Scannez le QR Code d’un employé ou saisissez-le manuellement
+          Scannez le QR Code d’un employé pour enregistrer son arrivée
         </p>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-        <div className="flex gap-4 justify-center mb-6">
-          <button
-            onClick={() => setType("entree")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition ${
-              type === "entree"
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-            }`}
-          >
-            <LogIn size={20} /> Arrivée
-          </button>
-          
-        </div>
-
         {/* Scanner vidéo */}
         <div className="relative">
           <div
@@ -221,7 +213,7 @@ export default function ScanPage() {
         )}
       </div>
 
-      {/* Saisie manuelle */}
+      {/* Saisie manuelle (optionnelle) */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
         <form onSubmit={handleManualSubmit} className="flex flex-col sm:flex-row gap-3">
           <input
@@ -257,7 +249,7 @@ export default function ScanPage() {
               <div className="flex items-center gap-3 mb-3">
                 <CheckCircle className="text-green-600 dark:text-green-400" size={28} />
                 <span className="text-lg font-semibold text-green-700 dark:text-green-300">
-                  Pointage {result.type === "entree" ? "entrée" : "sortie"} enregistré
+                  Arrivée enregistrée
                 </span>
               </div>
               <div className="flex items-center gap-4">
