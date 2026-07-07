@@ -3,8 +3,9 @@ import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import ImageUpload from "@/components/ImageUpload";
-import { Search, Plus, Edit, Trash2, QrCode, Download, User, Clock, Calendar, Printer, Eye, Award } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, Award, Download, User, Clock } from "lucide-react";
 import QRCode from "qrcode";
+import html2canvas from "html2canvas";
 
 interface Employee {
   id: string;
@@ -55,6 +56,7 @@ export default function AdminEmployeesPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [showRanking, setShowRanking] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -142,41 +144,20 @@ export default function AdminEmployeesPage() {
     setShowCardModal(true);
   };
 
-  const printCard = () => {
-    const printWindow = window.open("", "_blank");
-    if (printWindow && qrDataUrl && selectedEmployee) {
-      const emp = selectedEmployee;
-      printWindow.document.write(`
-        <html><head><title>Carte ${emp.firstName} ${emp.lastName}</title>
-        <style>
-          body { margin:0; padding:0; background:#f0f0f0; display:flex; justify-content:center; align-items:center; height:100vh; font-family:Arial,sans-serif; }
-          .card { width: 350px; padding: 20px; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align:center; border: 3px solid #DC2626; position:relative; overflow:hidden; }
-          .card-header { background: #111; color: #fff; padding: 10px; margin: -20px -20px 10px -20px; border-radius: 16px 16px 0 0; font-size: 18px; font-weight:bold; }
-          .card img { width: 80px; height: 80px; border-radius:50%; object-fit:cover; border:3px solid #DC2626; margin-bottom:10px; }
-          .card h2 { font-size: 20px; margin:5px 0; color:#111; }
-          .card .position { color:#DC2626; font-weight:bold; font-size:16px; }
-          .card .dept { color:#666; font-size:14px; }
-          .card .qr { margin:15px auto; width:150px; height:150px; }
-          .card .footer { border-top:1px solid #eee; padding-top:10px; font-size:12px; color:#aaa; }
-          .card .badge { position:absolute; top:10px; right:10px; background:#DC2626; color:#fff; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:bold; }
-        </style>
-        </head><body>
-        <div class="card">
-          <div class="card-header">MASEKA FOOD</div>
-          <div class="badge">EMPLOYÉ</div>
-          ${emp.image ? `<img src="${emp.image}" alt="${emp.firstName}" />` : `<div style="width:80px;height:80px;border-radius:50%;background:#ddd;margin:10px auto;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>`}
-          <h2>${emp.firstName} ${emp.lastName}</h2>
-          <p class="position">${emp.position}</p>
-          ${emp.department ? `<p class="dept">${emp.department}</p>` : ""}
-          ${emp.email ? `<p style="font-size:12px;color:#666;">📧 ${emp.email}</p>` : ""}
-          ${emp.phone ? `<p style="font-size:12px;color:#666;">📱 ${emp.phone}</p>` : ""}
-          <div class="qr"><img src="${qrDataUrl}" alt="QR" style="width:100%;height:100%;" /></div>
-          <div class="footer">ID: ${emp.qrCode} • Valable pour pointage</div>
-        </div>
-        </body></html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
+  const downloadCard = async () => {
+    if (!cardRef.current) return;
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+      });
+      const link = document.createElement("a");
+      link.download = `carte-${selectedEmployee?.firstName}-${selectedEmployee?.lastName}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      toast.error("Erreur téléchargement");
     }
   };
 
@@ -292,7 +273,7 @@ export default function AdminEmployeesPage() {
         </div>
       )}
 
-      {/* Liste */}
+      {/* Liste des employés (design amélioré) */}
       {loading ? (
         <p>Chargement...</p>
       ) : employees.length === 0 ? (
@@ -301,32 +282,33 @@ export default function AdminEmployeesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {employees.map((emp) => (
             <div key={emp.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="relative h-32 bg-gradient-to-r from-red-600 to-red-800"></div>
-              <div className="relative px-4 pb-4">
-                <div className="flex justify-center -mt-12">
-                  {emp.image ? (
-                    <img src={emp.image} alt={emp.firstName} className="w-24 h-24 rounded-full border-4 border-white object-cover" />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-3xl text-gray-500">
-                      {emp.firstName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="text-center mt-2">
-                  <h3 className="text-lg font-bold">{emp.firstName} {emp.lastName}</h3>
-                  <p className="text-sm text-red-600 font-medium">{emp.position}</p>
-                  {emp.department && <p className="text-xs text-gray-500">{emp.department}</p>}
-                  <p className="text-xs text-gray-400 mt-1">QR: {emp.qrCode}</p>
-                  <div className="flex justify-center gap-1 mt-1">
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${emp.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                      {emp.isActive ? "Actif" : "Inactif"}
-                    </span>
-                    <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">
-                      {emp._count.attendances} pointages
-                    </span>
+              <div className="h-32 bg-gradient-to-r from-red-600 to-red-800 relative">
+                {emp.image ? (
+                  <img
+                    src={emp.image}
+                    alt={emp.firstName}
+                    className="absolute bottom-0 left-4 w-24 h-24 object-cover border-2 border-white rounded-md shadow-md"
+                    style={{ bottom: "-24px" }}
+                  />
+                ) : (
+                  <div className="absolute bottom-0 left-4 w-24 h-24 bg-gray-300 border-2 border-white rounded-md flex items-center justify-center text-3xl text-gray-600" style={{ bottom: "-24px" }}>
+                    {emp.firstName.charAt(0).toUpperCase()}
                   </div>
+                )}
+              </div>
+              <div className="pt-8 px-4 pb-4">
+                <h3 className="text-lg font-bold">{emp.firstName} {emp.lastName}</h3>
+                <p className="text-sm text-red-600 font-medium">{emp.position}</p>
+                {emp.department && <p className="text-xs text-gray-500">{emp.department}</p>}
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${emp.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    {emp.isActive ? "Actif" : "Inactif"}
+                  </span>
+                  <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">
+                    {emp._count.attendances} pointages
+                  </span>
                 </div>
-                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                <div className="flex flex-wrap gap-2 mt-3">
                   <button onClick={() => editEmployee(emp)} className="text-blue-500 hover:text-blue-700 p-1"><Edit size={16} /></button>
                   <button onClick={() => deleteEmployee(emp.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16} /></button>
                   <button onClick={() => openCardModal(emp)} className="text-gray-500 hover:text-gray-700 p-1"><Eye size={16} /></button>
@@ -337,40 +319,56 @@ export default function AdminEmployeesPage() {
         </div>
       )}
 
-      {/* Modal Carte */}
+      {/* Modal carte de service */}
       {showCardModal && selectedEmployee && qrDataUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 relative shadow-2xl">
             <button
               onClick={() => setShowCardModal(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
             >
               ✕
             </button>
-            <div className="card mx-auto w-full bg-white rounded-xl border-2 border-red-600 overflow-hidden shadow-lg">
-              <div className="bg-black text-white py-2 text-center font-bold text-sm">MASEKA FOOD</div>
-              <div className="p-4 text-center">
-                {selectedEmployee.image ? (
-                  <img src={selectedEmployee.image} alt={selectedEmployee.firstName} className="w-24 h-24 rounded-full mx-auto object-cover border-2 border-red-600" />
-                ) : (
-                  <div className="w-24 h-24 rounded-full mx-auto bg-gray-200 flex items-center justify-center text-3xl text-gray-500">
-                    {selectedEmployee.firstName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <h2 className="text-xl font-bold mt-2">{selectedEmployee.firstName} {selectedEmployee.lastName}</h2>
-                <p className="text-red-600 font-semibold">{selectedEmployee.position}</p>
-                {selectedEmployee.department && <p className="text-gray-500 text-sm">{selectedEmployee.department}</p>}
-                {selectedEmployee.email && <p className="text-xs text-gray-500">📧 {selectedEmployee.email}</p>}
-                {selectedEmployee.phone && <p className="text-xs text-gray-500">📱 {selectedEmployee.phone}</p>}
-                <div className="flex justify-center my-3">
-                  <img src={qrDataUrl} alt="QR" className="w-32 h-32" />
+            {/* Carte de service rectangulaire */}
+            <div ref={cardRef} className="w-full bg-white rounded-xl overflow-hidden shadow-lg border-2 border-red-600">
+              <div className="bg-red-600 text-white px-6 py-3 flex justify-between items-center">
+                <span className="font-bold text-lg">MASEKA FOOD</span>
+                <span className="text-xs bg-white/20 px-2 py-1 rounded">SERVICE CARD</span>
+              </div>
+              <div className="flex flex-col sm:flex-row">
+                <div className="sm:w-1/3 bg-red-50 p-4 flex flex-col items-center justify-center">
+                  {selectedEmployee.image ? (
+                    <img
+                      src={selectedEmployee.image}
+                      alt={selectedEmployee.firstName}
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-red-600 shadow"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-5xl text-gray-500">
+                      {selectedEmployee.firstName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-gray-400">ID: {selectedEmployee.qrCode}</p>
+                <div className="sm:w-2/3 p-4 space-y-1">
+                  <h2 className="text-xl font-bold text-gray-800">{selectedEmployee.firstName} {selectedEmployee.lastName}</h2>
+                  <p className="text-red-600 font-semibold">{selectedEmployee.position}</p>
+                  {selectedEmployee.department && <p className="text-sm text-gray-600">{selectedEmployee.department}</p>}
+                  {selectedEmployee.email && <p className="text-sm text-gray-600">📧 {selectedEmployee.email}</p>}
+                  {selectedEmployee.phone && <p className="text-sm text-gray-600">📱 {selectedEmployee.phone}</p>}
+                  <div className="flex justify-start mt-2">
+                    <img src={qrDataUrl} alt="QR" className="w-24 h-24" />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">ID: {selectedEmployee.qrCode}</p>
+                </div>
+              </div>
+              <div className="bg-gray-100 text-center text-xs text-gray-500 py-1 border-t">
+                Valable pour pointage – Présentez ce QR à l'entrée
               </div>
             </div>
+
             <div className="mt-4 flex gap-2">
-              <button onClick={printCard} className="btn-primary flex-1 flex items-center justify-center gap-2">
-                <Printer size={16} /> Imprimer
+              <button onClick={downloadCard} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                <Download size={16} /> Télécharger
               </button>
               <button onClick={() => setShowCardModal(false)} className="btn-secondary flex-1">Fermer</button>
             </div>

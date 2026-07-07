@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { qrCode, type, device, ipAddress, location } = await req.json();
+    const { qrCode, type, deviceInfo, ipAddress, location } = await req.json();
 
     if (!qrCode || !type || !["entree", "sortie"].includes(type)) {
       return NextResponse.json({ error: "QR Code et type (entree/sortie) requis" }, { status: 400 });
@@ -19,35 +19,45 @@ export async function POST(req: Request) {
     const employee = await prisma.employee.findUnique({
       where: { qrCode },
     });
-
     if (!employee) {
       return NextResponse.json({ error: "Employé non trouvé" }, { status: 404 });
     }
-
     if (!employee.isActive) {
       return NextResponse.json({ error: "Employé inactif" }, { status: 403 });
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Vérifier si un pointage du même type existe déjà aujourd'hui
+    const existing = await prisma.attendance.findFirst({
+      where: {
+        employeeId: employee.id,
+        type,
+        timestamp: { gte: today },
+      },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: `Vous avez déjà un pointage ${type === "entree" ? "d'entrée" : "de sortie"} aujourd'hui.` },
+        { status: 400 }
+      );
+    }
+
+    // Enregistrer le pointage
     const attendance = await prisma.attendance.create({
       data: {
         employeeId: employee.id,
         type,
-        device: device || "Web",
-        ipAddress: ipAddress || req.headers.get("x-forwarded-for") || "unknown",
+        device: deviceInfo || null,
+        ipAddress: ipAddress || null,
         location: location || null,
+        date: new Date(),
       },
-      include: { employee: { select: { firstName: true, lastName: true, image: true } } },
+      include: { employee: true },
     });
 
-    return NextResponse.json({
-      success: true,
-      attendance,
-      employee: {
-        name: `${employee.firstName} ${employee.lastName}`,
-        image: employee.image,
-        position: employee.position,
-      },
-    });
+    return NextResponse.json(attendance, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
