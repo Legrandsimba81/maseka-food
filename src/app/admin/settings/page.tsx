@@ -25,6 +25,11 @@ export default function AdminSettingsPage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
+  // Horaires de travail
+  const [workStart, setWorkStart] = useState("08:00");
+  const [workEnd, setWorkEnd] = useState("17:00");
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -37,6 +42,8 @@ export default function AdminSettingsPage() {
         setExchangeRate(data.exchangeRate || 2300);
         setHeroImage(data.heroImage || "");
         setHeroImageTemp(data.heroImage || "");
+        setWorkStart(data.workStart || "08:00");
+        setWorkEnd(data.workEnd || "17:00");
       })
       .catch(err => console.error(err));
   }, []);
@@ -99,6 +106,22 @@ export default function AdminSettingsPage() {
     setSavingHero(false);
   };
 
+  // Sauvegarde des horaires de travail
+  const saveWorkSchedule = async () => {
+    setSavingSchedule(true);
+    const res = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workStart, workEnd }),
+    });
+    if (res.ok) {
+      toast.success("Horaires mis à jour");
+    } else {
+      toast.error("Erreur");
+    }
+    setSavingSchedule(false);
+  };
+
   const deleteUser = async (id: string, role: string) => {
     if (role === "admin") {
       toast.error("Suppression d'un administrateur non autorisée");
@@ -133,6 +156,7 @@ export default function AdminSettingsPage() {
       toast.error(err.error || "Erreur");
     }
   };
+
   const [stats, setStats] = useState({
     totalViews: 0,
     todayViews: 0,
@@ -142,7 +166,6 @@ export default function AdminSettingsPage() {
     uniqueVisitorsMonth: 0,
   });
 
-  // Ajoutez ces états
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -154,6 +177,7 @@ export default function AdminSettingsPage() {
       .then(data => setStats(data))
       .catch(err => console.error(err));
   }, []);
+
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
 
   return (
@@ -207,7 +231,44 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      {/* // Dans le JSX, ajoutez cette nouvelle section */}
+      {/* Horaires de travail */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">Horaires de travail (ponctualité)</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Ces horaires sont utilisés pour calculer les retards dans le classement des employés.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Heure d'arrivée</label>
+            <input
+              type="time"
+              value={workStart}
+              onChange={(e) => setWorkStart(e.target.value)}
+              className="input-field w-full"
+            />
+            <p className="text-xs text-gray-400 mt-1">Ex: 08:00</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Heure de sortie</label>
+            <input
+              type="time"
+              value={workEnd}
+              onChange={(e) => setWorkEnd(e.target.value)}
+              className="input-field w-full"
+            />
+            <p className="text-xs text-gray-400 mt-1">Ex: 17:00</p>
+          </div>
+        </div>
+        <button
+          onClick={saveWorkSchedule}
+          disabled={savingSchedule}
+          className="btn-primary mt-4"
+        >
+          {savingSchedule ? "Enregistrement..." : "Enregistrer les horaires"}
+        </button>
+      </div>
+
+      {/* Contacter les clients */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Contacter les clients</h2>
         <form
@@ -288,6 +349,7 @@ export default function AdminSettingsPage() {
         </form>
       </div>
 
+      {/* Statistiques de visite */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Statistiques de visite</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">

@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import ImageUpload from "@/components/ImageUpload";
-import { Search, Plus, Edit, Trash2, QrCode, Download, User, Clock, Calendar, Printer } from "lucide-react";
+import { Search, Plus, Edit, Trash2, QrCode, Download, User, Clock, Calendar, Printer, Eye, Award } from "lucide-react";
 import QRCode from "qrcode";
 
 interface Employee {
@@ -21,6 +21,17 @@ interface Employee {
   _count: { attendances: number };
 }
 
+interface RankingItem {
+  id: string;
+  name: string;
+  position: string;
+  image: string | null;
+  totalEntries: number;
+  lateCount: number;
+  onTimeCount: number;
+  punctualityRate: number;
+}
+
 export default function AdminEmployeesPage() {
   const { data: session } = useSession();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -28,7 +39,6 @@ export default function AdminEmployeesPage() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -40,10 +50,15 @@ export default function AdminEmployeesPage() {
     isActive: true,
   });
   const [saving, setSaving] = useState(false);
-  const qrRef = useRef<HTMLDivElement>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [ranking, setRanking] = useState<RankingItem[]>([]);
+  const [showRanking, setShowRanking] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
+    fetchRanking();
   }, []);
 
   const fetchEmployees = async () => {
@@ -55,6 +70,11 @@ export default function AdminEmployeesPage() {
     setLoading(false);
   };
 
+  const fetchRanking = async () => {
+    const res = await fetch("/api/admin/employees/ranking");
+    if (res.ok) setRanking(await res.json());
+  };
+
   const handleSearch = () => fetchEmployees();
 
   const deleteEmployee = async (id: string) => {
@@ -63,6 +83,7 @@ export default function AdminEmployeesPage() {
     if (res.ok) {
       toast.success("Employé supprimé");
       fetchEmployees();
+      fetchRanking();
     } else toast.error("Erreur");
   };
 
@@ -82,6 +103,7 @@ export default function AdminEmployeesPage() {
       setEditingId(null);
       setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true });
       fetchEmployees();
+      fetchRanking();
     } else {
       toast.error("Erreur");
     }
@@ -114,39 +136,48 @@ export default function AdminEmployeesPage() {
     }
   };
 
-  const printCard = (emp: Employee) => {
+  const openCardModal = (emp: Employee) => {
+    setSelectedEmployee(emp);
     generateQR(emp.qrCode);
-    setTimeout(() => {
-      const printWindow = window.open("", "_blank");
-      if (printWindow && qrDataUrl) {
-        printWindow.document.write(`
-          <html><head><title>Carte ${emp.firstName} ${emp.lastName}</title>
-          <style>
-            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; }
-            .card { width: 350px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align: center; }
-            .card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
-            .card h2 { margin: 5px 0; font-size: 20px; }
-            .card p { color: #666; margin: 3px 0; font-size: 14px; }
-            .card .qr { margin: 15px auto; width: 150px; height: 150px; }
-            .card .footer { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 12px; color: #aaa; }
-          </style>
-          </head><body>
-          <div class="card">
-            ${emp.image ? `<img src="${emp.image}" alt="${emp.firstName}" />` : `<div style="width:80px;height:80px;border-radius:50%;background:#ddd;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>`}
-            <h2>${emp.firstName} ${emp.lastName}</h2>
-            <p><strong>${emp.position}</strong></p>
-            ${emp.department ? `<p>${emp.department}</p>` : ""}
-            ${emp.email ? `<p>📧 ${emp.email}</p>` : ""}
-            ${emp.phone ? `<p>📱 ${emp.phone}</p>` : ""}
-            <div class="qr"><img src="${qrDataUrl}" alt="QR Code" style="width:100%;height:100%;" /></div>
-            <div class="footer">ID: ${emp.qrCode} • Maseka Food</div>
-          </div>
-          </body></html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      }
-    }, 300);
+    setShowCardModal(true);
+  };
+
+  const printCard = () => {
+    const printWindow = window.open("", "_blank");
+    if (printWindow && qrDataUrl && selectedEmployee) {
+      const emp = selectedEmployee;
+      printWindow.document.write(`
+        <html><head><title>Carte ${emp.firstName} ${emp.lastName}</title>
+        <style>
+          body { margin:0; padding:0; background:#f0f0f0; display:flex; justify-content:center; align-items:center; height:100vh; font-family:Arial,sans-serif; }
+          .card { width: 350px; padding: 20px; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align:center; border: 3px solid #DC2626; position:relative; overflow:hidden; }
+          .card-header { background: #111; color: #fff; padding: 10px; margin: -20px -20px 10px -20px; border-radius: 16px 16px 0 0; font-size: 18px; font-weight:bold; }
+          .card img { width: 80px; height: 80px; border-radius:50%; object-fit:cover; border:3px solid #DC2626; margin-bottom:10px; }
+          .card h2 { font-size: 20px; margin:5px 0; color:#111; }
+          .card .position { color:#DC2626; font-weight:bold; font-size:16px; }
+          .card .dept { color:#666; font-size:14px; }
+          .card .qr { margin:15px auto; width:150px; height:150px; }
+          .card .footer { border-top:1px solid #eee; padding-top:10px; font-size:12px; color:#aaa; }
+          .card .badge { position:absolute; top:10px; right:10px; background:#DC2626; color:#fff; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:bold; }
+        </style>
+        </head><body>
+        <div class="card">
+          <div class="card-header">MASEKA FOOD</div>
+          <div class="badge">EMPLOYÉ</div>
+          ${emp.image ? `<img src="${emp.image}" alt="${emp.firstName}" />` : `<div style="width:80px;height:80px;border-radius:50%;background:#ddd;margin:10px auto;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>`}
+          <h2>${emp.firstName} ${emp.lastName}</h2>
+          <p class="position">${emp.position}</p>
+          ${emp.department ? `<p class="dept">${emp.department}</p>` : ""}
+          ${emp.email ? `<p style="font-size:12px;color:#666;">📧 ${emp.email}</p>` : ""}
+          ${emp.phone ? `<p style="font-size:12px;color:#666;">📱 ${emp.phone}</p>` : ""}
+          <div class="qr"><img src="${qrDataUrl}" alt="QR" style="width:100%;height:100%;" /></div>
+          <div class="footer">ID: ${emp.qrCode} • Valable pour pointage</div>
+        </div>
+        </body></html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
@@ -155,10 +186,70 @@ export default function AdminEmployeesPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Gestion des employés</h1>
-        <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true }); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Ajouter un employé
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowRanking(!showRanking)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Award size={18} /> {showRanking ? "Masquer classement" : "Voir classement"}
+          </button>
+          <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true }); }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Ajouter un employé
+          </button>
+        </div>
       </div>
+
+      {/* Classement */}
+      {showRanking && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold flex items-center gap-2"><Award size={20} /> Classement par ponctualité</h2>
+            <p className="text-sm text-gray-500">Basé sur les entrées (retard &gt; 8h00)</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase">Employé</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase">Total entrées</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase">À l'heure</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase">Retards</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase">Ponctualité</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranking.map((item, idx) => (
+                  <tr key={item.id} className="border-b dark:border-gray-700">
+                    <td className="px-4 py-2 flex items-center gap-2">
+                      <span className="font-medium">{idx+1}.</span>
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-6 h-6 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600">
+                          {item.name.charAt(0)}
+                        </div>
+                      )}
+                      {item.name} ({item.position})
+                    </td>
+                    <td className="px-4 py-2">{item.totalEntries}</td>
+                    <td className="px-4 py-2 text-green-600">{item.onTimeCount}</td>
+                    <td className="px-4 py-2 text-red-600">{item.lateCount}</td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        item.punctualityRate >= 90 ? "bg-green-100 text-green-800" :
+                        item.punctualityRate >= 70 ? "bg-yellow-100 text-yellow-800" :
+                        "bg-red-100 text-red-800"
+                      }`}>
+                        {item.punctualityRate}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Recherche */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
@@ -210,7 +301,7 @@ export default function AdminEmployeesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {employees.map((emp) => (
             <div key={emp.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="relative h-32 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+              <div className="relative h-32 bg-gradient-to-r from-red-600 to-red-800"></div>
               <div className="relative px-4 pb-4">
                 <div className="flex justify-center -mt-12">
                   {emp.image ? (
@@ -223,7 +314,7 @@ export default function AdminEmployeesPage() {
                 </div>
                 <div className="text-center mt-2">
                   <h3 className="text-lg font-bold">{emp.firstName} {emp.lastName}</h3>
-                  <p className="text-sm text-primary font-medium">{emp.position}</p>
+                  <p className="text-sm text-red-600 font-medium">{emp.position}</p>
                   {emp.department && <p className="text-xs text-gray-500">{emp.department}</p>}
                   <p className="text-xs text-gray-400 mt-1">QR: {emp.qrCode}</p>
                   <div className="flex justify-center gap-1 mt-1">
@@ -238,11 +329,52 @@ export default function AdminEmployeesPage() {
                 <div className="flex flex-wrap justify-center gap-2 mt-3">
                   <button onClick={() => editEmployee(emp)} className="text-blue-500 hover:text-blue-700 p-1"><Edit size={16} /></button>
                   <button onClick={() => deleteEmployee(emp.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16} /></button>
-                  <button onClick={() => printCard(emp)} className="text-gray-500 hover:text-gray-700 p-1"><Printer size={16} /></button>
+                  <button onClick={() => openCardModal(emp)} className="text-gray-500 hover:text-gray-700 p-1"><Eye size={16} /></button>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal Carte */}
+      {showCardModal && selectedEmployee && qrDataUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+            <button
+              onClick={() => setShowCardModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+            <div className="card mx-auto w-full bg-white rounded-xl border-2 border-red-600 overflow-hidden shadow-lg">
+              <div className="bg-black text-white py-2 text-center font-bold text-sm">MASEKA FOOD</div>
+              <div className="p-4 text-center">
+                {selectedEmployee.image ? (
+                  <img src={selectedEmployee.image} alt={selectedEmployee.firstName} className="w-24 h-24 rounded-full mx-auto object-cover border-2 border-red-600" />
+                ) : (
+                  <div className="w-24 h-24 rounded-full mx-auto bg-gray-200 flex items-center justify-center text-3xl text-gray-500">
+                    {selectedEmployee.firstName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <h2 className="text-xl font-bold mt-2">{selectedEmployee.firstName} {selectedEmployee.lastName}</h2>
+                <p className="text-red-600 font-semibold">{selectedEmployee.position}</p>
+                {selectedEmployee.department && <p className="text-gray-500 text-sm">{selectedEmployee.department}</p>}
+                {selectedEmployee.email && <p className="text-xs text-gray-500">📧 {selectedEmployee.email}</p>}
+                {selectedEmployee.phone && <p className="text-xs text-gray-500">📱 {selectedEmployee.phone}</p>}
+                <div className="flex justify-center my-3">
+                  <img src={qrDataUrl} alt="QR" className="w-32 h-32" />
+                </div>
+                <p className="text-xs text-gray-400">ID: {selectedEmployee.qrCode}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button onClick={printCard} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                <Printer size={16} /> Imprimer
+              </button>
+              <button onClick={() => setShowCardModal(false)} className="btn-secondary flex-1">Fermer</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
