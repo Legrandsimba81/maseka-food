@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import ImageUpload from "@/components/ImageUpload";
-import { Search, Plus, Edit, Trash2, Eye, Package, ArrowDown, ArrowUp, FileSpreadsheet } from "lucide-react";
+import { Search, Plus, Edit, Trash2 } from "lucide-react";
 
 interface StockProduct {
   id: string;
@@ -82,20 +82,16 @@ export default function AdminStockPage() {
     } else toast.error("Erreur");
   };
 
-  // ✅ Fonction de génération automatique du SKU
+  // Génération automatique du SKU
   const generateSKU = (name: string): string => {
     if (!name || name.trim() === "") return "";
-    // Prendre les premières lettres de chaque mot (en majuscules)
     const words = name.trim().split(/\s+/);
     let prefix = words.map(word => word.charAt(0).toUpperCase()).join("");
-    // Limiter à 4 caractères maximum
     if (prefix.length > 4) prefix = prefix.substring(0, 4);
-    // Ajouter un timestamp court pour l'unicité
     const timestamp = Date.now().toString().slice(-4);
     return `${prefix}${timestamp}`;
   };
 
-  // ✅ Quand le nom change, générer le SKU automatiquement (sauf si l'utilisateur l'a modifié manuellement)
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     setForm({ ...form, name: newName });
@@ -104,16 +100,13 @@ export default function AdminStockPage() {
     }
   };
 
-  // ✅ Quand l'utilisateur modifie le SKU manuellement, marquer comme édité
   const handleSkuChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, sku: e.target.value });
     setIsSkuManuallyEdited(true);
   };
 
-  // ✅ Réinitialiser le flag quand on ouvre le formulaire
   const openForm = (product?: StockProduct) => {
     if (product) {
-      // Édition : pré-remplir et marquer comme édité
       setForm({
         sku: product.sku,
         name: product.name,
@@ -128,9 +121,8 @@ export default function AdminStockPage() {
         expirationDate: product.expirationDate ? new Date(product.expirationDate).toISOString().split("T")[0] : "",
       });
       setEditingId(product.id);
-      setIsSkuManuallyEdited(true); // En édition, le SKU est déjà défini
+      setIsSkuManuallyEdited(true);
     } else {
-      // Création : réinitialiser
       setForm({
         sku: "",
         name: "",
@@ -152,12 +144,31 @@ export default function AdminStockPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation des valeurs négatives
+    const quantity = parseInt(form.quantity as any);
+    const minStock = parseInt(form.minStock as any);
+    const price = form.price ? parseFloat(form.price) : null;
+    
+    if (quantity < 0) {
+      toast.error("La quantité ne peut pas être négative");
+      return;
+    }
+    if (minStock < 0) {
+      toast.error("Le stock minimum ne peut pas être négatif");
+      return;
+    }
+    if (price !== null && price < 0) {
+      toast.error("Le prix ne peut pas être négatif");
+      return;
+    }
+
     setSaving(true);
     const payload = {
       ...form,
-      quantity: parseInt(form.quantity as any),
-      minStock: parseInt(form.minStock as any),
-      price: form.price ? parseFloat(form.price) : null,
+      quantity,
+      minStock,
+      price,
     };
     const url = editingId ? `/api/admin/stock/${editingId}` : "/api/admin/stock";
     const method = editingId ? "PUT" : "POST";
@@ -215,7 +226,7 @@ export default function AdminStockPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Nom ou SKU..."
+              placeholder="Nom, SKU, catégorie..."
               className="input-field w-full"
             />
           </div>
@@ -254,28 +265,113 @@ export default function AdminStockPage() {
                 onChange={handleNameChange}
                 className="input-field"
                 required
+                placeholder="Ex: Pain complet, Croissant, Jus d'orange"
               />
+              <p className="text-xs text-gray-400 mt-1">Le SKU sera généré automatiquement à partir du nom.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">SKU *</label>
+              <label className="block text-sm font-medium">SKU (Référence) *</label>
               <input
                 value={form.sku}
                 onChange={handleSkuChange}
                 className="input-field"
                 required
-                placeholder="Généré automatiquement"
+                placeholder="Généré automatiquement, modifiable"
               />
-              <p className="text-xs text-gray-400 mt-1">Généré automatiquement, modifiable</p>
+              <p className="text-xs text-gray-400 mt-1">Identifiant unique du produit.</p>
             </div>
-            <div><label className="block text-sm font-medium">Catégorie *</label><select value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="input-field" required><option value="">Sélectionner</option>{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-            <div><label className="block text-sm font-medium">Image</label><ImageUpload onUpload={(url) => setForm({...form, imageUrl: url})} onRemove={() => setForm({...form, imageUrl: ""})} currentImage={form.imageUrl} label="Image" /></div>
-            <div><label className="block text-sm font-medium">Quantité *</label><input type="number" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseInt(e.target.value) || 0})} className="input-field" required /></div>
-            <div><label className="block text-sm font-medium">Unité</label><select value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} className="input-field">{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
-            <div><label className="block text-sm font-medium">Stock minimum</label><input type="number" value={form.minStock} onChange={(e) => setForm({...form, minStock: parseInt(e.target.value) || 0})} className="input-field" /></div>
-            <div><label className="block text-sm font-medium">Prix de vente (€)</label><input type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} className="input-field" /></div>
-            <div><label className="block text-sm font-medium">Statut</label><select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="input-field"><option value="disponible">Disponible</option><option value="faible_stock">Stock faible</option><option value="rupture">Rupture</option></select></div>
-            <div><label className="block text-sm font-medium">Date de fabrication</label><input type="date" value={form.manufacturingDate} onChange={(e) => setForm({...form, manufacturingDate: e.target.value})} className="input-field" /></div>
-            <div><label className="block text-sm font-medium">Date d'expiration</label><input type="date" value={form.expirationDate} onChange={(e) => setForm({...form, expirationDate: e.target.value})} className="input-field" /></div>
+            <div>
+              <label className="block text-sm font-medium">Catégorie *</label>
+              <select value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="input-field" required>
+                <option value="">Sélectionner</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Ex: Pain, Pâtisserie, Boisson...</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Image</label>
+              <ImageUpload
+                onUpload={(url) => setForm({...form, imageUrl: url})}
+                onRemove={() => setForm({...form, imageUrl: ""})}
+                currentImage={form.imageUrl}
+                label="Photo du produit"
+              />
+              <p className="text-xs text-gray-400 mt-1">Ajoutez une photo pour identifier plus facilement le produit.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Quantité en stock *</label>
+              <input
+                type="number"
+                min="0"
+                value={form.quantity}
+                onChange={(e) => setForm({...form, quantity: parseInt(e.target.value) || 0})}
+                className="input-field"
+                required
+                placeholder="0"
+              />
+              <p className="text-xs text-gray-400 mt-1">Nombre actuellement disponible (ne peut pas être négatif).</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Unité</label>
+              <select value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} className="input-field">
+                {units.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Ex: pièce, kg, litre...</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Stock minimum (alerte)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.minStock}
+                onChange={(e) => setForm({...form, minStock: parseInt(e.target.value) || 0})}
+                className="input-field"
+                placeholder="5"
+              />
+              <p className="text-xs text-gray-400 mt-1">En dessous de ce seuil, le produit sera marqué "Stock faible".</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Prix de vente (€)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.price}
+                onChange={(e) => setForm({...form, price: e.target.value})}
+                className="input-field"
+                placeholder="0.00"
+              />
+              <p className="text-xs text-gray-400 mt-1">Prix unitaire de vente (facultatif).</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Statut</label>
+              <select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="input-field">
+                <option value="disponible">Disponible</option>
+                <option value="faible_stock">Stock faible</option>
+                <option value="rupture">Rupture</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Statut actuel du produit.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Date de fabrication</label>
+              <input
+                type="date"
+                value={form.manufacturingDate}
+                onChange={(e) => setForm({...form, manufacturingDate: e.target.value})}
+                className="input-field"
+              />
+              <p className="text-xs text-gray-400 mt-1">Pour les produits frais (pains, pâtisseries).</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Date d'expiration</label>
+              <input
+                type="date"
+                value={form.expirationDate}
+                onChange={(e) => setForm({...form, expirationDate: e.target.value})}
+                className="input-field"
+              />
+              <p className="text-xs text-gray-400 mt-1">Si applicable, à ne pas dépasser.</p>
+            </div>
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" disabled={saving} className="btn-primary">{saving ? "Enregistrement..." : "Enregistrer"}</button>
               <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="btn-secondary">Annuler</button>
