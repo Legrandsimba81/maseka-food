@@ -16,8 +16,11 @@ import {
   Users,
   Menu,
   X,
+  Clock,
 } from "lucide-react";
 import { Star } from "lucide-react";
+
+
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -62,9 +65,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/qrcode", label: "QR Codes", icon: QrCode },
     { href: "/admin/products", label: "Produits", icon: Package },
     { href: "/admin/reviews", label: "Avis Produits", icon: Star },
-    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star },,
+    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star }, ,
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
     { href: "/admin/team", label: "Équipe", icon: Users },
+    { href: "/admin/stock", label: "Stock", icon: Package },
+    { href: "/admin/employees", label: "Employés", icon: Users },
+    { href: "/admin/attendance/scan", label: "Scanner", icon: QrCode },
+    { href: "/admin/attendance", label: "Pointages", icon: Clock },
   ];
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -92,8 +99,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${pathname === item.href
-                      ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                 >
                   <item.icon size={18} />
@@ -135,8 +142,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 onClick={closeSidebar}
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${pathname === item.href
-                    ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
               >
                 <item.icon size={20} />

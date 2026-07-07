@@ -1,0 +1,250 @@
+"use client";
+import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import ImageUpload from "@/components/ImageUpload";
+import { Search, Plus, Edit, Trash2, QrCode, Download, User, Clock, Calendar, Printer } from "lucide-react";
+import QRCode from "qrcode";
+
+interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  position: string;
+  department: string | null;
+  qrCode: string;
+  image: string | null;
+  isActive: boolean;
+  createdAt: string;
+  _count: { attendances: number };
+}
+
+export default function AdminEmployeesPage() {
+  const { data: session } = useSession();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    position: "",
+    department: "",
+    image: "",
+    isActive: true,
+  });
+  const [saving, setSaving] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    const res = await fetch(`/api/admin/employees?${params.toString()}`);
+    if (res.ok) setEmployees(await res.json());
+    setLoading(false);
+  };
+
+  const handleSearch = () => fetchEmployees();
+
+  const deleteEmployee = async (id: string) => {
+    if (!confirm("Supprimer cet employé ?")) return;
+    const res = await fetch(`/api/admin/employees/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Employé supprimé");
+      fetchEmployees();
+    } else toast.error("Erreur");
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const url = editingId ? `/api/admin/employees/${editingId}` : "/api/admin/employees";
+    const method = editingId ? "PUT" : "POST";
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      toast.success(editingId ? "Employé modifié" : "Employé ajouté");
+      setShowForm(false);
+      setEditingId(null);
+      setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true });
+      fetchEmployees();
+    } else {
+      toast.error("Erreur");
+    }
+    setSaving(false);
+  };
+
+  const editEmployee = (emp: Employee) => {
+    setForm({
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email || "",
+      phone: emp.phone || "",
+      position: emp.position,
+      department: emp.department || "",
+      image: emp.image || "",
+      isActive: emp.isActive,
+    });
+    setEditingId(emp.id);
+    setShowForm(true);
+  };
+
+  const generateQR = async (qrCode: string) => {
+    try {
+      const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const data = `${baseUrl}/admin/attendance?qr=${qrCode}`;
+      const qr = await QRCode.toDataURL(data, { width: 200, margin: 2 });
+      setQrDataUrl(qr);
+    } catch (err) {
+      toast.error("Erreur génération QR");
+    }
+  };
+
+  const printCard = (emp: Employee) => {
+    generateQR(emp.qrCode);
+    setTimeout(() => {
+      const printWindow = window.open("", "_blank");
+      if (printWindow && qrDataUrl) {
+        printWindow.document.write(`
+          <html><head><title>Carte ${emp.firstName} ${emp.lastName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; }
+            .card { width: 350px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align: center; }
+            .card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
+            .card h2 { margin: 5px 0; font-size: 20px; }
+            .card p { color: #666; margin: 3px 0; font-size: 14px; }
+            .card .qr { margin: 15px auto; width: 150px; height: 150px; }
+            .card .footer { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 12px; color: #aaa; }
+          </style>
+          </head><body>
+          <div class="card">
+            ${emp.image ? `<img src="${emp.image}" alt="${emp.firstName}" />` : `<div style="width:80px;height:80px;border-radius:50%;background:#ddd;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>`}
+            <h2>${emp.firstName} ${emp.lastName}</h2>
+            <p><strong>${emp.position}</strong></p>
+            ${emp.department ? `<p>${emp.department}</p>` : ""}
+            ${emp.email ? `<p>📧 ${emp.email}</p>` : ""}
+            ${emp.phone ? `<p>📱 ${emp.phone}</p>` : ""}
+            <div class="qr"><img src="${qrDataUrl}" alt="QR Code" style="width:100%;height:100%;" /></div>
+            <div class="footer">ID: ${emp.qrCode} • Maseka Food</div>
+          </div>
+          </body></html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }, 300);
+  };
+
+  if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <h1 className="text-2xl font-bold">Gestion des employés</h1>
+        <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ firstName: "", lastName: "", email: "", phone: "", position: "", department: "", image: "", isActive: true }); }} className="btn-primary flex items-center gap-2">
+          <Plus size={18} /> Ajouter un employé
+        </button>
+      </div>
+
+      {/* Recherche */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium">Recherche</label>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Nom, prénom, email, QR..."
+              className="input-field w-full"
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleSearch} className="btn-primary">Rechercher</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Formulaire */}
+      {showForm && (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold mb-4">{editingId ? "Modifier" : "Ajouter"} un employé</h2>
+          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className="block text-sm font-medium">Prénom *</label><input value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} className="input-field" required /></div>
+            <div><label className="block text-sm font-medium">Nom *</label><input value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} className="input-field" required /></div>
+            <div><label className="block text-sm font-medium">Email</label><input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} className="input-field" /></div>
+            <div><label className="block text-sm font-medium">Téléphone</label><input value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="input-field" /></div>
+            <div><label className="block text-sm font-medium">Poste *</label><input value={form.position} onChange={(e) => setForm({...form, position: e.target.value})} className="input-field" required /></div>
+            <div><label className="block text-sm font-medium">Département</label><input value={form.department} onChange={(e) => setForm({...form, department: e.target.value})} className="input-field" /></div>
+            <div className="md:col-span-2"><ImageUpload label="Photo" onUpload={(url) => setForm({...form, image: url})} onRemove={() => setForm({...form, image: ""})} currentImage={form.image} /></div>
+            <div className="md:col-span-2 flex items-center gap-2"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm({...form, isActive: e.target.checked})} /><label>Actif</label></div>
+            <div className="md:col-span-2 flex gap-2">
+              <button type="submit" disabled={saving} className="btn-primary">{saving ? "Enregistrement..." : "Enregistrer"}</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="btn-secondary">Annuler</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Liste */}
+      {loading ? (
+        <p>Chargement...</p>
+      ) : employees.length === 0 ? (
+        <p>Aucun employé.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {employees.map((emp) => (
+            <div key={emp.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="relative h-32 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+              <div className="relative px-4 pb-4">
+                <div className="flex justify-center -mt-12">
+                  {emp.image ? (
+                    <img src={emp.image} alt={emp.firstName} className="w-24 h-24 rounded-full border-4 border-white object-cover" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-3xl text-gray-500">
+                      {emp.firstName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="text-center mt-2">
+                  <h3 className="text-lg font-bold">{emp.firstName} {emp.lastName}</h3>
+                  <p className="text-sm text-primary font-medium">{emp.position}</p>
+                  {emp.department && <p className="text-xs text-gray-500">{emp.department}</p>}
+                  <p className="text-xs text-gray-400 mt-1">QR: {emp.qrCode}</p>
+                  <div className="flex justify-center gap-1 mt-1">
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${emp.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      {emp.isActive ? "Actif" : "Inactif"}
+                    </span>
+                    <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">
+                      {emp._count.attendances} pointages
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                  <button onClick={() => editEmployee(emp)} className="text-blue-500 hover:text-blue-700 p-1"><Edit size={16} /></button>
+                  <button onClick={() => deleteEmployee(emp.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16} /></button>
+                  <button onClick={() => printCard(emp)} className="text-gray-500 hover:text-gray-700 p-1"><Printer size={16} /></button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
