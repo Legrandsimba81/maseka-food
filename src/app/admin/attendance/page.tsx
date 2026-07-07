@@ -183,16 +183,7 @@ export default function ScanPage() {
           >
             <LogIn size={20} /> Arrivée
           </button>
-          <button
-            onClick={() => setType("sortie")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition ${
-              type === "sortie"
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-            }`}
-          >
-            <LogOut size={20} /> Sortie
-          </button>
+          
         </div>
 
         {/* Scanner vidéo */}
