@@ -17,6 +17,7 @@ interface StockProduct {
   unit: string;
   minStock: number;
   price: number | null;
+  purchasePrice: number | null;
   status: string;
   manufacturingDate: string | null;
   expirationDate: string | null;
@@ -45,6 +46,7 @@ export default function AdminStockPage() {
     unit: "pièce",
     minStock: 5,
     price: "",
+    purchasePrice: "",
     status: "disponible",
     manufacturingDate: "",
     expirationDate: "",
@@ -69,7 +71,6 @@ export default function AdminStockPage() {
     if (res.ok) {
       const data = await res.json();
       setProducts(data);
-      // Filtrer les produits en alerte (stock faible ou rupture)
       setAlertProducts(data.filter((p: StockProduct) => p.status === "faible_stock" || p.status === "rupture"));
     }
     setLoading(false);
@@ -92,7 +93,6 @@ export default function AdminStockPage() {
     } else toast.error("Erreur");
   };
 
-  // Génération automatique du SKU
   const generateSKU = (name: string): string => {
     if (!name || name.trim() === "") return "";
     const words = name.trim().split(/\s+/);
@@ -126,6 +126,7 @@ export default function AdminStockPage() {
         unit: product.unit,
         minStock: product.minStock,
         price: product.price?.toString() || "",
+        purchasePrice: product.purchasePrice?.toString() || "",
         status: product.status,
         manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString().split("T")[0] : "",
         expirationDate: product.expirationDate ? new Date(product.expirationDate).toISOString().split("T")[0] : "",
@@ -142,6 +143,7 @@ export default function AdminStockPage() {
         unit: "pièce",
         minStock: 5,
         price: "",
+        purchasePrice: "",
         status: "disponible",
         manufacturingDate: "",
         expirationDate: "",
@@ -158,6 +160,7 @@ export default function AdminStockPage() {
     const quantity = parseInt(form.quantity as any);
     const minStock = parseInt(form.minStock as any);
     const price = form.price ? parseFloat(form.price) : null;
+    const purchasePrice = form.purchasePrice ? parseFloat(form.purchasePrice) : null;
     
     if (quantity < 0) {
       toast.error("La quantité ne peut pas être négative");
@@ -168,7 +171,11 @@ export default function AdminStockPage() {
       return;
     }
     if (price !== null && price < 0) {
-      toast.error("Le prix ne peut pas être négatif");
+      toast.error("Le prix de vente ne peut pas être négatif");
+      return;
+    }
+    if (purchasePrice !== null && purchasePrice < 0) {
+      toast.error("Le prix d'achat ne peut pas être négatif");
       return;
     }
 
@@ -178,6 +185,7 @@ export default function AdminStockPage() {
       quantity,
       minStock,
       price,
+      purchasePrice,
     };
     const url = editingId ? `/api/admin/stock/${editingId}` : "/api/admin/stock";
     const method = editingId ? "PUT" : "POST";
@@ -199,6 +207,7 @@ export default function AdminStockPage() {
         unit: "pièce",
         minStock: 5,
         price: "",
+        purchasePrice: "",
         status: "disponible",
         manufacturingDate: "",
         expirationDate: "",
@@ -211,11 +220,9 @@ export default function AdminStockPage() {
     setSaving(false);
   };
 
-  const editProduct = (product: StockProduct) => {
-    openForm(product);
-  };
-
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
+
+  const totalStockValue = products.reduce((sum, p) => sum + (p.purchasePrice || 0) * p.quantity, 0);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -248,7 +255,10 @@ export default function AdminStockPage() {
       )}
 
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Gestion des stocks</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Gestion des stocks</h1>
+          <p className="text-sm text-gray-500">Valeur totale du stock : {totalStockValue.toFixed(2)} $</p>
+        </div>
         <div className="flex gap-2">
           <Link href="/admin/stock/movements" className="btn-secondary flex items-center gap-2">
             <MoveRight size={18} /> Mouvements
@@ -373,7 +383,20 @@ export default function AdminStockPage() {
               <p className="text-xs text-gray-400 mt-1">En dessous de ce seuil, le produit sera marqué "Stock faible".</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Prix de vente (€)</label>
+              <label className="block text-sm font-medium">Prix d'achat unitaire ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.purchasePrice}
+                onChange={(e) => setForm({...form, purchasePrice: e.target.value})}
+                className="input-field"
+                placeholder="0.00"
+              />
+              <p className="text-xs text-gray-400 mt-1">Prix d'achat par unité (optionnel).</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Prix de vente unitaire ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -383,7 +406,7 @@ export default function AdminStockPage() {
                 className="input-field"
                 placeholder="0.00"
               />
-              <p className="text-xs text-gray-400 mt-1">Prix unitaire de vente (facultatif).</p>
+              <p className="text-xs text-gray-400 mt-1">Prix de vente par unité (optionnel).</p>
             </div>
             <div>
               <label className="block text-sm font-medium">Statut</label>
@@ -437,40 +460,47 @@ export default function AdminStockPage() {
                 <th className="px-4 py-2 text-left text-xs font-medium uppercase">Catégorie</th>
                 <th className="px-4 py-2 text-left text-xs font-medium uppercase">Qté</th>
                 <th className="px-4 py-2 text-left text-xs font-medium uppercase">Unité</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Prix</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Prix achat</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Prix vente</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Valeur stock</th>
                 <th className="px-4 py-2 text-left text-xs font-medium uppercase">Statut</th>
                 <th className="px-4 py-2 text-left text-xs font-medium uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-b dark:border-gray-700">
-                  <td className="px-4 py-2 text-sm font-mono">{p.sku}</td>
-                  <td className="px-4 py-2 text-sm font-medium">{p.name}</td>
-                  <td className="px-4 py-2 text-sm">{p.category}</td>
-                  <td className="px-4 py-2 text-sm">{p.quantity}</td>
-                  <td className="px-4 py-2 text-sm">{p.unit}</td>
-                  <td className="px-4 py-2 text-sm">{p.price ? p.price.toFixed(2) + " €" : "-"}</td>
-                  <td className="px-4 py-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      p.status === "disponible" ? "bg-green-100 text-green-800" :
-                      p.status === "faible_stock" ? "bg-yellow-100 text-yellow-800" :
-                      "bg-red-100 text-red-800"
-                    }`}>
-                      {p.status === "disponible" ? "Disponible" : p.status === "faible_stock" ? "Stock faible" : "Rupture"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <div className="flex gap-1 items-center">
-                      <Link href={`/admin/stock/movements?productId=${p.id}`} className="text-blue-500 hover:text-blue-700" title="Mouvements">
-                        <MoveRight size={16} />
-                      </Link>
-                      <button onClick={() => editProduct(p)} className="text-blue-500 hover:text-blue-700"><Edit size={16} /></button>
-                      <button onClick={() => deleteProduct(p.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {products.map((p) => {
+                const stockValue = p.purchasePrice ? p.quantity * p.purchasePrice : 0;
+                return (
+                  <tr key={p.id} className="border-b dark:border-gray-700">
+                    <td className="px-4 py-2 text-sm font-mono">{p.sku}</td>
+                    <td className="px-4 py-2 text-sm font-medium">{p.name}</td>
+                    <td className="px-4 py-2 text-sm">{p.category}</td>
+                    <td className="px-4 py-2 text-sm">{p.quantity}</td>
+                    <td className="px-4 py-2 text-sm">{p.unit}</td>
+                    <td className="px-4 py-2 text-sm">{p.purchasePrice ? p.purchasePrice.toFixed(2) + " $" : "-"}</td>
+                    <td className="px-4 py-2 text-sm">{p.price ? p.price.toFixed(2) + " $" : "-"}</td>
+                    <td className="px-4 py-2 text-sm">{stockValue > 0 ? stockValue.toFixed(2) + " $" : "-"}</td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        p.status === "disponible" ? "bg-green-100 text-green-800" :
+                        p.status === "faible_stock" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-red-100 text-red-800"
+                      }`}>
+                        {p.status === "disponible" ? "Disponible" : p.status === "faible_stock" ? "Stock faible" : "Rupture"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-1 items-center">
+                        <Link href={`/admin/stock/movements?productId=${p.id}`} className="text-blue-500 hover:text-blue-700" title="Mouvements">
+                          <MoveRight size={16} />
+                        </Link>
+                        <button onClick={() => openForm(p)} className="text-blue-500 hover:text-blue-700"><Edit size={16} /></button>
+                        <button onClick={() => deleteProduct(p.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

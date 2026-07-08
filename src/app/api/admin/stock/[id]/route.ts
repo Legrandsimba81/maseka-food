@@ -2,60 +2,99 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendStockMovementEmail } from "@/lib/email";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  try {
-    const product = await prisma.stockProduct.findUnique({ where: { id: params.id } });
-    if (!product) return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
-    return NextResponse.json(product);
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+
+  const product = await prisma.stockProduct.findUnique({
+    where: { id: params.id },
+  });
+  if (!product) {
+    return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
   }
+  return NextResponse.json(product);
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
   try {
-    const data = await req.json();
-    const updated = await prisma.stockProduct.update({
+    const body = await req.json();
+    const product = await prisma.stockProduct.findUnique({
+      where: { id: params.id },
+    });
+    if (!product) {
+      return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
+    }
+
+    const updatedProduct = await prisma.stockProduct.update({
       where: { id: params.id },
       data: {
-        sku: data.sku,
-        name: data.name,
-        category: data.category,
-        imageUrl: data.imageUrl,
-        quantity: parseInt(data.quantity) || 0,
-        unit: data.unit || "pièce",
-        minStock: parseInt(data.minStock) || 5,
-        price: data.price ? parseFloat(data.price) : null,
-        status: data.status || "disponible",
-        manufacturingDate: data.manufacturingDate ? new Date(data.manufacturingDate) : null,
-        expirationDate: data.expirationDate ? new Date(data.expirationDate) : null,
+        sku: body.sku,
+        name: body.name,
+        category: body.category,
+        imageUrl: body.imageUrl,
+        quantity: body.quantity,
+        unit: body.unit,
+        minStock: body.minStock,
+        price: body.price,
+        purchasePrice: body.purchasePrice,
+        status: body.status,
+        manufacturingDate: body.manufacturingDate ? new Date(body.manufacturingDate) : undefined,
+        expirationDate: body.expirationDate ? new Date(body.expirationDate) : undefined,
       },
     });
-    return NextResponse.json(updated);
+
+    // Si la quantité a changé, envoyer un email
+    if (body.quantity !== undefined && body.quantity !== product.quantity) {
+      const previousQuantity = product.quantity;
+      const newQuantity = body.quantity;
+      const diff = Math.abs(newQuantity - previousQuantity);
+      const type = newQuantity > previousQuantity ? "entree" : "sortie";
+
+      await sendStockMovementEmail(
+        updatedProduct.name,
+        updatedProduct.sku,
+        updatedProduct.unit,
+        type,
+        diff,
+        newQuantity,
+        "Modification manuelle du stock",
+        previousQuantity
+      ).catch(console.error);
+    }
+
+    return NextResponse.json(updatedProduct);
   } catch (error) {
-    console.error(error);
+    console.error("Erreur mise à jour stock:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  try {
-    await prisma.stockProduct.delete({ where: { id: params.id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
+
+  await prisma.stockProduct.delete({
+    where: { id: params.id },
+  });
+  return NextResponse.json({ success: true });
 }

@@ -254,6 +254,7 @@ model StockProduct {
   unit              String    @default("pièce")
   minStock          Int       @default(5)
   price             Float?
+  purchasePrice     Float?    // prix d'achat unitaire
   status            String    @default("disponible") // disponible, faible_stock, rupture
   manufacturingDate DateTime?
   expirationDate    DateTime?

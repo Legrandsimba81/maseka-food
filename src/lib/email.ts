@@ -38,6 +38,18 @@ export async function sendEmail(to: string, subject: string, html: string) {
   });
 }
 
+// Ajoutez cette fonction
+export async function sendStockAlertEmail(productName: string, sku: string, quantity: number, minStock: number) {
+  const html = `
+    <h2>⚠️ Alerte stock - ${productName}</h2>
+    <p>Le produit <strong>${productName}</strong> (SKU: ${sku}) est en dessous du seuil de stock.</p>
+    <p><strong>Quantité actuelle :</strong> ${quantity}</p>
+    <p><strong>Seuil minimum :</strong> ${minStock}</p>
+    <p>Veuillez réapprovisionner rapidement.</p>
+  `;
+  await sendEmail(process.env.EMAIL_FROM!, `Alerte stock : ${productName}`, html);
+}
+
 // Nouvelle fonction : envoi d'un récapitulatif de commande à la boulangerie
 // Version acceptant un objet order complet
 export async function sendOrderConfirmationEmail(order: any) {
@@ -101,4 +113,42 @@ export async function sendOrderConfirmationEmail(order: any) {
     subject: `Nouvelle commande #${order.id}`,
     html,
   });
+}
+
+// lib/email.ts – ajout à la suite des autres fonctions
+
+/**
+ * Envoi d'un email pour chaque mouvement de stock
+ */
+export async function sendStockMovementEmail(
+  productName: string,
+  sku: string,
+  unit: string,
+  type: "entree" | "sortie",
+  quantity: number,
+  newQuantity: number,
+  reason?: string,
+  previousQuantity?: number
+) {
+  const action = type === "entree" ? "augmenté" : "diminué";
+  const emoji = type === "entree" ? "📦" : "📤";
+
+  const html = `
+    <h2>${emoji} Mouvement de stock - ${productName}</h2>
+    <p><strong>Produit :</strong> ${productName} (SKU: ${sku})</p>
+    <p><strong>Type :</strong> ${type === "entree" ? "Entrée (approvisionnement)" : "Sortie (consommation/vente)"}</p>
+    <p><strong>Quantité concernée :</strong> ${quantity} ${unit}</p>
+    ${previousQuantity !== undefined ? `<p><strong>Quantité avant :</strong> ${previousQuantity} ${unit}</p>` : ''}
+    <p><strong>Nouvelle quantité :</strong> ${newQuantity} ${unit}</p>
+    ${reason ? `<p><strong>Raison :</strong> ${reason}</p>` : ''}
+    <p>Le stock a été ${action} de ${quantity} ${unit}.</p>
+    <hr />
+    <p>Cet email a été envoyé automatiquement depuis Maseka Food.</p>
+  `;
+
+  await sendEmail(
+    process.env.EMAIL_FROM!,
+    `Mouvement stock - ${productName} (${action})`,
+    html
+  );
 }

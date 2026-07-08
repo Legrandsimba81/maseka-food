@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendStockMovementEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "La quantité doit être positive" }, { status: 400 });
     }
 
-    // Vérifier que le produit existe
     const product = await prisma.stockProduct.findUnique({
       where: { id: productId },
     });
@@ -30,38 +30,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
     }
 
-    // Vérifier le stock si sortie
     if (type === "sortie" && product.quantity < quantity) {
       return NextResponse.json({ error: "Stock insuffisant" }, { status: 400 });
     }
 
-    // Démarrer une transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Mettre à jour la quantité
-      const newQuantity = type === "entree" ? product.quantity + quantity : product.quantity - quantity;
-      const updatedProduct = await tx.stockProduct.update({
-        where: { id: productId },
-        data: {
-          quantity: newQuantity,
-          // Mise à jour du statut automatique
-          status: newQuantity === 0 ? "rupture" : newQuantity <= product.minStock ? "faible_stock" : "disponible",
-        },
-      });
+    const previousQuantity = product.quantity;
+    const newQuantity = type === "entree" ? product.quantity + quantity : product.quantity - quantity;
 
-      // Créer le mouvement
-      const movement = await tx.stockMovement.create({
-        data: {
-          productId,
-          type,
-          quantity,
-          reason: reason || null,
-        },
-      });
-
-      return { product: updatedProduct, movement };
+    // Mise à jour du produit
+    const updatedProduct = await prisma.stockProduct.update({
+      where: { id: productId },
+      data: {
+        quantity: newQuantity,
+        status: newQuantity === 0 ? "rupture" : newQuantity <= product.minStock ? "faible_stock" : "disponible",
+      },
     });
 
-    return NextResponse.json(result);
+    // Création du mouvement
+    const movement = await prisma.stockMovement.create({
+      data: {
+        productId,
+        type,
+        quantity,
+        reason: reason || null,
+      },
+    });
+
+    // Envoi de l'email (ne pas bloquer la réponse)
+    sendStockMovementEmail(
+      product.name,
+      product.sku,
+      product.unit,
+      type,
+      quantity,
+      newQuantity,
+      reason || undefined,
+      previousQuantity
+    ).catch(console.error);
+
+    return NextResponse.json({ product: updatedProduct, movement });
   } catch (error) {
     console.error("Erreur mouvement stock:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
