@@ -198,7 +198,7 @@ export default function CartPage() {
         <div className="w-full lg:w-96 bg-gray-50 dark:bg-gray-800 p-4 sm:p-6 rounded-lg h-fit">
           <h2 className="text-lg sm:text-xl font-bold mb-4">Livraison</h2>
 
-          {/* Sélecteur du type de commande */}
+          {/* Sélecteur de commande */}
           <div className="flex gap-4 mb-4">
             <button
               type="button"
