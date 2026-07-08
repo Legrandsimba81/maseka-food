@@ -18,6 +18,7 @@ import {
   X,
   Clock,
   TrendingUp,
+  MoveRight,
 } from "lucide-react";
 import { Star } from "lucide-react";
 
@@ -62,20 +63,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Menu vertical (éléments secondaires – affichés dans la sidebar)
   const sideNavItems = [
-    { href: "/admin/categories-order", label: "Catégories", icon: ListOrdered },
-    { href: "/admin/qrcode", label: "QR Codes", icon: QrCode },
     { href: "/admin/products", label: "Produits", icon: Package },
-    { href: "/admin/reviews", label: "Avis Produits", icon: Star },
-    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star }, ,
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
-    { href: "/admin/team", label: "Équipe", icon: Users },
-    { href: "/admin/stock", label: "Stock", icon: Package },
     { href: "/admin/employees", label: "Employés", icon: Users },
-    // { href: "/admin/attendance/scan", label: "Scanner", icon: QrCode },
     { href: "/admin/attendance", label: "Pointages", icon: Clock },
     { href: "/admin/attendance/stats", label: "Statistiques", icon: TrendingUp },
     { href: "/admin/attendance/calendar", label: "Calendrier", icon: Calendar },
-    { href: "/admin/attendance/history", label: "Historique", icon: Calendar },
+    { href: "/admin/stock", label: "Stock", icon: Package },
+    { href: "/admin/stock/movements", label: "Mouvements stock", icon: MoveRight },
+    { href: "/admin/reviews", label: "Avis Produits", icon: Star },
+    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star }, ,
+    { href: "/admin/team", label: "Équipe", icon: Users },
+    { href: "/admin/categories-order", label: "Catégories", icon: ListOrdered },
+    { href: "/admin/qrcode", label: "QR Codes", icon: QrCode },
+
+    // { href: "/admin/attendance/scan", label: "Scanner", icon: QrCode },
+
+    // { href: "/admin/attendance/history", label: "Historique", icon: Calendar },
   ];
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);

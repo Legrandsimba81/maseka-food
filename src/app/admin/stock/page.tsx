@@ -1,9 +1,11 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import ImageUpload from "@/components/ImageUpload";
-import { Search, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, AlertCircle, MoveRight } from "lucide-react";
+import Link from "next/link";
 
 interface StockProduct {
   id: string;
@@ -50,6 +52,9 @@ export default function AdminStockPage() {
   const [saving, setSaving] = useState(false);
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
 
+  // Alertes
+  const [alertProducts, setAlertProducts] = useState<StockProduct[]>([]);
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -61,7 +66,12 @@ export default function AdminStockPage() {
     if (categoryFilter) params.append("category", categoryFilter);
     if (statusFilter) params.append("status", statusFilter);
     const res = await fetch(`/api/admin/stock?${params.toString()}`);
-    if (res.ok) setProducts(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      setProducts(data);
+      // Filtrer les produits en alerte (stock faible ou rupture)
+      setAlertProducts(data.filter((p: StockProduct) => p.status === "faible_stock" || p.status === "rupture"));
+    }
     setLoading(false);
   };
 
@@ -145,7 +155,6 @@ export default function AdminStockPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation des valeurs négatives
     const quantity = parseInt(form.quantity as any);
     const minStock = parseInt(form.minStock as any);
     const price = form.price ? parseFloat(form.price) : null;
@@ -210,11 +219,44 @@ export default function AdminStockPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Section Alertes */}
+      {alertProducts.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="text-red-600 dark:text-red-400 mt-1" size={20} />
+            <div>
+              <h3 className="font-semibold text-red-700 dark:text-red-300">Alertes stock</h3>
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {alertProducts.filter(p => p.status === "rupture").length} produit(s) en rupture,
+                {alertProducts.filter(p => p.status === "faible_stock").length} produit(s) en stock faible.
+              </p>
+              <ul className="text-sm mt-1 space-y-1">
+                {alertProducts.slice(0, 5).map(p => (
+                  <li key={p.id} className="text-red-600 dark:text-red-400">
+                    • {p.name} - {p.quantity} {p.unit} restant(s)
+                    {p.status === "rupture" && " (RUPTURE)"}
+                    {p.status === "faible_stock" && ` (seuil: ${p.minStock})`}
+                  </li>
+                ))}
+                {alertProducts.length > 5 && (
+                  <li className="text-xs text-gray-500">+ {alertProducts.length - 5} autres alertes</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Gestion des stocks</h1>
-        <button onClick={() => openForm()} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Ajouter un produit
-        </button>
+        <div className="flex gap-2">
+          <Link href="/admin/stock/movements" className="btn-secondary flex items-center gap-2">
+            <MoveRight size={18} /> Mouvements
+          </Link>
+          <button onClick={() => openForm()} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Ajouter un produit
+          </button>
+        </div>
       </div>
 
       {/* Filtres et recherche */}
@@ -419,7 +461,10 @@ export default function AdminStockPage() {
                     </span>
                   </td>
                   <td className="px-4 py-2">
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 items-center">
+                      <Link href={`/admin/stock/movements?productId=${p.id}`} className="text-blue-500 hover:text-blue-700" title="Mouvements">
+                        <MoveRight size={16} />
+                      </Link>
                       <button onClick={() => editProduct(p)} className="text-blue-500 hover:text-blue-700"><Edit size={16} /></button>
                       <button onClick={() => deleteProduct(p.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
                     </div>
