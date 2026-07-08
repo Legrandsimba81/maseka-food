@@ -1,8 +1,55 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ArticleClient from "./ArticleClient";
+import { Metadata } from "next";
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
+type Props = {
+  params: { slug: string };
+};
+
+// Génération des métadonnées dynamiques
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const article = await prisma.article.findUnique({
+    where: { slug: params.slug },
+    select: {
+      title: true,
+      excerpt: true,
+      imageMain: true,
+      content: true,
+      updatedAt: true,
+    },
+  });
+  if (!article) {
+    return {
+      title: "Article non trouvé",
+    };
+  }
+
+  const description = article.excerpt || article.content?.slice(0, 160) || "Lire cet article sur Maseka Food";
+  const imageUrl = article.imageMain || "/images/hero-bakery.jpg";
+  const url = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://maseka-food.vercel.app'}/articles/${params.slug}`;
+
+  return {
+    title: `${article.title} | Maseka Food`,
+    description,
+    openGraph: {
+      title: article.title,
+      description,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: article.title }],
+      url,
+      type: "article",
+      publishedTime: article.updatedAt?.toISOString(),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+
+export default async function ArticlePage({ params }: Props) {
   const article = await prisma.article.findUnique({
     where: { slug: params.slug },
     include: {

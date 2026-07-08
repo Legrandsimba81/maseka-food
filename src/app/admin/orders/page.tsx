@@ -1,7 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import { ChevronDown, ChevronUp, Store, Truck, NotepadText } from "lucide-react";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -16,6 +18,7 @@ export default function AdminOrdersPage() {
   const { data: session } = useSession();
   const [orders, setOrders] = useState([]);
   const [noteInput, setNoteInput] = useState({});
+  const [showNote, setShowNote] = useState({}); // toggle pour chaque commande
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
@@ -72,6 +75,7 @@ export default function AdminOrdersPage() {
     if (res.ok) {
       toast.success("Note envoyée");
       setNoteInput({ ...noteInput, [id]: "" });
+      setShowNote({ ...showNote, [id]: false }); // fermer après envoi
       fetchOrders();
     } else toast.error("Erreur");
   };
@@ -101,10 +105,9 @@ export default function AdminOrdersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deliveryStatus }),
       });
-
       if (res.ok) {
         toast.success("Statut de livraison mis à jour");
-        fetchOrders(); // Recharger la liste
+        fetchOrders();
       } else {
         const error = await res.json();
         toast.error(error.error || "Erreur");
@@ -114,13 +117,17 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const toggleNote = (id) => {
+    setShowNote(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   if (!session || session.user.role !== "admin") return <div>Accès refusé</div>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Commandes</h1>
-        <button onClick={deleteAllOrders} className="btn-secondary bg-red-600 text-white">Tout supprimer</button>
+        <button onClick={deleteAllOrders} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">Tout supprimer</button>
       </div>
 
       {/* Filtres */}
@@ -164,21 +171,33 @@ export default function AdminOrdersPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {orders.map(order => {
             const statusBadge = getStatusBadge(order.status);
+            const isOnSite = order.deliveryAddress?.startsWith("Table n°");
             return (
               <div key={order.id} className="bg-white dark:bg-gray-800 border p-4 rounded-xl shadow relative">
-                {/* Badge de statut */}
-                <div className="absolute top-4 right-4">
+                {/* Badge de statut et type */}
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
                   <span className={`px-2 py-1 text-xs rounded-full ${statusBadge.className}`}>
                     {statusBadge.label}
                   </span>
+                  {isOnSite ? (
+                    <span className="flex items-center gap-1 text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                      <Store size={12} /> Sur place
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                      <Truck size={12} /> Livraison
+                    </span>
+                  )}
                 </div>
+
                 <div>
                   <p><strong>Client:</strong> {order.user?.name} ({order.user?.email})</p>
                   <p><strong>Total:</strong> {order.totalAmount} $</p>
-                  <p><strong>Adresse:</strong> {order.deliveryAddress} - <strong>Heure:</strong> {order.deliveryTime}</p>
-                  {order.adminNote && <p className="text-sm text-gray-500">Note admin: {order.adminNote}</p>}
-                  {order.paymentStatus === "paid_by_ussd" && <p className="text-green-600">✅ Payé par USSD</p>}
+                  <p><strong>Adresse:</strong> {order.deliveryAddress} {isOnSite ? "" : `- Heure: ${order.deliveryTime}`}</p>
+                  {order.adminNote && <p className="text-sm text-gray-500 mt-1">📝 {order.adminNote}</p>}
+                  {order.paymentStatus === "paid_by_ussd" && <p className="text-green-600 mt-1">✅ Payé par USSD</p>}
                 </div>
+
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 my-3">
                   <ul className="space-y-1">
                     {order.items?.map((item) => (
@@ -188,15 +207,21 @@ export default function AdminOrdersPage() {
                     ))}
                   </ul>
                 </div>
-                {order.status === "pending" && (
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => updateStatus(order.id, "confirmed", noteInput[order.id])} className="bg-green-500 text-white px-2 py-1 rounded">Confirmer</button>
-                    <button onClick={() => updateStatus(order.id, "cancelled", noteInput[order.id])} className="bg-red-500 text-white px-2 py-1 rounded">Annuler</button>
-                  </div>
-                )}
-                {order.status === "confirmed" && order.paymentStatus !== "paid_by_ussd" && (
-                  <button onClick={() => markPaid(order.id)} className="bg-green-500 text-white px-2 py-1 rounded mt-2">Marquer payé (USSD)</button>
-                )}
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {order.status === "pending" && (
+                    <>
+                      <button onClick={() => updateStatus(order.id, "confirmed", noteInput[order.id])} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">Confirmer</button>
+                      <button onClick={() => updateStatus(order.id, "cancelled", noteInput[order.id])} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Annuler</button>
+                    </>
+                  )}
+                  {order.status === "confirmed" && order.paymentStatus !== "paid_by_ussd" && (
+                    <button onClick={() => markPaid(order.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Marquer payé (USSD)</button>
+                  )}
+                  <button onClick={() => deleteOrder(order.id)} className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Supprimer</button>
+                </div>
+
                 {/* Statut de livraison */}
                 <div className="mt-3">
                   <label className="block text-sm font-medium mb-1">Statut de livraison</label>
@@ -210,18 +235,31 @@ export default function AdminOrdersPage() {
                     <option value="delivered">Livré</option>
                   </select>
                 </div>
+
+                {/* Note */}
                 <div className="mt-3">
-                  <textarea
-                    placeholder="Ajouter une note"
-                    className="border p-2 w-full rounded-xl"
-                    rows={2}
-                    value={noteInput[order.id] || ""}
-                    onChange={e => setNoteInput({ ...noteInput, [order.id]: e.target.value })}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => sendNote(order.id)} className="bg-blue-500 text-white px-3 py-1 rounded">Envoyer note</button>
-                    <button onClick={() => deleteOrder(order.id)} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
-                  </div>
+                  <button
+                    onClick={() => toggleNote(order.id)}
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    <NotepadText size={16} />
+                    {showNote[order.id] ? "Masquer la note" : "Ajouter une note"}
+                    {showNote[order.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {showNote[order.id] && (
+                    <div className="mt-2">
+                      <textarea
+                        placeholder="Note pour cette commande..."
+                        className="border p-2 w-full rounded-xl text-sm"
+                        rows={2}
+                        value={noteInput[order.id] || ""}
+                        onChange={e => setNoteInput({ ...noteInput, [order.id]: e.target.value })}
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button onClick={() => sendNote(order.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm">Envoyer note</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

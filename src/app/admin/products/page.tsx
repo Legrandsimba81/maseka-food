@@ -5,12 +5,46 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import DeleteProductButton from "../../../components/DeleteProductButton";
 import { formatPrice } from "@/lib/format";
+import { ProductFilters } from "@/components/ProductFilters";
 
-export default async function AdminProductsPage() {
+// Définition des catégories avec leurs icônes (as const pour le typage strict)
+const categoriesWithIcons = [
+  { id: "pains", label: "Pains", icon: "Wheat" },
+  { id: "viennoiseries", label: "Viennoiseries", icon: "Croissant" },
+  { id: "pâtisseries", label: "Pâtisseries", icon: "Cake" },
+  { id: "sandwichs", label: "Sandwichs", icon: "Sandwich" },
+  { id: "pizzas", label: "Pizzas", icon: "Pizza" },
+  { id: "burgers", label: "Burgers", icon: "Hamburger" },
+  { id: "snacks", label: "Snacks", icon: "Popcorn" },
+  { id: "boissons", label: "Boissons", icon: "Coffee" },
+] as const;
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: { search?: string; category?: string };
+}) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") redirect("/login");
 
+  // Récupération des filtres depuis l'URL
+  const search = searchParams?.search || "";
+  const category = searchParams?.category || "";
+
+  // Construction de la clause WHERE
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+  if (category) {
+    where.category = category;
+  }
+
   const products = await prisma.product.findMany({
+    where,
     orderBy: { name: "asc" },
   });
 
@@ -23,7 +57,16 @@ export default async function AdminProductsPage() {
         </Link>
       </div>
 
-      <div className="bg-white  dark:bg-gray-700 dark:text-gray-200 rounded-lg shadow overflow-x-auto">
+      {/* Filtres et recherche */}
+      <div className="mb-6">
+        <ProductFilters
+          categoriesWithIcons={categoriesWithIcons}
+          currentCategory={category}
+          currentSearch={search}
+        />
+      </div>
+
+      <div className="bg-white dark:bg-gray-700 dark:text-gray-200 rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
             <tr>
@@ -47,7 +90,6 @@ export default async function AdminProductsPage() {
                   <Link href={`/admin/products/${product.id}/edit`} className="text-blue-600 hover:underline">
                     Modifier
                   </Link>
-       
                   <DeleteProductButton productId={product.id} />
                 </td>
               </tr>

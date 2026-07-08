@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -12,9 +11,6 @@ import ScrollToTop from '@/components/ScrollToTop';
 import VisitTracker from "@/components/VisitTracker";
 import BakeryReviewPopup from "@/components/BakeryReviewPopup";
 
-// import SplashScreen from '@/components/SplashScreen';
-
-
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport = {
@@ -24,17 +20,17 @@ export const viewport = {
   userScalable: 'yes',
 };
 
-// Métadonnées SEO globales
+// Métadonnées globales (utilisées par défaut)
 export const metadata: Metadata = {
   title: 'Maseka Food - Boulangerie & Pâtisserie | Butembo',
   description: 'La meilleure boulangerie de Butembo, Nord-Kivu. Pains frais, gâteaux, fast-food, pizzas et bien plus. Livraison disponible.',
-  keywords: 'boulangerie en rdc,site de boulangerie, boulangerie Butembo, pain Butembo, gâteau cérémonie, fast-food Nord-Kivu, pizza Butembo, livraison Butembo',
+  keywords: 'maseka, maseka food, boulangerie en rdc, site de boulangerie, boulangerie Butembo, pain Butembo, gâteau cérémonie, fast-food Nord-Kivu, pizza Butembo, livraison Butembo',
   authors: [{ name: 'Maseka Food' }],
   robots: 'index, follow',
   openGraph: {
     title: 'Maseka Food - Boulangerie & Pâtisserie à Butembo',
-    description: 'Découvrez nos délicieux produits frais. Livraison disponible dans Butembo.',
-    url: 'https://masekafood.cd',
+    description: 'Découvrez nos délicieux produits frais. Pizza, gâteaux, pains, fast-food',
+    url: process.env.NEXT_PUBLIC_BASE_URL || 'https://maseka-food.vercel.app',
     siteName: 'Maseka Food',
     images: [
       {
@@ -50,11 +46,11 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Maseka Food - Boulangerie & Pâtisserie à Butembo',
-    description: 'Découvrez nos délicieux produits frais. Livraison disponible dans Butembo.',
+    description: 'Découvrez nos délicieux produits frais. Pizza, gâteaux, pains, fast-food',
     images: ['/images/hero-bakery.jpg'],
   },
   alternates: {
-    canonical: 'https://maseka-food.vercel.app',
+    canonical: process.env.NEXT_PUBLIC_BASE_URL || 'https://maseka-food.vercel.app',
   },
 };
 
@@ -66,6 +62,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         {/* Script JSON-LD (Schema.org) */}
         <Script
           id="schema-bakery"
@@ -76,7 +73,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Bakery",
               "name": "Maseka Food",
-              "url": "https://maseka-food.vercel.app",
+              "url": process.env.NEXT_PUBLIC_BASE_URL || 'https://maseka-food.vercel.app',
               "description": "Boulangerie et pâtisserie à Butembo, Nord-Kivu",
               "address": {
                 "@type": "PostalAddress",
@@ -95,12 +92,9 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} bg-gray-50 dark:bg-gray-900`}>
         <VisitTracker />
-
-
         <Toaster position="top-center" reverseOrder={false} />
         <ThemeProvider>
           <AuthProvider>
-            {/* <SplashScreen /> */}
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">{children}</main>
@@ -108,11 +102,9 @@ export default function RootLayout({
               <Footer />
             </div>
             <BakeryReviewPopup />
-
           </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
-

@@ -1,9 +1,12 @@
+// app/admin/products/[id]/edit/page.tsx
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { ArrowLeft } from "lucide-react";
+import ImageUploadWithCrop from "@/components/ImageUploadWithCrop";
 
 const categories = [
   "pains",
@@ -115,8 +118,14 @@ export default function EditProductPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">URL de l’image</label>
-          <input name="imageUrl" value={form.imageUrl} onChange={handleChange} className="input-field" placeholder="/images/produits/..." />
+          <label className="block text-sm font-medium mb-1">Image du produit</label>
+          <ImageUploadWithCrop
+            onUpload={(url) => setForm({ ...form, imageUrl: url })}
+            onRemove={() => setForm({ ...form, imageUrl: "" })}
+            currentImage={form.imageUrl}
+            aspect={1 / 1} // carré pour les produits
+            label="Télécharger une image"
+          />
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" name="isAvailable" checked={form.isAvailable} onChange={handleChange} />
