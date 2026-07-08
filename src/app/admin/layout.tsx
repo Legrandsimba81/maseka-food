@@ -1,4 +1,5 @@
 "use client";
+
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -18,13 +19,9 @@ import {
   X,
   Clock,
   TrendingUp,
-  MoveRight,
   RefreshCw,
 } from "lucide-react";
 import { Star } from "lucide-react";
-
-
-
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -34,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     pendingReservations: 0,
     unreadMessages: 0,
   });
+  const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -49,10 +47,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
     fetchCounts();
     const interval = setInterval(fetchCounts, 30000);
-    return () => clearInterval(interval);
+
+    const fetchLowStock = async () => {
+      try {
+        const res = await fetch("/api/admin/stock/alert-count");
+        if (res.ok) {
+          const data = await res.json();
+          setLowStockCount(data.count);
+        }
+      } catch (e) {}
+    };
+    fetchLowStock();
+
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
-  // Menu horizontal (éléments principaux)
   const mainNavItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/orders", label: "Commandes", icon: ShoppingCart, badge: counts.pendingOrders > 0 ? counts.pendingOrders : undefined },
@@ -62,7 +73,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/settings", label: "Paramètres", icon: Settings },
   ];
 
-  // Menu vertical (éléments secondaires – affichés dans la sidebar)
   const sideNavItems = [
     { href: "/admin/products", label: "Produits", icon: Package },
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
@@ -70,17 +80,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/attendance", label: "Pointages", icon: Clock },
     { href: "/admin/attendance/stats", label: "Statistiques", icon: TrendingUp },
     { href: "/admin/attendance/calendar", label: "Calendrier", icon: Calendar },
-    { href: "/admin/stock", label: "Stock", icon: Package },
+    { href: "/admin/stock", label: "Stock", icon: Package, alert: lowStockCount > 0 },
     { href: "/admin/stock/movements", label: "Mouvements stock", icon: RefreshCw },
     { href: "/admin/reviews", label: "Avis Produits", icon: Star },
-    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star }, ,
+    { href: "/admin/bakery-reviews", label: "Avis Boulangerie", icon: Star },
     { href: "/admin/team", label: "Équipe", icon: Users },
     { href: "/admin/categories-order", label: "Catégories", icon: ListOrdered },
     { href: "/admin/qrcode", label: "QR Codes", icon: QrCode },
-
-    // { href: "/admin/attendance/scan", label: "Scanner", icon: QrCode },
-
-    // { href: "/admin/attendance/history", label: "Historique", icon: Calendar },
   ];
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -88,11 +94,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-      {/* Barre horizontale fixe (sticky) avec menu horizontal */}
+      {/* Barre horizontale fixe */}
       <div className="sticky top-16 z-40 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-300 dark:border-gray-700">
         <div className="container mx-auto px-2 sm:px-4">
-          <div className="flex items-center h-14">
-            {/* Bouton burger (visible sur mobile) */}
+          <div className="flex items-center justify-between h-14">
+            {/* Burger (visible mobile) */}
             <button
               onClick={toggleSidebar}
               className="p-1.5 mr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
@@ -101,21 +107,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Menu size={22} className="text-gray-600 dark:text-gray-300" />
             </button>
 
-            {/* Menu horizontal (toujours visible, compact sur mobile) */}
-            <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-1.5 flex-1">
+            {/* Menu horizontal – aligné à droite */}
+            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1.5 flex-1 justify-end">
               {mainNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${pathname === item.href
-                    ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap relative ${
+                    pathname === item.href
+                      ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
                 >
                   <item.icon size={18} />
                   <span className="hidden sm:inline">{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-0.5 bg-orange-500 text-white text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                    <span className="ml-0.5 bg-orange-500 text-white text-[10px] rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   )}
@@ -126,11 +133,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
+      {/* Conteneur principal avec sidebar */}
       <div className="flex flex-1">
-        {/* Sidebar vertical (affichée sur desktop, ouverte via burger sur mobile) */}
+        {/* Sidebar verticale */}
         <aside
           className={`
-            fixed lg:sticky top-32 left-0 z-30
+            fixed lg:sticky top-[calc(4rem+56px)] left-0 z-30
             w-64 h-[calc(100vh-8rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
             transition-transform duration-300 ease-in-out
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -150,13 +158,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 onClick={closeSidebar}
-                className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${pathname === item.href
-                  ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+                className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
+                  pathname === item.href
+                    ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
               >
                 <item.icon size={20} />
                 <span>{item.label}</span>
+                {item.alert && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                    <span className="relative inline-flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                  </span>
+                )}
               </Link>
             ))}
           </div>
