@@ -16,24 +16,35 @@ export async function GET(req: Request) {
   const startDate = new Date(year, month, 1);
   const endDate = new Date(year, month + 1, 1);
 
+  // Récupérer tous les employés actifs (ou tous)
   const employees = await prisma.employee.findMany({
+    where: { isActive: true },
     include: {
       attendances: {
         where: {
           type: "entree",
           timestamp: { gte: startDate, lt: endDate },
         },
-        select: {
-          timestamp: true,
-        },
+        select: { timestamp: true },
       },
     },
   });
 
+  // Déterminer le nombre de jours à considérer
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let totalDays = daysInMonth;
+  if (month === currentMonth && year === currentYear) {
+    totalDays = now.getDate(); // jours écoulés jusqu'à aujourd'hui inclus
+  }
+
   const stats = employees.map(emp => {
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    const presenceDays = new Set(emp.attendances.map(a => a.timestamp.toISOString().split("T")[0])).size;
-    const absenceDays = totalDays - presenceDays;
+    const presenceDays = new Set(
+      emp.attendances.map(a => a.timestamp.toISOString().split("T")[0])
+    ).size;
+    const absenceDays = Math.max(0, totalDays - presenceDays); // ne peut pas être négatif
 
     return {
       id: emp.id,

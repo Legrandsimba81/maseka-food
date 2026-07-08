@@ -14,8 +14,8 @@ interface Employee {
 }
 
 interface DayStatus {
-  date: string; // "YYYY-MM-DD"
-  status: "present" | "absent";
+  date: string;
+  status: "present" | "absent" | "future";
 }
 
 const monthNames = [
@@ -120,18 +120,11 @@ export default function AttendanceCalendarPage() {
     return days.find(d => d.date === dateStr);
   };
 
-  const getDayColor = (day: number, status?: DayStatus): string => {
-    if (!status) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const checkDate = new Date(year, month, day);
-      if (checkDate > today) {
-        return "bg-gray-100 dark:bg-gray-700";
-      }
-      return "bg-red-200 dark:bg-red-800";
-    }
+  const getDayColor = (status?: DayStatus): string => {
+    if (!status) return "bg-gray-100 dark:bg-gray-700"; // fallback
     if (status.status === "present") return "bg-green-200 dark:bg-green-800";
-    return "bg-red-200 dark:bg-red-800";
+    if (status.status === "future") return "bg-gray-100 dark:bg-gray-700";
+    return "bg-red-200 dark:bg-red-800"; // absent
   };
 
   const totalPresent = days.filter(d => d.status === "present").length;
@@ -238,11 +231,9 @@ export default function AttendanceCalendarPage() {
               {calendarRows.map((week, weekIndex) => (
                 <tr key={weekIndex}>
                   {week.map((day, dayIndex) => {
-                    if (day === null) {
-                      return <td key={dayIndex} className="p-1"></td>;
-                    }
+                    if (day === null) return <td key={dayIndex} className="p-1"></td>;
                     const status = getStatusForDate(day);
-                    const color = getDayColor(day, status);
+                    const color = getDayColor(status);
                     return (
                       <td key={dayIndex} className="p-1 text-center">
                         <div className={`${color} rounded-lg p-2 text-sm font-medium transition-colors`}>

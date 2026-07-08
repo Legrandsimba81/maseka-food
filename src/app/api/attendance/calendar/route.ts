@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
     const monthParam = searchParams.get("month");
     const yearParam = searchParams.get("year");
 
-    // Vérification stricte de l'employeeId
     if (!employeeId || employeeId.trim() === "") {
       return NextResponse.json({ error: "employeeId requis" }, { status: 400 });
     }
@@ -23,9 +22,8 @@ export async function GET(req: NextRequest) {
     const month = monthParam ? parseInt(monthParam, 10) : new Date().getMonth();
     const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
 
-    // Vérifier que l'employé existe
     const employee = await prisma.employee.findUnique({
-      where: { id: employeeId }, // employeeId est désormais une string non vide
+      where: { id: employeeId },
     });
     if (!employee) {
       return NextResponse.json({ error: "Employé non trouvé" }, { status: 404 });
@@ -34,32 +32,32 @@ export async function GET(req: NextRequest) {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0);
 
-    // Récupérer les présences pour cet employé sur le mois
     const attendances = await prisma.attendance.findMany({
       where: {
-        employeeId: employeeId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
+        employeeId,
+        date: { gte: startDate, lte: endDate },
       },
-      select: {
-        date: true,
-      },
-      distinct: ['date'], // une présence par jour suffit
+      select: { date: true },
+      distinct: ['date'],
     });
 
     const presentDates = new Set(
       attendances.map(a => a.date.toISOString().split('T')[0])
     );
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const days = [];
     for (let d = 1; d <= endDate.getDate(); d++) {
       const dateObj = new Date(year, month, d);
       const dateStr = dateObj.toISOString().split('T')[0];
-      let status: "present" | "absent" = "absent";
+      let status: "present" | "absent" | "future" = "absent";
+
       if (presentDates.has(dateStr)) {
         status = "present";
+      } else if (dateObj > today) {
+        status = "future";
       }
       days.push({ date: dateStr, status });
     }
@@ -67,9 +65,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ days });
   } catch (error) {
     console.error("Erreur API calendrier :", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
