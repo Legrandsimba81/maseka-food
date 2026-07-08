@@ -75,6 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/attendance", label: "Pointages", icon: Clock },
     { href: "/admin/attendance/stats", label: "Statistiques", icon: TrendingUp },
     { href: "/admin/attendance/calendar", label: "Calendrier", icon: Calendar },
+    { href: "/admin/attendance/history", label: "Historique", icon: Calendar },
   ];
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
