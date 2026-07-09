@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
@@ -11,17 +12,26 @@ export default function CategoriesOrderPage() {
   const [order, setOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/settings")
-      .then(res => res.json())
-      .then(settings => {
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        const settings = await res.json();
         if (settings?.categoryOrder && Array.isArray(settings.categoryOrder)) {
           setOrder(settings.categoryOrder);
         } else {
           setOrder(allCategories);
         }
-        setLoading(false);
-      });
+      }
+    } catch (error) {
+      console.error("Erreur chargement settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
   }, []);
 
   const moveUp = (index: number) => {
@@ -39,15 +49,21 @@ export default function CategoriesOrderPage() {
   };
 
   const saveOrder = async () => {
-    const res = await fetch("/api/admin/categories-order", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ categoryOrder: order }),
-    });
-    if (res.ok) {
-      toast.success("Ordre des catégories sauvegardé");
-    } else {
-      toast.error("Erreur");
+    try {
+      const res = await fetch("/api/admin/categories-order", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryOrder: order }),
+      });
+      if (res.ok) {
+        toast.success("Ordre des catégories sauvegardé");
+        // Recharger l'ordre depuis le serveur pour refléter la nouvelle valeur
+        await fetchSettings();
+      } else {
+        toast.error("Erreur lors de la sauvegarde");
+      }
+    } catch (error) {
+      toast.error("Erreur réseau");
     }
   };
 

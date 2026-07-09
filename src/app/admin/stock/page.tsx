@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import ImageUpload from "@/components/ImageUpload";
-import { Search, Plus, Edit, Trash2, AlertCircle, MoveRight } from "lucide-react";
+import { Search, Plus, Edit, Trash2, AlertCircle, MoveRight, Filter } from "lucide-react";
 import Link from "next/link";
 
 interface StockProduct {
@@ -53,9 +53,8 @@ export default function AdminStockPage() {
   });
   const [saving, setSaving] = useState(false);
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
-
-  // Alertes
   const [alertProducts, setAlertProducts] = useState<StockProduct[]>([]);
+  const [showFilters, setShowFilters] = useState(false); // Toggle pour les filtres sur mobile
 
   useEffect(() => {
     fetchProducts();
@@ -225,8 +224,8 @@ export default function AdminStockPage() {
   const totalStockValue = products.reduce((sum, p) => sum + (p.purchasePrice || 0) * p.quantity, 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Section Alertes */}
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* Alertes */}
       {alertProducts.length > 0 && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
           <div className="flex items-start gap-3">
@@ -254,44 +253,56 @@ export default function AdminStockPage() {
         </div>
       )}
 
+      {/* En-tête */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Gestion des stocks</h1>
           <p className="text-sm text-gray-500">Valeur totale du stock : {totalStockValue.toFixed(2)} $</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/admin/stock/movements" className="btn-secondary flex items-center gap-2">
-            <MoveRight size={18} /> Mouvements
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/stock/movements" className="btn-secondary flex items-center gap-2 text-sm px-3 py-2">
+            <MoveRight size={18} /> <span className="hidden sm:inline">Mouvements</span>
           </Link>
-          <button onClick={() => openForm()} className="btn-primary flex items-center gap-2">
-            <Plus size={18} /> Ajouter un produit
+          <button onClick={() => openForm()} className="btn-primary flex items-center gap-2 text-sm px-3 py-2">
+            <Plus size={18} /> <span className="hidden sm:inline">Ajouter</span>
           </button>
         </div>
       </div>
 
-      {/* Filtres et recherche */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+      {/* Bouton toggle filtres (mobile) */}
+      <div className="md:hidden mb-2">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-medium"
+        >
+          <Filter size={18} />
+          {showFilters ? "Masquer les filtres" : "Filtres"}
+        </button>
+      </div>
+
+      {/* Filtres */}
+      <div className={`${showFilters ? 'block' : 'hidden'} md:block bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6 transition-all`}>
         <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[150px]">
             <label className="block text-sm font-medium">Recherche</label>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Nom, SKU, catégorie..."
-              className="input-field w-full"
+              className="input-field w-full text-sm"
             />
           </div>
-          <div className="w-40">
+          <div className="w-36 sm:w-40">
             <label className="block text-sm font-medium">Catégorie</label>
-            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="input-field w-full">
+            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="input-field w-full text-sm">
               <option value="">Toutes</option>
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div className="w-40">
+          <div className="w-36 sm:w-40">
             <label className="block text-sm font-medium">Statut</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field w-full">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field w-full text-sm">
               <option value="">Tous</option>
               <option value="disponible">Disponible</option>
               <option value="faible_stock">Stock faible</option>
@@ -299,46 +310,45 @@ export default function AdminStockPage() {
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSearch} className="btn-primary">Rechercher</button>
-            <button onClick={resetFilters} className="btn-secondary">Réinitialiser</button>
+            <button onClick={handleSearch} className="btn-primary text-sm px-4 py-2">Rechercher</button>
+            <button onClick={resetFilters} className="btn-secondary text-sm px-4 py-2">Réinitialiser</button>
           </div>
         </div>
       </div>
 
       {/* Formulaire */}
       {showForm && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow mb-8 border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-4">{editingId ? "Modifier" : "Ajouter"} un produit</h2>
-          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium">Nom *</label>
               <input
                 value={form.name}
                 onChange={handleNameChange}
-                className="input-field"
+                className="input-field text-sm"
                 required
-                placeholder="Ex: Pain complet, Croissant, Jus d'orange"
+                placeholder="Ex: Pain complet, Croissant..."
               />
-              <p className="text-xs text-gray-400 mt-1">Le SKU sera généré automatiquement à partir du nom.</p>
+              <p className="text-xs text-gray-400 mt-1">Le SKU sera généré automatiquement.</p>
             </div>
             <div>
               <label className="block text-sm font-medium">SKU (Référence) *</label>
               <input
                 value={form.sku}
                 onChange={handleSkuChange}
-                className="input-field"
+                className="input-field text-sm"
                 required
-                placeholder="Généré automatiquement, modifiable"
+                placeholder="Généré automatiquement"
               />
-              <p className="text-xs text-gray-400 mt-1">Identifiant unique du produit.</p>
+              <p className="text-xs text-gray-400 mt-1">Identifiant unique.</p>
             </div>
             <div>
               <label className="block text-sm font-medium">Catégorie *</label>
-              <select value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="input-field" required>
+              <select value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="input-field text-sm" required>
                 <option value="">Sélectionner</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <p className="text-xs text-gray-400 mt-1">Ex: Pain, Pâtisserie, Boisson...</p>
             </div>
             <div>
               <label className="block text-sm font-medium">Image</label>
@@ -346,98 +356,88 @@ export default function AdminStockPage() {
                 onUpload={(url) => setForm({...form, imageUrl: url})}
                 onRemove={() => setForm({...form, imageUrl: ""})}
                 currentImage={form.imageUrl}
-                label="Photo du produit"
+                label="Photo"
               />
-              <p className="text-xs text-gray-400 mt-1">Ajoutez une photo pour identifier plus facilement le produit.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Quantité en stock *</label>
+              <label className="block text-sm font-medium">Quantité *</label>
               <input
                 type="number"
                 min="0"
                 value={form.quantity}
                 onChange={(e) => setForm({...form, quantity: parseInt(e.target.value) || 0})}
-                className="input-field"
+                className="input-field text-sm"
                 required
-                placeholder="0"
               />
-              <p className="text-xs text-gray-400 mt-1">Nombre actuellement disponible (ne peut pas être négatif).</p>
             </div>
             <div>
               <label className="block text-sm font-medium">Unité</label>
-              <select value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} className="input-field">
+              <select value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} className="input-field text-sm">
                 {units.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
-              <p className="text-xs text-gray-400 mt-1">Ex: pièce, kg, litre...</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Stock minimum (alerte)</label>
+              <label className="block text-sm font-medium">Stock minimum</label>
               <input
                 type="number"
                 min="0"
                 value={form.minStock}
                 onChange={(e) => setForm({...form, minStock: parseInt(e.target.value) || 0})}
-                className="input-field"
+                className="input-field text-sm"
                 placeholder="5"
               />
-              <p className="text-xs text-gray-400 mt-1">En dessous de ce seuil, le produit sera marqué "Stock faible".</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Prix d'achat unitaire ($)</label>
+              <label className="block text-sm font-medium">Prix achat unitaire ($)</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.purchasePrice}
                 onChange={(e) => setForm({...form, purchasePrice: e.target.value})}
-                className="input-field"
+                className="input-field text-sm"
                 placeholder="0.00"
               />
-              <p className="text-xs text-gray-400 mt-1">Prix d'achat par unité (optionnel).</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Prix de vente unitaire ($)</label>
+              <label className="block text-sm font-medium">Prix vente unitaire ($)</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.price}
                 onChange={(e) => setForm({...form, price: e.target.value})}
-                className="input-field"
+                className="input-field text-sm"
                 placeholder="0.00"
               />
-              <p className="text-xs text-gray-400 mt-1">Prix de vente par unité (optionnel).</p>
             </div>
             <div>
               <label className="block text-sm font-medium">Statut</label>
-              <select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="input-field">
+              <select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="input-field text-sm">
                 <option value="disponible">Disponible</option>
                 <option value="faible_stock">Stock faible</option>
                 <option value="rupture">Rupture</option>
               </select>
-              <p className="text-xs text-gray-400 mt-1">Statut actuel du produit.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Date de fabrication</label>
+              <label className="block text-sm font-medium">Date fabrication</label>
               <input
                 type="date"
                 value={form.manufacturingDate}
                 onChange={(e) => setForm({...form, manufacturingDate: e.target.value})}
-                className="input-field"
+                className="input-field text-sm"
               />
-              <p className="text-xs text-gray-400 mt-1">Pour les produits frais (pains, pâtisseries).</p>
             </div>
             <div>
-              <label className="block text-sm font-medium">Date d'expiration</label>
+              <label className="block text-sm font-medium">Date expiration</label>
               <input
                 type="date"
                 value={form.expirationDate}
                 onChange={(e) => setForm({...form, expirationDate: e.target.value})}
-                className="input-field"
+                className="input-field text-sm"
               />
-              <p className="text-xs text-gray-400 mt-1">Si applicable, à ne pas dépasser.</p>
             </div>
-            <div className="md:col-span-2 flex gap-2">
+            <div className="sm:col-span-2 flex flex-wrap gap-2">
               <button type="submit" disabled={saving} className="btn-primary">{saving ? "Enregistrement..." : "Enregistrer"}</button>
               <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="btn-secondary">Annuler</button>
             </div>
@@ -445,43 +445,43 @@ export default function AdminStockPage() {
         </div>
       )}
 
-      {/* Liste */}
+      {/* Tableau */}
       {loading ? (
-        <p>Chargement...</p>
+        <p className="text-center py-8">Chargement...</p>
       ) : products.length === 0 ? (
-        <p>Aucun produit en stock.</p>
+        <p className="text-center py-8">Aucun produit en stock.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <table className="w-full bg-white dark:bg-gray-800 rounded-lg shadow text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">SKU</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Nom</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Catégorie</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Qté</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Unité</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Prix achat</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Prix vente</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Valeur stock</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Statut</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Actions</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">SKU</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Nom</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase hidden sm:table-cell">Catégorie</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Qté</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase hidden sm:table-cell">Unité</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase hidden md:table-cell">Prix achat</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase hidden md:table-cell">Prix vente</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase hidden md:table-cell">Valeur</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Statut</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
               {products.map((p) => {
                 const stockValue = p.purchasePrice ? p.quantity * p.purchasePrice : 0;
                 return (
-                  <tr key={p.id} className="border-b dark:border-gray-700">
-                    <td className="px-4 py-2 text-sm font-mono">{p.sku}</td>
-                    <td className="px-4 py-2 text-sm font-medium">{p.name}</td>
-                    <td className="px-4 py-2 text-sm">{p.category}</td>
-                    <td className="px-4 py-2 text-sm">{p.quantity}</td>
-                    <td className="px-4 py-2 text-sm">{p.unit}</td>
-                    <td className="px-4 py-2 text-sm">{p.purchasePrice ? p.purchasePrice.toFixed(2) + " $" : "-"}</td>
-                    <td className="px-4 py-2 text-sm">{p.price ? p.price.toFixed(2) + " $" : "-"}</td>
-                    <td className="px-4 py-2 text-sm">{stockValue > 0 ? stockValue.toFixed(2) + " $" : "-"}</td>
-                    <td className="px-4 py-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
+                  <tr key={p.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                    <td className="px-3 py-2 font-mono text-xs">{p.sku}</td>
+                    <td className="px-3 py-2 font-medium">{p.name}</td>
+                    <td className="px-3 py-2 hidden sm:table-cell">{p.category}</td>
+                    <td className="px-3 py-2">{p.quantity}</td>
+                    <td className="px-3 py-2 hidden sm:table-cell">{p.unit}</td>
+                    <td className="px-3 py-2 hidden md:table-cell">{p.purchasePrice ? p.purchasePrice.toFixed(2) + " $" : "-"}</td>
+                    <td className="px-3 py-2 hidden md:table-cell">{p.price ? p.price.toFixed(2) + " $" : "-"}</td>
+                    <td className="px-3 py-2 hidden md:table-cell">{stockValue > 0 ? stockValue.toFixed(2) + " $" : "-"}</td>
+                    <td className="px-3 py-2">
+                      <span className={`px-2 py-0.5 text-xs rounded-full whitespace-nowrap ${
                         p.status === "disponible" ? "bg-green-100 text-green-800" :
                         p.status === "faible_stock" ? "bg-yellow-100 text-yellow-800" :
                         "bg-red-100 text-red-800"
@@ -489,7 +489,7 @@ export default function AdminStockPage() {
                         {p.status === "disponible" ? "Disponible" : p.status === "faible_stock" ? "Stock faible" : "Rupture"}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <div className="flex gap-1 items-center">
                         <Link href={`/admin/stock/movements?productId=${p.id}`} className="text-blue-500 hover:text-blue-700" title="Mouvements">
                           <MoveRight size={16} />

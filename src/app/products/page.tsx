@@ -4,7 +4,8 @@ import ProductCard from "@/components/ProductCard";
 import { Search, Cake, Coffee, Sandwich, Pizza, Beef, Croissant, Candy, Egg, X } from "lucide-react";
 import SkeletonLoader from "@/components/SkeletonLoader";
 
-const categories = [
+// Liste de base des catégories avec leurs icônes
+const baseCategories = [
   { id: "all", label: "Tous", icon: null },
   { id: "pains", label: "Pains", icon: Egg },
   { id: "pâtisseries", label: "Gâteaux", icon: Cake },
@@ -22,7 +23,35 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(baseCategories);
 
+  // Récupérer l'ordre personnalisé des catégories
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(settings => {
+        if (settings?.categoryOrder && Array.isArray(settings.categoryOrder)) {
+          // Créer un tableau trié en conservant "all" en premier
+          const orderedIds = settings.categoryOrder;
+          const sorted = [
+            baseCategories.find(c => c.id === "all"),
+            ...orderedIds
+              .filter(id => id !== "all")
+              .map(id => baseCategories.find(c => c.id === id))
+              .filter(Boolean)
+          ];
+          // Ajouter les catégories manquantes (non présentes dans l'ordre) à la fin
+          const existingIds = new Set(orderedIds);
+          const missing = baseCategories.filter(c => c.id !== "all" && !existingIds.has(c.id));
+          setCategories([...sorted, ...missing]);
+        } else {
+          setCategories(baseCategories);
+        }
+      })
+      .catch(() => setCategories(baseCategories));
+  }, []);
+
+  // Chargement des produits
   useEffect(() => {
     setLoading(true);
     fetch("/api/products")
@@ -34,6 +63,7 @@ export default function ProductsPage() {
       });
   }, []);
 
+  // Filtrage
   useEffect(() => {
     let filtered = products;
     if (activeCategory !== "all") {
@@ -68,7 +98,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Filtres */}
+      {/* Filtres avec ordre personnalisé */}
       <div className="flex flex-wrap items-center gap-2 mb-8">
         {categories.map((cat) => {
           const Icon = cat.icon;
