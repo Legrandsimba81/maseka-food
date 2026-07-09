@@ -39,7 +39,7 @@ export async function POST(
   }
 
   try {
-    const { name, price } = await req.json();
+    const { name, price, unit = "pièce" } = await req.json();
     if (!name || !price) {
       return NextResponse.json({ error: "Nom et prix requis" }, { status: 400 });
     }
@@ -57,6 +57,7 @@ export async function POST(
         name,
         price: parseFloat(price),
         quantity: 0,
+        unit,
       },
     });
 
@@ -67,7 +68,7 @@ export async function POST(
   }
 }
 
-// PUT – Modifier un produit (nom, prix, quantité)
+// PUT – Modifier un produit (nom, prix, quantité, unité)
 export async function PUT(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -78,7 +79,7 @@ export async function PUT(
   }
 
   try {
-    const { productId, name, price, quantity } = await req.json();
+    const { productId, name, price, quantity, unit } = await req.json();
     if (!productId) {
       return NextResponse.json({ error: "ID produit requis" }, { status: 400 });
     }
@@ -87,6 +88,7 @@ export async function PUT(
     if (name !== undefined) data.name = name;
     if (price !== undefined) data.price = parseFloat(price);
     if (quantity !== undefined) data.quantity = parseInt(quantity);
+    if (unit !== undefined) data.unit = unit;
 
     const product = await prisma.sectionProduct.update({
       where: { id: productId },

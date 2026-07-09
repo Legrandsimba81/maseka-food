@@ -293,6 +293,7 @@ model SectionProduct {
   name        String
   price       Float    // prix de vente
   quantity    Int      @default(0) // quantité pour la journée en cours
+  unit        String   @default("pièce")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   saleItems   DailySaleItem[]
@@ -305,6 +306,8 @@ model DailySale {
   section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   date        DateTime @default(now()) // date de la vente (jour)
   totalAmount Float
+  totalInitialStock Int   @default(0) // stock total initial (somme des quantités)
+  totalItemsSold    Int   @default(0) // quantité totale vendue
   items       DailySaleItem[]
   createdAt   DateTime @default(now())
 }

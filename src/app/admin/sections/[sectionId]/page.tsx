@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
-import Link from "next/link";
-import { Plus, Minus, Package, DollarSign, Calendar, X, Search, Edit, Save, Trash2 } from "lucide-react";
+import { Plus, Minus, Calendar, X, Search, Edit, Save, Trash2, Package } from "lucide-react";
+
+const units = ["pièce", "kg", "litre", "boîte", "paquet", "sac", "bouteille"];
 
 export default function SectionDashboard() {
   const { data: session } = useSession();
@@ -19,13 +20,21 @@ export default function SectionDashboard() {
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: "", price: "" });
-  const [editingProduct, setEditingProduct] = useState(null); // produit en cours d'édition
+  const [newProduct, setNewProduct] = useState({ name: "", price: "", unit: "pièce" });
+  const [editingProduct, setEditingProduct] = useState(null);
   const [closing, setClosing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sellQuantities, setSellQuantities] = useState({}); // { productId: quantity }
+  const [sellQuantities, setSellQuantities] = useState({});
 
-  // Vérifier la session et le mot de passe
+  // Date formatée
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
   useEffect(() => {
     if (session?.user?.role === "admin") {
       const stored = sessionStorage.getItem(`section_${sectionId}_auth`);
@@ -43,7 +52,6 @@ export default function SectionDashboard() {
       const data = await res.json();
       setProducts(data.products);
       setTotal(data.total);
-      // Initialiser sellQuantities à 0 pour chaque produit
       const initialSell = {};
       data.products.forEach(p => { initialSell[p.id] = 0; });
       setSellQuantities(initialSell);
@@ -67,7 +75,6 @@ export default function SectionDashboard() {
     }
   };
 
-  // Mettre à jour le stock initial (quantité)
   const updateStock = async (productId: string, newQuantity: number) => {
     if (newQuantity < 0) {
       toast.error("La quantité ne peut pas être négative");
@@ -86,10 +93,14 @@ export default function SectionDashboard() {
     }
   };
 
-  // Vendre (décrémenter) une quantité
   const sellProduct = async (productId: string, quantity: number) => {
     if (quantity <= 0) {
       toast.error("Quantité de vente invalide");
+      return;
+    }
+    const product = products.find(p => p.id === productId);
+    if (!product || product.quantity < quantity) {
+      toast.error("Stock insuffisant");
       return;
     }
     const res = await fetch(`/api/admin/sections/${sectionId}/sales`, {
@@ -106,7 +117,6 @@ export default function SectionDashboard() {
     }
   };
 
-  // Ajouter un produit
   const addProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await fetch(`/api/admin/sections/${sectionId}/products`, {
@@ -117,14 +127,13 @@ export default function SectionDashboard() {
     if (res.ok) {
       toast.success("Produit ajouté");
       setShowProductForm(false);
-      setNewProduct({ name: "", price: "" });
+      setNewProduct({ name: "", price: "", unit: "pièce" });
       fetchData();
     } else {
       toast.error("Erreur");
     }
   };
 
-  // Modifier un produit (nom, prix)
   const editProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
@@ -135,6 +144,7 @@ export default function SectionDashboard() {
         productId: editingProduct.id,
         name: editingProduct.name,
         price: editingProduct.price,
+        unit: editingProduct.unit,
       }),
     });
     if (res.ok) {
@@ -146,7 +156,6 @@ export default function SectionDashboard() {
     }
   };
 
-  // Supprimer un produit
   const deleteProduct = async (productId: string) => {
     if (!confirm("Supprimer ce produit ?")) return;
     const res = await fetch(`/api/admin/sections/${sectionId}/products`, {
@@ -162,13 +171,10 @@ export default function SectionDashboard() {
     }
   };
 
-  // Clôture de journée
   const closeDay = async () => {
     if (!confirm("Clôturer la journée ? Les quantités seront réinitialisées à 0.")) return;
     setClosing(true);
-    const res = await fetch(`/api/admin/sections/${sectionId}/close`, {
-      method: "POST",
-    });
+    const res = await fetch(`/api/admin/sections/${sectionId}/close`, { method: "POST" });
     if (res.ok) {
       toast.success("Journée clôturée ! Rapport envoyé par email.");
       fetchData();
@@ -178,7 +184,6 @@ export default function SectionDashboard() {
     setClosing(false);
   };
 
-  // Filtrer les produits par nom
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -214,7 +219,7 @@ export default function SectionDashboard() {
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">📊 Ventes du jour</h1>
-          <p className="text-sm text-gray-500">{new Date().toLocaleDateString('fr-FR')}</p>
+          <p className="text-sm text-gray-500">{formattedDate}</p>
           <p className="text-sm text-gray-500">Total : <span className="font-bold text-green-600">{total.toFixed(2)} $</span></p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -234,7 +239,7 @@ export default function SectionDashboard() {
         </div>
       </div>
 
-      {/* Barre de recherche */}
+      {/* Recherche */}
       <div className="relative mb-4 max-w-sm">
         <input
           type="text"
@@ -246,7 +251,7 @@ export default function SectionDashboard() {
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
       </div>
 
-      {/* Formulaire d'ajout de produit */}
+      {/* Formulaire d'ajout */}
       {showProductForm && (
         <form onSubmit={addProduct} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6 flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[150px]">
@@ -269,12 +274,22 @@ export default function SectionDashboard() {
               required
             />
           </div>
+          <div className="w-32">
+            <label className="block text-sm font-medium">Unité</label>
+            <select
+              value={newProduct.unit}
+              onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+              className="input-field"
+            >
+              {units.map(u => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
           <button type="submit" className="btn-primary">Ajouter</button>
           <button type="button" onClick={() => setShowProductForm(false)} className="btn-secondary">Annuler</button>
         </form>
       )}
 
-      {/* Formulaire d'édition de produit */}
+      {/* Formulaire d'édition */}
       {editingProduct && (
         <form onSubmit={editProduct} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6 border-2 border-blue-500">
           <div className="flex justify-between items-center mb-2">
@@ -304,6 +319,16 @@ export default function SectionDashboard() {
                 required
               />
             </div>
+            <div className="w-32">
+              <label className="block text-sm font-medium">Unité</label>
+              <select
+                value={editingProduct.unit || "pièce"}
+                onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
+                className="input-field"
+              >
+                {units.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
             <button type="submit" className="btn-primary flex items-center gap-2">
               <Save size={18} /> Enregistrer
             </button>
@@ -311,14 +336,14 @@ export default function SectionDashboard() {
         </form>
       )}
 
-      {/* Tableau des produits */}
+      {/* Tableau */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Produit</th>
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Prix unitaire</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Prix</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Stock</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Total</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Vendre</th>
@@ -326,62 +351,74 @@ export default function SectionDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredProducts.map((product) => (
-                <tr key={product.id}>
-                  <td className="px-3 py-2 font-medium">{product.name}</td>
-                  <td className="px-3 py-2">{product.price.toFixed(2)} $</td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        value={product.quantity}
-                        onChange={(e) => {
-                          const newQty = parseInt(e.target.value) || 0;
-                          updateStock(product.id, newQty);
-                        }}
-                        className="input-field w-20 py-1 text-sm"
-                      />
-                      <span className="text-xs text-gray-500">{product.unit || "pièce"}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 font-bold">{(product.quantity * product.price).toFixed(2)} $</td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        min="1"
-                        value={sellQuantities[product.id] || 0}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setSellQuantities(prev => ({ ...prev, [product.id]: val }));
-                        }}
-                        className="input-field w-16 py-1 text-sm"
-                      />
+              {filteredProducts.map((product) => {
+                const stock = product.quantity;
+                const stockValue = stock * product.price;
+                const isOutOfStock = stock === 0;
+                return (
+                  <tr key={product.id}>
+                    <td className="px-3 py-2 font-medium">{product.name}</td>
+                    <td className="px-3 py-2">{product.price.toFixed(2)} $ / {product.unit || "pièce"}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={stock}
+                          onChange={(e) => {
+                            const newQty = parseInt(e.target.value) || 0;
+                            updateStock(product.id, newQty);
+                          }}
+                          className="input-field w-20 py-1 text-sm"
+                        />
+                        <span className="text-xs text-gray-500">{product.unit || "pièce"}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 font-bold">{stockValue.toFixed(2)} $</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="1"
+                          max={stock}
+                          value={sellQuantities[product.id] || 0}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            setSellQuantities(prev => ({ ...prev, [product.id]: val }));
+                          }}
+                          className="input-field w-16 py-1 text-sm"
+                          disabled={isOutOfStock}
+                        />
+                        <button
+                          onClick={() => sellProduct(product.id, sellQuantities[product.id] || 1)}
+                          disabled={isOutOfStock}
+                          className={`px-2 py-1 rounded text-sm flex items-center gap-1 ${
+                            isOutOfStock
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-green-500 hover:bg-green-600 text-white"
+                          }`}
+                        >
+                          <Package size={14} /> Vendre
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 flex gap-1">
                       <button
-                        onClick={() => sellProduct(product.id, sellQuantities[product.id] || 1)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm"
+                        onClick={() => setEditingProduct(product)}
+                        className="text-blue-500 hover:text-blue-700 p-1"
                       >
-                        Vendre
+                        <Edit size={16} />
                       </button>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 flex gap-1">
-                    <button
-                      onClick={() => setEditingProduct(product)}
-                      className="text-blue-500 hover:text-blue-700 p-1"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => deleteProduct(product.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      <button
+                        onClick={() => deleteProduct(product.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               <tr className="bg-gray-50 dark:bg-gray-700 font-bold">
                 <td colSpan={3} className="px-3 py-2 text-right">TOTAL</td>
                 <td className="px-3 py-2 text-lg text-green-600">{total.toFixed(2)} $</td>
@@ -394,51 +431,62 @@ export default function SectionDashboard() {
 
       {/* Version mobile : cartes */}
       <div className="md:hidden mt-6 grid grid-cols-1 gap-4">
-        {filteredProducts.map((product) => (
-          <div key={product.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border">
-            <div className="flex justify-between items-start">
-              <h3 className="font-bold">{product.name}</h3>
-              <div className="flex gap-1">
-                <button onClick={() => setEditingProduct(product)} className="text-blue-500"><Edit size={16} /></button>
-                <button onClick={() => deleteProduct(product.id)} className="text-red-500"><Trash2 size={16} /></button>
+        {filteredProducts.map((product) => {
+          const stock = product.quantity;
+          const isOutOfStock = stock === 0;
+          return (
+            <div key={product.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border">
+              <div className="flex justify-between items-start">
+                <h3 className="font-bold">{product.name}</h3>
+                <div className="flex gap-1">
+                  <button onClick={() => setEditingProduct(product)} className="text-blue-500"><Edit size={16} /></button>
+                  <button onClick={() => deleteProduct(product.id)} className="text-red-500"><Trash2 size={16} /></button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                <div><span className="text-gray-500">Prix :</span> {product.price.toFixed(2)} $ / {product.unit || "pièce"}</div>
+                <div><span className="text-gray-500">Stock :</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={stock}
+                    onChange={(e) => {
+                      const newQty = parseInt(e.target.value) || 0;
+                      updateStock(product.id, newQty);
+                    }}
+                    className="input-field w-16 py-0 text-sm inline-block"
+                  />
+                </div>
+                <div><span className="text-gray-500">Total :</span> {(stock * product.price).toFixed(2)} $</div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min="1"
+                    max={stock}
+                    value={sellQuantities[product.id] || 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setSellQuantities(prev => ({ ...prev, [product.id]: val }));
+                    }}
+                    className="input-field w-16 py-0 text-sm"
+                    disabled={isOutOfStock}
+                  />
+                  <button
+                    onClick={() => sellProduct(product.id, sellQuantities[product.id] || 1)}
+                    disabled={isOutOfStock}
+                    className={`px-2 py-1 rounded text-sm flex items-center gap-1 ${
+                      isOutOfStock
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
+                  >
+                    <Package size={14} /> Vendre
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-              <div><span className="text-gray-500">Prix :</span> {product.price.toFixed(2)} $</div>
-              <div><span className="text-gray-500">Stock :</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={product.quantity}
-                  onChange={(e) => {
-                    const newQty = parseInt(e.target.value) || 0;
-                    updateStock(product.id, newQty);
-                  }}
-                  className="input-field w-16 py-0 text-sm inline-block"
-                />
-              </div>
-              <div><span className="text-gray-500">Total :</span> {(product.quantity * product.price).toFixed(2)} $</div>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min="1"
-                  value={sellQuantities[product.id] || 0}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    setSellQuantities(prev => ({ ...prev, [product.id]: val }));
-                  }}
-                  className="input-field w-16 py-0 text-sm"
-                />
-                <button
-                  onClick={() => sellProduct(product.id, sellQuantities[product.id] || 1)}
-                  className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                >
-                  Vendre
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

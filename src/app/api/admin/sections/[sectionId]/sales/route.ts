@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET – Récupérer les ventes du jour pour une section
+// GET – Récupérer les ventes du jour
 export async function GET(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -20,16 +20,13 @@ export async function GET(
     return NextResponse.json({ error: "Section non trouvée" }, { status: 404 });
   }
 
-  // Récupérer les produits avec leurs quantités du jour
   const products = await prisma.sectionProduct.findMany({
     where: { sectionId: params.sectionId },
     orderBy: { name: "asc" },
   });
 
-  // Calculer le total du jour
   const total = products.reduce((sum, p) => sum + p.quantity * p.price, 0);
 
-  // Vérifier si une vente existe déjà pour aujourd'hui
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -50,7 +47,7 @@ export async function GET(
   });
 }
 
-// POST – Ajouter une vente (incrémenter la quantité d'un produit)
+// POST – Vendre un produit (décrémenter le stock)
 export async function POST(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -65,6 +62,9 @@ export async function POST(
     if (!productId) {
       return NextResponse.json({ error: "ID produit requis" }, { status: 400 });
     }
+    if (quantity <= 0) {
+      return NextResponse.json({ error: "La quantité doit être positive" }, { status: 400 });
+    }
 
     const product = await prisma.sectionProduct.findUnique({
       where: { id: productId },
@@ -73,10 +73,15 @@ export async function POST(
       return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
     }
 
-    // Mettre à jour la quantité
+    // Vérifier le stock disponible
+    if (product.quantity < quantity) {
+      return NextResponse.json({ error: "Stock insuffisant" }, { status: 400 });
+    }
+
+    // Décrémenter la quantité
     const updated = await prisma.sectionProduct.update({
       where: { id: productId },
-      data: { quantity: { increment: quantity } },
+      data: { quantity: { decrement: quantity } },
     });
 
     // Créer ou mettre à jour la vente journalière
@@ -98,6 +103,8 @@ export async function POST(
           sectionId: params.sectionId,
           date: today,
           totalAmount: 0,
+          totalInitialStock: 0,
+          totalItemsSold: 0,
         },
       });
     }
@@ -113,15 +120,18 @@ export async function POST(
       },
     });
 
-    // Mettre à jour le total de la vente
+    // Mettre à jour les totaux de la vente
     await prisma.dailySale.update({
       where: { id: dailySale.id },
-      data: { totalAmount: { increment: product.price * quantity } },
+      data: {
+        totalAmount: { increment: product.price * quantity },
+        totalItemsSold: { increment: quantity },
+      },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Erreur ajout vente:", error);
+    console.error("Erreur vente:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
