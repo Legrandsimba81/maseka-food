@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import slugify from "slugify";
 
 // GET – Récupérer un article (avec incrément des vues)
 export async function GET(req: Request, { params }: { params: { slug: string } }) {
@@ -46,10 +47,7 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
 
     let newSlug = params.slug;
     if (title) {
-      newSlug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+      newSlug = slugify(title, { lower: true, strict: true, locale: "fr" });
     }
 
     if (newSlug !== params.slug) {

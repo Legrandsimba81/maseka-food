@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import slugify from "slugify";
 
 // GET – Liste paginée avec recherche
 export async function GET(req: Request) {
@@ -52,10 +53,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Titre et contenu requis" }, { status: 400 });
     }
 
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+    const slug = slugify(title, { lower: true, strict: true, locale: "fr" });
 
     const existing = await prisma.article.findUnique({ where: { slug } });
     if (existing) {
