@@ -40,6 +40,7 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
   try {
     const body = await req.json();
     const { title, content, excerpt, imageMain, imagesSecondary } = body;
+    
 
     if (!title || !content) {
       return NextResponse.json({ error: "Titre et contenu requis" }, { status: 400 });
