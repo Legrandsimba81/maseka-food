@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
-// GET – Liste des sections (super admin uniquement)
+// GET – Liste des sections (admin uniquement)
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "super_admin") {
+  if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
@@ -21,10 +21,10 @@ export async function GET() {
   return NextResponse.json(sections);
 }
 
-// POST – Créer une section (super admin uniquement)
+// POST – Créer une section (admin uniquement)
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "super_admin") {
+  if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 

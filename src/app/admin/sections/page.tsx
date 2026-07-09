@@ -12,7 +12,7 @@ export default function SectionsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (session?.user?.role === "super_admin") {
+    if (session?.user?.role === "admin") {  // <-- modifié : "admin" au lieu de "super_admin"
       fetchSections();
     }
   }, [session]);
@@ -25,14 +25,14 @@ export default function SectionsPage() {
     setLoading(false);
   };
 
-  if (!session || session.user.role !== "super_admin") {
+  if (!session || session.user.role !== "admin") {
     return <div className="p-6 text-center text-red-500">Accès refusé</div>;
   }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Sections (points de vente)</h1>
+        <h1 className="text-2xl font-bold">📋 Sections (points de vente)</h1>
         <Link href="/admin/sections/new" className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Nouvelle section
         </Link>
