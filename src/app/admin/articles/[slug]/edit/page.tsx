@@ -1,118 +1,123 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
-import toast from "react-hot-toast";
-import { ArrowLeft } from "lucide-react";
-import ImageUpload from "@/components/ImageUpload";
 
-export default function EditArticlePage() {
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import ImageUploadWithCrop from "@/components/ImageUploadWithCrop";
+import Editor from "@/components/Editor";
+
+export default function EditArticlePage({ params }: { params: { slug: string } }) {
   const router = useRouter();
-  const params = useParams();
-  const slug = params?.slug as string;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
+  const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
   const [imageMain, setImageMain] = useState("");
   const [imagesSecondary, setImagesSecondary] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!slug) return;
-    fetch(`/api/articles/${slug}`)
-      .then((res) => {
+    const fetchArticle = async () => {
+      try {
+        const res = await fetch(`/api/admin/articles/${params.slug}`);
         if (!res.ok) throw new Error("Article non trouvé");
-        return res.json();
-      })
-      .then((data) => {
-        setTitle(data.title);
-        setContent(data.content);
+        const data = await res.json();
+        setTitle(data.title || "");
+        setExcerpt(data.excerpt || "");
+        setContent(data.content || "");
         setImageMain(data.imageMain || "");
         setImagesSecondary(Array.isArray(data.imagesSecondary) ? data.imagesSecondary : []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        toast.error(err.message);
+      } catch (err) {
+        toast.error("Erreur chargement article");
         router.push("/admin/articles");
-      });
-  }, [slug, router]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticle();
+  }, [params.slug, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim() || !content.trim()) {
+      toast.error("Le titre et le contenu sont requis");
+      return;
+    }
     setSaving(true);
     try {
-      const res = await fetch(`/api/articles/${slug}`, {
+      const res = await fetch(`/api/admin/articles/${params.slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
+          excerpt: excerpt.trim(),
           content,
           imageMain,
           imagesSecondary,
         }),
       });
-      const data = await res.json();
       if (res.ok) {
-        toast.success("Article modifié");
+        toast.success("Article modifié !");
         router.push("/admin/articles");
       } else {
-        toast.error(data.error || "Erreur");
+        const err = await res.json();
+        toast.error(err.error || "Erreur");
       }
-    } catch (err) {
+    } catch {
       toast.error("Erreur réseau");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/articles" className="text-gray-500 hover:text-primary">
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="text-2xl font-bold">Modifier l'article</h1>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-6">✏️ Modifier l'article</h1>
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium">Titre</label>
+          <label className="block text-sm font-medium mb-1">Titre *</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} className="input-field" required />
         </div>
         <div>
-          <label className="block text-sm font-medium">Contenu (HTML)</label>
-          <textarea rows={10} value={content} onChange={(e) => setContent(e.target.value)} className="input-field" required />
+          <label className="block text-sm font-medium mb-1">Résumé (excerpt)</label>
+          <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} className="input-field" rows={2} placeholder="Bref résumé" />
         </div>
         <div>
-          <ImageUpload
-            label="Image principale"
-            onUpload={(url) => setImageMain(url)}
-            onRemove={() => setImageMain("")}
-            currentImage={imageMain}
-          />
+          <label className="block text-sm font-medium mb-1">Image principale (paysage)</label>
+          <ImageUploadWithCrop onUpload={setImageMain} onRemove={() => setImageMain("")} currentImage={imageMain} aspect={16 / 9} label="Image principale" />
+          <p className="text-xs text-gray-500 mt-1">Format paysage (16:9).</p>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Images secondaires</label>
-          <div className="space-y-2">
+          <label className="block text-sm font-medium mb-1">Images secondaires (portrait)</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-2">
             {imagesSecondary.map((url, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <img src={url} alt="" className="h-12 w-auto rounded" />
+              <div key={idx} className="relative group">
+                <img src={url} alt={`Secondaire ${idx + 1}`} className="w-full h-48 object-cover rounded-lg border" />
                 <button
                   type="button"
                   onClick={() => setImagesSecondary(imagesSecondary.filter((_, i) => i !== idx))}
-                  className="text-red-500"
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-70 hover:opacity-100"
                 >
-                  Supprimer
+                  ✕
                 </button>
               </div>
             ))}
-            <ImageUpload
-              label="Ajouter une image"
-              onUpload={(url) => setImagesSecondary([...imagesSecondary, url])}
-            />
+            <div className="flex items-center justify-center border-2 border-dashed rounded-lg h-48">
+              <ImageUploadWithCrop onUpload={(url) => setImagesSecondary([...imagesSecondary, url])} aspect={3 / 4} label="Ajouter" />
+            </div>
           </div>
+          <p className="text-xs text-gray-500 mt-1">Format portrait (3:4).</p>
         </div>
-        <button type="submit" disabled={saving} className="btn-primary w-full">Enregistrer</button>
+        <div>
+          <label className="block text-sm font-medium mb-1">Contenu (texte enrichi) *</label>
+          <Editor value={content} onChange={setContent} placeholder="Rédigez votre article..." />
+        </div>
+        <div className="flex gap-3">
+          <button type="submit" disabled={saving} className="btn-primary">{saving ? "Enregistrement..." : "Enregistrer"}</button>
+          <button type="button" onClick={() => router.back()} className="btn-secondary">Annuler</button>
+        </div>
       </form>
     </div>
   );
