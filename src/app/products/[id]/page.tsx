@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -8,15 +7,14 @@ import { formatPrice } from "@/lib/format";
 import ProductReviews from "@/components/ProductReviews";
 import ShareButton from "@/components/ShareButtonProduit";
 import { Metadata } from "next";
+import { getProductById } from "@/lib/product-cache";
 
 type Props = {
   params: { id: string };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = await prisma.product.findUnique({
-    where: { id: params.id },
-  });
+  const product = await getProductById(params.id);
   if (!product) {
     return { title: "Produit introuvable" };
   }
@@ -44,9 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  const product = await prisma.product.findUnique({
-    where: { id: params.id },
-  });
+  const product = await getProductById(params.id);
 
   if (!product) notFound();
 

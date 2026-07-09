@@ -6,12 +6,14 @@ declare module "next-auth" {
     role?: string;
     avatarUrl?: string | null;
     image?: string | null;
+    createdAt?: Date | string; // ajout
   }
   interface Session {
     user: {
       id: string;
       role?: string;
       avatarUrl?: string | null;
+      createdAt?: Date | string; // ajout
     } & DefaultSession["user"];
   }
 }
@@ -21,5 +23,6 @@ declare module "next-auth/jwt" {
     id: string;
     role?: string;
     avatarUrl?: string | null;
+    createdAt?: Date | string; // ajout
   }
 }

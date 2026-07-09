@@ -142,7 +142,6 @@ export default function OrdersPage() {
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Receipt size={16} className="text-gray-500" />
                     <p className="text-sm font-mono text-gray-600 dark:text-gray-400">
                       #{order.id.slice(0, 8)}
                     </p>
@@ -199,7 +198,7 @@ export default function OrdersPage() {
 
                 {order.paymentStatus === "paid_by_ussd" && (
                   <div className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-1">
-                    ✅ Payé par USSD
+                    Payé par USSD
                   </div>
                 )}
 

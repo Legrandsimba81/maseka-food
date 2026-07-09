@@ -1,14 +1,14 @@
 "use client";
+
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useCart } from "@/hooks/useCart";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
 import BackButton from "@/components/BackButton";
 import { formatPrice } from "@/lib/format";
-import { BookOpen, User } from "lucide-react";
+import { BookOpen, User, Calendar, ShoppingBag } from "lucide-react";
 
 interface Order {
   id: string;
@@ -20,7 +20,6 @@ interface Order {
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
-  const { items, removeFromCart, updateQuantity, getTotal, clearCart } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -68,7 +67,7 @@ export default function ProfilePage() {
       } else {
         toast.error(data.error || "Erreur");
       }
-    } catch (err) {
+    } catch {
       toast.error("Erreur réseau");
     }
     setUploading(false);
@@ -118,33 +117,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCheckout = async () => {
-    if (items.length === 0) {
-      toast.error("Votre panier est vide");
-      return;
-    }
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: items.map((i) => ({
-          productId: i.productId,
-          quantity: i.quantity,
-          price: i.price,
-        })),
-        totalAmount: getTotal(),
-      }),
-    });
-    if (res.ok) {
-      clearCart();
-      toast.success("Commande validée !");
-      router.refresh();
-    } else {
-      const data = await res.json();
-      toast.error(data.error || "Erreur");
-    }
-  };
-
   const last6Months = () => {
     const months = [];
     const now = new Date();
@@ -164,11 +136,22 @@ export default function ProfilePage() {
 
   if (status === "loading" || loading) return <div className="text-center py-8">Chargement...</div>;
 
+  // Récupérer la date d'inscription depuis session.user.createdAt (si disponible)
+  // Ou depuis la base via une API (on suppose que le champ existe)
+  const memberSince = session?.user?.createdAt
+  ? new Date(session.user.createdAt).toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  : "Date inconnue";
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <BackButton />
 
-      <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 mt-4 mb-8 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 bg-gradient-to-r from-transparent to-amber-50/30 dark:to-gray-800/30">
+      {/* En‑tête du profil (pleine largeur) */}
+      <div className="mt-4 mb-8 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 bg-gradient-to-r from-transparent to-amber-50/30 dark:to-gray-800/30 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
           {avatarUrl ? (
             <img src={avatarUrl} alt="Avatar" className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-amber-500/30" />
@@ -181,23 +164,29 @@ export default function ProfilePage() {
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
               Bonjour, {session?.user?.name}
             </h1>
-            {session?.user?.email && (
-              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-0.5">
-                {session.user.email}
-              </p>
-            )}
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-0.5">
+              {session?.user?.email}
+            </p>
+            <p className="text-sm text-gray-400 flex items-center gap-1 mt-1">
+              <Calendar size={14} /> Membre depuis le {memberSince}
+            </p>
           </div>
         </div>
-        <div className="mt-2 sm:mt-0">
+        <div className="flex flex-wrap gap-2">
           <label className="btn-secondary cursor-pointer text-sm sm:text-base px-3 py-1.5 sm:px-4 sm:py-2">
             {uploading ? "Envoi..." : "Changer l'avatar"}
             <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
           </label>
+          <Link href="/cart" className="btn-primary flex items-center gap-2 text-sm sm:text-base px-4 py-2">
+            <ShoppingBag size={18} /> Mon panier
+          </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      {/* Corps à deux colonnes sur grand écran */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Colonne gauche : Informations personnelles + changement mot de passe */}
+        <div className="space-y-6">
           <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Informations personnelles</h2>
             {editMode ? (
@@ -220,12 +209,10 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <p><strong>Nom :</strong> {session?.user?.name}</p>
                 <p><strong>Email :</strong> {session?.user?.email}</p>
-                <div className="flex gap-2 mt-4">
+                <p><strong>Membre depuis :</strong> {memberSince}</p>
+                <div className="flex flex-wrap gap-2 mt-4">
                   <button onClick={() => setEditMode(true)} className="btn-secondary">Modifier</button>
                   <button onClick={() => setChangePasswordMode(true)} className="btn-secondary">Changer le mot de passe</button>
-                  <Link href="/guide" className="flex items-center gap-2 text-primary hover:underline mt-4">
-                    <BookOpen size={18} /> Guide d'utilisation
-                  </Link>
                 </div>
               </div>
             )}
@@ -251,6 +238,23 @@ export default function ProfilePage() {
             )}
           </div>
 
+          {/* Carte "Guide d'utilisation" */}
+          <Link href="/guide" className="block border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition hover:border-amber-300 dark:hover:border-amber-700">
+            <div className="flex items-start gap-3">
+              <BookOpen size={28} className="text-amber-600 dark:text-amber-400 mt-1" />
+              <div>
+                <h3 className="text-lg font-semibold">Guide d'utilisation</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Découvrez les fonctionnalités clés de l'application, gérez vos commandes, votre profil et bien plus encore.
+                </p>
+                <span className="text-primary text-sm font-medium mt-1 inline-block">Cliquez pour en savoir plus →</span>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Colonne droite : Graphique + Dernières commandes */}
+        <div className="space-y-6">
           <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Évolution des commandes</h2>
             {orders.length === 0 ? (
@@ -283,45 +287,6 @@ export default function ProfilePage() {
                 {orders.length > 5 && <Link href="/orders" className="text-primary text-sm">Voir toutes</Link>}
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 sticky top-24">
-            <h2 className="text-xl font-semibold mb-4">Mon panier</h2>
-            {items.length === 0 ? (
-              <p className="text-muted-foreground">Votre panier est vide.</p>
-            ) : (
-              <>
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {items.map((item) => (
-                    <div key={item.productId} className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="px-2 py-0 border rounded">-</button>
-                          <span className="text-sm">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="px-2 py-0 border rounded">+</button>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p>{formatPrice(item.price * item.quantity)} $</p>
-                        <button onClick={() => removeFromCart(item.productId)} className="text-red-500 text-xs">Supprimer</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t pt-3 mt-3">
-                  <div className="flex justify-between font-bold">
-                    <span>Total</span>
-                    <span>{formatPrice(getTotal())} $</span>
-                  </div>
-                  <button onClick={handleCheckout} className="btn-primary w-full mt-4">Valider la commande</button>
-                  <button onClick={clearCart} className="btn-secondary w-full mt-2">Vider le panier</button>
-                </div>
-              </>
-            )}
-            <Link href="/products" className="text-primary text-sm block mt-4 text-center">Ajouter des produits</Link>
           </div>
         </div>
       </div>
