@@ -21,7 +21,6 @@ export default function Editor({ value, onChange, placeholder = "Écrivez votre 
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2] },
-        // link et codeBlock sont déjà inclus par défaut
       }),
       Placeholder.configure({ placeholder }),
       Image.configure({ HTMLAttributes: { class: 'rounded-lg max-w-full' } }),
@@ -78,20 +77,20 @@ export default function Editor({ value, onChange, placeholder = "Écrivez votre 
   return (
     <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
       <div className="flex flex-wrap items-center gap-1 p-2 border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-        <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('bold') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Gras"><Bold size={18} /></button>
-        <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('italic') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Italique"><Italic size={18} /></button>
-        <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Titre 1"><Heading1 size={18} /></button>
-        <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Titre 2"><Heading2 size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('bold') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Gras"><Bold size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('italic') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Italique"><Italic size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Titre 1"><Heading1 size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Titre 2"><Heading2 size={18} /></button>
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-        <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('bulletList') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Liste à puces"><List size={18} /></button>
-        <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('orderedList') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Liste numérotée"><ListOrdered size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('bulletList') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Liste à puces"><List size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('orderedList') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Liste numérotée"><ListOrdered size={18} /></button>
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-        <button onClick={setLink} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('link') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Lien"><LinkIcon size={18} /></button>
-        <button onClick={handleImageUpload} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Insérer une image" disabled={isUploading}><ImageIcon size={18} /></button>
-        <button onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('codeBlock') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Bloc de code"><Code size={18} /></button>
+        <button type="button" onClick={setLink} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('link') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Lien"><LinkIcon size={18} /></button>
+        <button type="button" onClick={handleImageUpload} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Insérer une image" disabled={isUploading}><ImageIcon size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 ${editor.isActive('codeBlock') ? 'bg-gray-200 dark:bg-gray-600' : ''}`} title="Bloc de code"><Code size={18} /></button>
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-        <button onClick={() => editor.chain().focus().undo().run()} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Annuler"><Undo size={18} /></button>
-        <button onClick={() => editor.chain().focus().redo().run()} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Rétablir"><Redo size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().undo().run()} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Annuler"><Undo size={18} /></button>
+        <button type="button" onClick={() => editor.chain().focus().redo().run()} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Rétablir"><Redo size={18} /></button>
         {isUploading && <span className="text-xs text-gray-500 ml-2">Upload...</span>}
       </div>
       <EditorContent editor={editor} />
