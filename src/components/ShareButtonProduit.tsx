@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Share2,  MessageCircle, Link2 } from "lucide-react";
+import { Share2, MessageCircle, Link2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { FaFacebook } from "react-icons/fa";
 
@@ -41,7 +41,7 @@ export default function ShareButton({ title, url, description = "" }: ShareButto
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative inline-block" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
@@ -52,7 +52,7 @@ export default function ShareButton({ title, url, description = "" }: ShareButto
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+        <div className="absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
           <button
             onClick={() => {
               window.open(shareUrls.whatsapp, "_blank");
