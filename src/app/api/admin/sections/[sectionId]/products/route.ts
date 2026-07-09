@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET – Liste des produits d'une section (avec vérification du mot de passe)
+// GET – Liste des produits d'une section
 export async function GET(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -13,7 +13,6 @@ export async function GET(
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  // Vérifier que la section existe
   const section = await prisma.section.findUnique({
     where: { id: params.sectionId },
   });
@@ -29,7 +28,7 @@ export async function GET(
   return NextResponse.json(products);
 }
 
-// POST – Ajouter un produit à la section
+// POST – Ajouter un produit
 export async function POST(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -68,7 +67,7 @@ export async function POST(
   }
 }
 
-// PUT – Modifier un produit
+// PUT – Modifier un produit (nom, prix, quantité)
 export async function PUT(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -79,14 +78,19 @@ export async function PUT(
   }
 
   try {
-    const { productId, name, price } = await req.json();
-    if (!productId || !name || !price) {
-      return NextResponse.json({ error: "Données incomplètes" }, { status: 400 });
+    const { productId, name, price, quantity } = await req.json();
+    if (!productId) {
+      return NextResponse.json({ error: "ID produit requis" }, { status: 400 });
     }
+
+    const data: any = {};
+    if (name !== undefined) data.name = name;
+    if (price !== undefined) data.price = parseFloat(price);
+    if (quantity !== undefined) data.quantity = parseInt(quantity);
 
     const product = await prisma.sectionProduct.update({
       where: { id: productId },
-      data: { name, price: parseFloat(price) },
+      data,
     });
 
     return NextResponse.json(product);
