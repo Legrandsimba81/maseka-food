@@ -25,7 +25,8 @@ export async function GET(
     orderBy: { name: "asc" },
   });
 
-  const total = products.reduce((sum, p) => sum + p.quantity * p.price, 0);
+  // Calcul du stock total en $ (valeur du stock actuel)
+  const totalStock = products.reduce((sum, p) => sum + p.quantity * p.price, 0);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -39,9 +40,13 @@ export async function GET(
     },
   });
 
+  // Total des ventes du jour (cumul des montants encaissés)
+  const totalSold = dailySale?.totalAmount || 0;
+
   return NextResponse.json({
     products,
-    total,
+    totalStock,
+    totalSold,
     dailySaleId: dailySale?.id || null,
     date: today,
   });

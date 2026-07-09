@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { Plus, Minus, Calendar, X, Search, Edit, Save, Trash2, Package } from "lucide-react";
+import { Plus, Calendar, X, Search, Edit, Save, Trash2, Package, RefreshCw } from "lucide-react";
 
 const units = ["pièce", "kg", "litre", "boîte", "paquet", "sac", "bouteille"];
 
@@ -18,15 +18,16 @@ export default function SectionDashboard() {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [products, setProducts] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [totalStock, setTotalStock] = useState(0);
+  const [totalSold, setTotalSold] = useState(0);
   const [showProductForm, setShowProductForm] = useState(false);
   const [newProduct, setNewProduct] = useState({ name: "", price: "", unit: "pièce" });
   const [editingProduct, setEditingProduct] = useState(null);
   const [closing, setClosing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sellQuantities, setSellQuantities] = useState({});
+  const [stockQuantities, setStockQuantities] = useState({}); // pour les mises à jour de stock
 
-  // Date formatée
   const today = new Date();
   const formattedDate = today.toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -51,10 +52,16 @@ export default function SectionDashboard() {
     if (res.ok) {
       const data = await res.json();
       setProducts(data.products);
-      setTotal(data.total);
+      setTotalStock(data.totalStock || 0);
+      setTotalSold(data.totalSold || 0);
       const initialSell = {};
-      data.products.forEach(p => { initialSell[p.id] = 0; });
+      const initialStock = {};
+      data.products.forEach(p => {
+        initialSell[p.id] = 0;
+        initialStock[p.id] = p.quantity || 0;
+      });
       setSellQuantities(initialSell);
+      setStockQuantities(initialStock);
     }
     setLoading(false);
   };
@@ -87,6 +94,7 @@ export default function SectionDashboard() {
     });
     if (res.ok) {
       toast.success("Stock mis à jour");
+      setStockQuantities(prev => ({ ...prev, [productId]: 0 }));
       fetchData();
     } else {
       toast.error("Erreur");
@@ -218,9 +226,12 @@ export default function SectionDashboard() {
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">📊 Ventes du jour</h1>
+          <h1 className="text-2xl font-bold">Ventes du jour</h1>
           <p className="text-sm text-gray-500">{formattedDate}</p>
-          <p className="text-sm text-gray-500">Total : <span className="font-bold text-green-600">{total.toFixed(2)} $</span></p>
+          <div className="flex flex-wrap gap-4 mt-1">
+            <p className="text-sm">Stock total : <span className="font-bold text-blue-600">{totalStock.toFixed(2)} $</span></p>
+            <p className="text-sm">Vendu aujourd'hui : <span className="font-bold text-green-600">{totalSold.toFixed(2)} $</span></p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -345,7 +356,7 @@ export default function SectionDashboard() {
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Produit</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Prix</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Stock</th>
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Total</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase">Total stock</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Vendre</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase">Actions</th>
               </tr>
@@ -364,14 +375,19 @@ export default function SectionDashboard() {
                         <input
                           type="number"
                           min="0"
-                          value={stock}
+                          value={stockQuantities[product.id] !== undefined ? stockQuantities[product.id] : stock}
                           onChange={(e) => {
-                            const newQty = parseInt(e.target.value) || 0;
-                            updateStock(product.id, newQty);
+                            const val = parseInt(e.target.value) || 0;
+                            setStockQuantities(prev => ({ ...prev, [product.id]: val }));
                           }}
                           className="input-field w-20 py-1 text-sm"
                         />
-                        <span className="text-xs text-gray-500">{product.unit || "pièce"}</span>
+                        <button
+                          onClick={() => updateStock(product.id, stockQuantities[product.id] !== undefined ? stockQuantities[product.id] : stock)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm flex items-center gap-1"
+                        >
+                          <RefreshCw size={14} /> Mettre à jour
+                        </button>
                       </div>
                     </td>
                     <td className="px-3 py-2 font-bold">{stockValue.toFixed(2)} $</td>
@@ -420,9 +436,10 @@ export default function SectionDashboard() {
                 );
               })}
               <tr className="bg-gray-50 dark:bg-gray-700 font-bold">
-                <td colSpan={3} className="px-3 py-2 text-right">TOTAL</td>
-                <td className="px-3 py-2 text-lg text-green-600">{total.toFixed(2)} $</td>
-                <td colSpan={2}></td>
+                <td colSpan={3} className="px-3 py-2 text-right">TOTAUX</td>
+                <td className="px-3 py-2 text-lg text-blue-600">{totalStock.toFixed(2)} $</td>
+                <td className="px-3 py-2 text-lg text-green-600">{totalSold.toFixed(2)} $</td>
+                <td></td>
               </tr>
             </tbody>
           </table>
@@ -434,6 +451,7 @@ export default function SectionDashboard() {
         {filteredProducts.map((product) => {
           const stock = product.quantity;
           const isOutOfStock = stock === 0;
+          const stockValue = stock * product.price;
           return (
             <div key={product.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border">
               <div className="flex justify-between items-start">
@@ -445,43 +463,55 @@ export default function SectionDashboard() {
               </div>
               <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
                 <div><span className="text-gray-500">Prix :</span> {product.price.toFixed(2)} $ / {product.unit || "pièce"}</div>
-                <div><span className="text-gray-500">Stock :</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={stock}
-                    onChange={(e) => {
-                      const newQty = parseInt(e.target.value) || 0;
-                      updateStock(product.id, newQty);
-                    }}
-                    className="input-field w-16 py-0 text-sm inline-block"
-                  />
+                <div>
+                  <span className="text-gray-500">Stock :</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <input
+                      type="number"
+                      min="0"
+                      value={stockQuantities[product.id] !== undefined ? stockQuantities[product.id] : stock}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setStockQuantities(prev => ({ ...prev, [product.id]: val }));
+                      }}
+                      className="input-field w-16 py-0 text-sm inline-block"
+                    />
+                    <button
+                      onClick={() => updateStock(product.id, stockQuantities[product.id] !== undefined ? stockQuantities[product.id] : stock)}
+                      className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs"
+                    >
+                      MAJ
+                    </button>
+                  </div>
                 </div>
-                <div><span className="text-gray-500">Total :</span> {(stock * product.price).toFixed(2)} $</div>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    min="1"
-                    max={stock}
-                    value={sellQuantities[product.id] || 0}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 0;
-                      setSellQuantities(prev => ({ ...prev, [product.id]: val }));
-                    }}
-                    className="input-field w-16 py-0 text-sm"
-                    disabled={isOutOfStock}
-                  />
-                  <button
-                    onClick={() => sellProduct(product.id, sellQuantities[product.id] || 1)}
-                    disabled={isOutOfStock}
-                    className={`px-2 py-1 rounded text-sm flex items-center gap-1 ${
-                      isOutOfStock
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-green-500 hover:bg-green-600 text-white"
-                    }`}
-                  >
-                    <Package size={14} /> Vendre
-                  </button>
+                <div><span className="text-gray-500">Total stock :</span> {stockValue.toFixed(2)} $</div>
+                <div>
+                  <span className="text-gray-500">Vendre :</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <input
+                      type="number"
+                      min="1"
+                      max={stock}
+                      value={sellQuantities[product.id] || 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setSellQuantities(prev => ({ ...prev, [product.id]: val }));
+                      }}
+                      className="input-field w-16 py-0 text-sm"
+                      disabled={isOutOfStock}
+                    />
+                    <button
+                      onClick={() => sellProduct(product.id, sellQuantities[product.id] || 1)}
+                      disabled={isOutOfStock}
+                      className={`px-2 py-0.5 rounded text-xs flex items-center gap-1 ${
+                        isOutOfStock
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-green-500 text-white"
+                      }`}
+                    >
+                      <Package size={14} /> Vendre
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
