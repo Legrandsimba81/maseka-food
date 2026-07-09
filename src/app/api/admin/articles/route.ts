@@ -1,11 +1,10 @@
-// app/api/admin/articles/route.ts
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import slugify from "slugify";
 
-// GET – Liste admin
+// GET – Liste paginée avec recherche (admin)
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
@@ -22,8 +21,8 @@ export async function GET(req: Request) {
   const where: any = {};
   if (search) {
     where.OR = [
-      { title: { contains: search } },
-      { excerpt: { contains: search } },
+      { title: { contains: search, mode: "insensitive" } },
+      { content: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -44,7 +43,7 @@ export async function GET(req: Request) {
   return NextResponse.json({ articles, total });
 }
 
-// POST – Créer un article
+// POST – Créer un article (admin uniquement)
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
@@ -56,14 +55,20 @@ export async function POST(req: Request) {
     const { title, content, excerpt, imageMain, imagesSecondary } = body;
 
     if (!title || !content) {
-      return NextResponse.json({ error: "Titre et contenu requis" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Titre et contenu requis" },
+        { status: 400 }
+      );
     }
 
     const slug = slugify(title, { lower: true, strict: true, locale: "fr" });
 
     const existing = await prisma.article.findUnique({ where: { slug } });
     if (existing) {
-      return NextResponse.json({ error: "Un article avec ce titre existe déjà" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Un article avec ce titre existe déjà" },
+        { status: 409 }
+      );
     }
 
     const author = await prisma.user.findUnique({
