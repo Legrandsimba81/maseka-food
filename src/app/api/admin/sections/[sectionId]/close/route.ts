@@ -26,10 +26,11 @@ export async function POST(
       where: { sectionId: params.sectionId },
     });
 
-    const total = products.reduce((sum, p) => sum + p.quantity * p.price, 0);
-    const totalInitialStock = products.reduce((sum, p) => sum + p.quantity, 0);
-    const totalItemsSold = 0; // On ne peut pas le connaître directement, on le récupère depuis DailySale
+    // Calculs des totaux
+    const totalAmount = products.reduce((sum, p) => sum + p.quantity * p.price, 0);
+    const totalUnits = products.reduce((sum, p) => sum + p.quantity, 0);
 
+    // Mise à jour des statistiques dans DailySale (si existant)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -42,45 +43,44 @@ export async function POST(
       },
     });
 
-    // Mettre à jour les stats de la vente
     if (dailySale) {
       await prisma.dailySale.update({
         where: { id: dailySale.id },
         data: {
-          totalInitialStock,
-          totalItemsSold: dailySale.totalItemsSold || 0,
-          totalAmount: total,
+          totalAmount: totalAmount,
+          totalItemsSold: totalUnits,
         },
       });
     }
 
-    // Créer le récapitulatif
-    const details = products
-      .filter(p => p.quantity > 0)
-      .map(p => `${p.name} (${p.unit}): stock initial ${p.quantity} + ${p.quantity} vendus = ${p.quantity * p.price}$`)
-      .join('\n');
+    // Construction du message simplifié
+    const dateStr = new Date().toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const timeStr = new Date().toLocaleTimeString('fr-FR');
 
     const message = `
 📊 RAPPORT DE VENTE - ${section.name}
-📅 ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-🕐 Clôturé à ${new Date().toLocaleTimeString('fr-FR')}
+📅 ${dateStr}
+🕐 Clôturé à ${timeStr}
 
-${details}
-─────────────────
-💰 TOTAL : ${total.toFixed(2)} $
+💰 Total des ventes : ${totalAmount.toFixed(2)} $
+📦 Nombre total d'unités vendues : ${totalUnits}
 
-Stock total initial : ${totalInitialStock} unités
-Total vendu : ${dailySale?.totalItemsSold || 0} unités
+💡 Pour consulter le détail des ventes, rendez-vous dans l'historique de la section.
     `;
 
-    // Envoyer l'email
+    // Envoi de l'email
     await sendEmail(
       process.env.EMAIL_FROM!,
-      `Rapport de vente - ${section.name} - ${new Date().toLocaleDateString('fr-FR')}`,
+      `Rapport de vente - ${section.name} - ${dateStr}`,
       `<pre>${message}</pre>`
     );
 
-    // Réinitialiser les quantités à 0
+    // Réinitialisation des quantités à 0
     await prisma.$transaction(
       products.map(p =>
         prisma.sectionProduct.update({
@@ -90,7 +90,7 @@ Total vendu : ${dailySale?.totalItemsSold || 0} unités
       )
     );
 
-    return NextResponse.json({ success: true, message });
+    return NextResponse.json({ success: true, message: "Journée clôturée" });
   } catch (error) {
     console.error("Erreur clôture:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
