@@ -49,7 +49,7 @@ export default function SectionHistory() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">📅 Historique des ventes</h1>
+      <h1 className="text-2xl font-bold mb-6">Historique des ventes</h1>
 
       <div className="flex items-center justify-center gap-4 mb-6">
         <button onClick={() => changeDay(-1)} className="p-2 rounded hover:bg-gray-100"><ChevronLeft size={20} /></button>

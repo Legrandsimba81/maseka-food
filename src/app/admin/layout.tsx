@@ -19,6 +19,7 @@ import {
   X,
   Clock,
   TrendingUp,
+  Store,
   RefreshCw,
 } from "lucide-react";
 import { Star } from "lucide-react";
@@ -80,6 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/attendance", label: "Pointages", icon: Clock },
     { href: "/admin/attendance/stats", label: "Statistiques", icon: TrendingUp },
     { href: "/admin/attendance/calendar", label: "Calendrier", icon: Calendar },
+    { href: "/admin/sections", label: "Sections", icon: Store },
     { href: "/admin/stock", label: "Stock", icon: Package, alert: lowStockCount > 0 },
     { href: "/admin/stock/movements", label: "Mouvements stock", icon: RefreshCw },
     { href: "/admin/reviews", label: "Avis Produits", icon: Star },
