@@ -17,16 +17,16 @@ model User {
   avatarUrl        String?
   resetToken       String?
   resetTokenExpiry DateTime?
-  orders           Order[]
-  reservations     Reservation[]
-  cart             Cart?
-  sentMessages     Message[]       @relation("sentMessages")
-  receivedMessages Message[]       @relation("receivedMessages")
-  articles         Article[]
-  productReviews   ProductReview[] // avis sur les produits
-  bakeryReviews    BakeryReview[] // avis sur la boulangerie
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+  articles         Article[]
+  bakeryReviews    BakeryReview[]
+  cart             Cart?
+  receivedMessages Message[]       @relation("receivedMessages")
+  sentMessages     Message[]       @relation("sentMessages")
+  orders           Order[]
+  productReviews   ProductReview[]
+  reservations     Reservation[]
 }
 
 model Product {
@@ -36,20 +36,19 @@ model Product {
   price       Float
   category    String
   imageUrl    String?
-  cartItems   CartItem[]
   isPromo     Boolean         @default(false)
   promoPrice  Float?
-  reviews     ProductReview[]
   isAvailable Boolean         @default(true)
-  orderItems  OrderItem[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  reviews     ProductReview[]
 }
 
 model Order {
   id              String      @id @default(cuid())
   userId          String
-  user            User        @relation(fields: [userId], references: [id])
   totalAmount     Float
   status          String      @default("pending")
   pickupTime      DateTime?
@@ -58,26 +57,26 @@ model Order {
   deliveryTime    String?
   deliveryStatus  String      @default("pending")
   adminNote       String?
-  paymentStatus   String      @default("pending") // pending, paid_by_ussd
-  items           OrderItem[]
+  paymentStatus   String      @default("pending")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
 }
 
 model OrderItem {
   id          String  @id @default(cuid())
   orderId     String
-  order       Order   @relation(fields: [orderId], references: [id])
   productId   String
-  product     Product @relation(fields: [productId], references: [id])
   quantity    Int
   priceAtTime Float
+  order       Order   @relation(fields: [orderId], references: [id])
+  product     Product @relation(fields: [productId], references: [id])
 }
 
 model Reservation {
   id              String   @id @default(cuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id])
   date            DateTime
   time            String
   numberOfPeople  Int
@@ -86,6 +85,7 @@ model Reservation {
   adminNote       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
 }
 
 model BakerySettings {
@@ -102,8 +102,8 @@ model BakerySettings {
   primaryColor   String   @default("#fbbf24")
   secondaryColor String   @default("#78350f")
   updatedAt      DateTime @updatedAt
-  workStart  String? @default("08:00")
-  workEnd    String? @default("17:00")
+  workEnd        String?  @default("17:00")
+  workStart      String?  @default("08:00")
 }
 
 model ContactMessage {
@@ -122,44 +122,44 @@ model Message {
   content    String
   read       Boolean  @default(false)
   createdAt  DateTime @default(now())
-  sender     User     @relation("sentMessages", fields: [senderId], references: [id])
   receiver   User     @relation("receivedMessages", fields: [receiverId], references: [id])
+  sender     User     @relation("sentMessages", fields: [senderId], references: [id])
 }
 
 model Cart {
   id        String     @id @default(cuid())
   userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id])
-  items     CartItem[]
   updatedAt DateTime   @updatedAt
   createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
 }
 
 model CartItem {
   id        String   @id @default(cuid())
   cartId    String
-  cart      Cart     @relation(fields: [cartId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
   quantity  Int
   createdAt DateTime @default(now())
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 }
 
 model Article {
   id              String    @id @default(cuid())
   title           String
   slug            String    @unique
-  content         String // HTML ou Markdown
-  excerpt         String? // résumé
-  imageMain       String? // URL image principale
-  imagesSecondary Json? // tableau d'URLs
+  content         String
+  excerpt         String?
+  imageMain       String?
+  imagesSecondary Json?
   publishedAt     DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   views           Int       @default(0)
   likes           Int       @default(0)
-  comments        Comment[]
   authorId        String
   author          User      @relation(fields: [authorId], references: [id])
+  comments        Comment[]
 }
 
 model Comment {
@@ -167,14 +167,14 @@ model Comment {
   authorName String
   content    String
   articleId  String
-  article    Article  @relation(fields: [articleId], references: [id])
   createdAt  DateTime @default(now())
+  article    Article  @relation(fields: [articleId], references: [id])
 }
 
 model PageView {
   id        String   @id @default(cuid())
-  visitorId String // identifiant unique du visiteur (cookie)
-  page      String? // chemin de la page visitée
+  visitorId String
+  page      String?
   createdAt DateTime @default(now())
 }
 
@@ -191,35 +191,34 @@ model TeamMember {
 }
 
 model Employee {
-  id            String    @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String?   @unique
-  phone         String?
-  position      String    // Poste occupé
-  department    String?   // Département
-  qrCode        String    @unique  // Identifiant unique pour le QR
-  image         String?   // Photo de profil
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  scheduledStart String? @default("08:00") // Horaire de début par défaut
-  scheduledEnd   String? @default("17:00")
-
-  attendances   Attendance[]
+  id             String       @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String?      @unique
+  phone          String?
+  position       String
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  department     String?
+  image          String?
+  qrCode         String       @unique
+  scheduledEnd   String?      @default("17:00")
+  scheduledStart String?      @default("08:00")
+  attendances    Attendance[]
 }
 
 model Attendance {
-  id            String    @id @default(cuid())
-  employeeId    String
-  employee      Employee  @relation(fields: [employeeId], references: [id])
-  type          String    // "entree" ou "sortie"
-  timestamp     DateTime  @default(now())
-  date          DateTime  @default(now())
-  device        String?   // Appareil utilisé (ex: "iPhone 15", "Tablette")
-  ipAddress     String?   // Adresse IP
-  location      String?   // Coordonnées GPS ou lieu
-  createdAt     DateTime  @default(now())
+  id         String   @id @default(cuid())
+  employeeId String
+  type       String
+  timestamp  DateTime @default(now())
+  date       DateTime @default(now())
+  ipAddress  String?
+  location   String?
+  createdAt  DateTime @default(now())
+  device     String?
+  employee   Employee @relation(fields: [employeeId], references: [id])
 }
 
 model ProductReview {
@@ -228,10 +227,10 @@ model ProductReview {
   comment   String?
   productId String
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model BakeryReview {
@@ -239,38 +238,85 @@ model BakeryReview {
   rating    Int
   comment   String?
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model StockProduct {
-  id                String    @id @default(cuid())
-  sku               String    @unique
+  id                String          @id @default(cuid())
+  sku               String          @unique
   name              String
   category          String
   imageUrl          String?
-  quantity          Int       @default(0)
-  unit              String    @default("pièce")
-  minStock          Int       @default(5)
+  quantity          Int             @default(0)
+  unit              String          @default("pièce")
+  minStock          Int             @default(5)
   price             Float?
-  purchasePrice     Float?    // prix d'achat unitaire
-  status            String    @default("disponible") // disponible, faible_stock, rupture
+  status            String          @default("disponible")
   manufacturingDate DateTime?
   expirationDate    DateTime?
-  updatedAt         DateTime  @updatedAt
-  createdAt         DateTime  @default(now())
-
-  // Relations pour les mouvements de stock (optionnel)
+  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime        @default(now())
+  purchasePrice     Float?
   stockMovements    StockMovement[]
 }
 
 model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  type      String
+  quantity  Int
+  reason    String?
+  createdAt DateTime     @default(now())
+  product   StockProduct @relation(fields: [productId], references: [id])
+}
+
+// Section (point de vente)
+model Section {
+  id            String           @id @default(cuid())
+  name          String           @unique
+  password      String           // mot de passe hashé
+  description   String?
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  products      SectionProduct[]
+  dailySales    DailySale[]
+}
+
+// Produits d'une section
+model SectionProduct {
   id          String   @id @default(cuid())
-  productId   String
-  product     StockProduct @relation(fields: [productId], references: [id])
-  type        String   // "entree" ou "sortie"
-  quantity    Int
-  reason      String?  // raison du mouvement (vente, réapprovisionnement, casse, etc.)
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float    // prix de vente
+  quantity    Int      @default(0) // quantité pour la journée en cours
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  saleItems   DailySaleItem[]
+}
+
+// Vente journalière (rapport)
+model DailySale {
+  id          String   @id @default(cuid())
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  date        DateTime @default(now()) // date de la vente (jour)
+  totalAmount Float
+  items       DailySaleItem[]
+  createdAt   DateTime @default(now())
+}
+
+// Ligne de vente journalière
+model DailySaleItem {
+  id          String         @id @default(cuid())
+  dailySaleId String
+  dailySale   DailySale      @relation(fields: [dailySaleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     SectionProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity    Int
+  priceAtSale Float          // prix au moment de la vente
+  total       Float
 }
