@@ -39,7 +39,7 @@ export default function NewArticlePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">📝 Nouvel article</h1>
+      <h1 className="text-2xl font-bold mb-6">Nouvel article</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium mb-1">Titre *</label>

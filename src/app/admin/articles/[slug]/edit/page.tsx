@@ -19,8 +19,16 @@ export default function EditArticlePage({ params }: { params: { slug: string } }
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const res = await fetch(`/api/admin/articles/${params.slug}`);
-        if (!res.ok) throw new Error("Article non trouvé");
+        const encodedSlug = encodeURIComponent(params.slug);
+        const res = await fetch(`/api/admin/articles/${encodedSlug}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            toast.error("Article non trouvé");
+            router.push("/admin/articles");
+            return;
+          }
+          throw new Error("Erreur chargement");
+        }
         const data = await res.json();
         setTitle(data.title || "");
         setExcerpt(data.excerpt || "");
@@ -45,7 +53,8 @@ export default function EditArticlePage({ params }: { params: { slug: string } }
     }
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/articles/${params.slug}`, {
+      const encodedSlug = encodeURIComponent(params.slug);
+      const res = await fetch(`/api/admin/articles/${encodedSlug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -87,7 +96,6 @@ export default function EditArticlePage({ params }: { params: { slug: string } }
         <div>
           <label className="block text-sm font-medium mb-1">Image principale (paysage)</label>
           <ImageUploadWithCrop onUpload={setImageMain} onRemove={() => setImageMain("")} currentImage={imageMain} aspect={16 / 9} label="Image principale" />
-          <p className="text-xs text-gray-500 mt-1">Format paysage (16:9).</p>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Images secondaires (portrait)</label>
@@ -108,7 +116,6 @@ export default function EditArticlePage({ params }: { params: { slug: string } }
               <ImageUploadWithCrop onUpload={(url) => setImagesSecondary([...imagesSecondary, url])} aspect={3 / 4} label="Ajouter" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Format portrait (3:4).</p>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Contenu (texte enrichi) *</label>

@@ -3,9 +3,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import CodeBlock from "@tiptap/extension-code-block";
 import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Image as ImageIcon, Code, Undo, Redo, Heading1, Heading2 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -21,11 +19,12 @@ export default function Editor({ value, onChange, placeholder = "Écrivez votre 
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2] } }),
+      StarterKit.configure({
+        heading: { levels: [1, 2] },
+        // link et codeBlock sont déjà inclus par défaut
+      }),
       Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false }),
       Image.configure({ HTMLAttributes: { class: 'rounded-lg max-w-full' } }),
-      CodeBlock,
     ],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
