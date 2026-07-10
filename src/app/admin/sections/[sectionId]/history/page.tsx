@@ -60,7 +60,7 @@ export default function SectionHistory() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">📅 Historique des ventes</h1>
+      <h1 className="text-2xl font-bold mb-6">Historique des ventes</h1>
 
       {/* Navigation et filtre date */}
       <div className="flex flex-wrap items-center justify-center gap-4 mb-6">

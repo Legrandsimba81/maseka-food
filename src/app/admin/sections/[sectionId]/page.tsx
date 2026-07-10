@@ -203,7 +203,7 @@ export default function SectionDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="p-6 max-w-md mx-auto mt-20">
-        <h1 className="text-2xl font-bold mb-4">🔒 Accès section</h1>
+        <h1 className="text-2xl font-bold mb-4">Accès section</h1>
         <p className="text-gray-500 mb-4">Entrez le mot de passe pour accéder à cette section.</p>
         <form onSubmit={handleAuthenticate} className="space-y-4">
           <input

@@ -31,8 +31,8 @@ export default function SectionsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">📋 Sections (points de vente)</h1>
+      <div className="flex flex-wrap justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Sections (vos points de vente)</h1>
         <Link href="/admin/sections/new" className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Nouvelle section
         </Link>

@@ -81,7 +81,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/attendance", label: "Pointages", icon: Clock },
     { href: "/admin/attendance/stats", label: "Statistiques", icon: TrendingUp },
     { href: "/admin/attendance/calendar", label: "Calendrier", icon: Calendar },
-    { href: "/admin/sections", label: "Sections", icon: Store },
+    // 🟡 "Sections" avec highlight pour attirer l'attention
+    { href: "/admin/sections", label: "Sections", icon: Store, highlight: true },
     { href: "/admin/stock", label: "Stock", icon: Package, alert: lowStockCount > 0 },
     { href: "/admin/stock/movements", label: "Mouvements stock", icon: RefreshCw },
     { href: "/admin/reviews", label: "Avis Produits", icon: Star },
@@ -100,7 +101,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="sticky top-16 z-40 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-300 dark:border-gray-700">
         <div className="container mx-auto px-2 sm:px-4">
           <div className="flex items-center justify-between h-14">
-            {/* Burger (visible mobile) */}
             <button
               onClick={toggleSidebar}
               className="p-1.5 mr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
@@ -109,7 +109,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Menu size={22} className="text-gray-600 dark:text-gray-300" />
             </button>
 
-            {/* Menu horizontal – aligné à droite */}
             <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1.5 flex-1 justify-end">
               {mainNavItems.map((item) => (
                 <Link
@@ -137,7 +136,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Conteneur principal avec sidebar */}
       <div className="flex flex-1">
-        {/* Sidebar verticale */}
         <aside
           className={`
             fixed lg:sticky top-[calc(4rem+56px)] left-0 z-30
@@ -163,7 +161,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors relative ${
                   pathname === item.href
                     ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    : item.highlight
+                      ? "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/30"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <item.icon size={20} />
@@ -181,7 +181,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </aside>
 
-        {/* Overlay pour fermer la sidebar sur mobile */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-20 bg-black/50 lg:hidden"
@@ -189,7 +188,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ></div>
         )}
 
-        {/* Contenu principal */}
         <main className="flex-1 p-4 sm:p-6 overflow-x-auto">
           {children}
         </main>
