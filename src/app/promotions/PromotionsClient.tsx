@@ -105,9 +105,9 @@ export default function PromotionsClient({ initialProducts }: { initialProducts:
             />
             <Link
               href="/products"
-              className="bg-white text-orange-600 hover:bg-orange-100 font-semibold px-6 py-2 rounded-xl transition shadow-md inline-flex items-center gap-2"
+              className="bg-white text-orange-600 hover:bg-orange-100 font-semibold px-6 py-2 rounded-xl inline-flex items-center gap-2"
             >
-              <ShoppingCart size={18} /> Voir les offres
+              <ShoppingCart size={18} /> Voir d'autre produits
             </Link>
           </div>
         </div>

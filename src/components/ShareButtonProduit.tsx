@@ -44,11 +44,11 @@ export default function ShareButton({ title, url, description = "" }: ShareButto
     <div className="relative inline-block" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+        className="flex items-center gap-2 bg-red-50 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-gray-700 rounded-lg transition"
         aria-label="Partager"
       >
         <Share2 size={18} />
-        <span>Partager</span>
+        <span>Partager promo</span>
       </button>
 
       {isOpen && (
