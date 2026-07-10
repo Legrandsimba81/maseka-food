@@ -3,19 +3,18 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import toast from "react-hot-toast";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function SectionHistory() {
   const { data: session } = useSession();
   const params = useParams();
   const sectionId = params.sectionId as string;
 
-  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyDetail, setDailyDetail] = useState(null);
+  const [monthSummary, setMonthSummary] = useState({ total: 0, maxDay: null });
 
   useEffect(() => {
     if (session?.user?.role === "admin") {
@@ -29,18 +28,30 @@ export default function SectionHistory() {
     const res = await fetch(`/api/admin/sections/${sectionId}/history?date=${dateStr}`);
     if (res.ok) {
       const data = await res.json();
-      setHistory(data.history);
       setDailyDetail(data.detail);
+      setMonthSummary(data.monthSummary || { total: 0, maxDay: null });
     } else {
       toast.error("Erreur chargement historique");
     }
     setLoading(false);
   };
 
-  const changeDay = (offset) => {
+  const changeDay = (offset: number) => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + offset);
     setSelectedDate(newDate);
+  };
+
+  // Formater la date pour l'input
+  const formatDateInput = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(e.target.value + 'T00:00:00');
+    if (!isNaN(newDate.getTime())) {
+      setSelectedDate(newDate);
+    }
   };
 
   if (!session || session.user.role !== "admin") {
@@ -49,14 +60,46 @@ export default function SectionHistory() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Historique des ventes</h1>
+      <h1 className="text-2xl font-bold mb-6">📅 Historique des ventes</h1>
 
-      <div className="flex items-center justify-center gap-4 mb-6">
-        <button onClick={() => changeDay(-1)} className="p-2 rounded hover:bg-gray-100"><ChevronLeft size={20} /></button>
+      {/* Navigation et filtre date */}
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
+        <button onClick={() => changeDay(-1)} className="p-2 rounded hover:bg-gray-100">
+          <ChevronLeft size={20} />
+        </button>
         <span className="font-semibold">{selectedDate.toLocaleDateString('fr-FR')}</span>
-        <button onClick={() => changeDay(1)} className="p-2 rounded hover:bg-gray-100"><ChevronRight size={20} /></button>
+        <button onClick={() => changeDay(1)} className="p-2 rounded hover:bg-gray-100">
+          <ChevronRight size={20} />
+        </button>
+
+        <div className="flex items-center gap-2 ml-4">
+          <label htmlFor="datePicker" className="text-sm font-medium">Choisir une date :</label>
+          <input
+            id="datePicker"
+            type="date"
+            value={formatDateInput(selectedDate)}
+            onChange={handleDateChange}
+            className="input-field w-auto"
+          />
+        </div>
       </div>
 
+      {/* Résumé du mois */}
+      <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <h2 className="text-lg font-semibold mb-2">Résumé du mois</h2>
+        <p className="text-sm">
+          Total du mois : <span className="font-bold text-blue-600">{monthSummary.total.toFixed(2)} $</span>
+        </p>
+        {monthSummary.maxDay && (
+          <p className="text-sm">
+            Jour le plus abondant : <span className="font-bold text-green-600">
+              {new Date(monthSummary.maxDay.date).toLocaleDateString('fr-FR')} : {monthSummary.maxDay.amount.toFixed(2)} $
+            </span>
+          </p>
+        )}
+      </div>
+
+      {/* Détail du jour */}
       {loading ? (
         <p>Chargement...</p>
       ) : dailyDetail ? (

@@ -18,23 +18,53 @@ export async function GET(
     return NextResponse.json({ error: "Date requise" }, { status: 400 });
   }
 
-  const date = new Date(dateParam);
-  date.setHours(0, 0, 0, 0);
-  const nextDay = new Date(date);
+  const selectedDate = new Date(dateParam);
+  selectedDate.setHours(0, 0, 0, 0);
+  const nextDay = new Date(selectedDate);
   nextDay.setDate(nextDay.getDate() + 1);
 
+  // 1. Récupérer les détails du jour sélectionné
   const dailySale = await prisma.dailySale.findFirst({
     where: {
       sectionId: params.sectionId,
-      date: { gte: date, lt: nextDay },
+      date: { gte: selectedDate, lt: nextDay },
     },
     include: {
       items: { include: { product: true } },
     },
   });
 
+  // 2. Récupérer les stats du mois (tous les jours du mois)
+  const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+  const monthEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+
+  const monthSales = await prisma.dailySale.findMany({
+    where: {
+      sectionId: params.sectionId,
+      date: { gte: monthStart, lt: monthEnd },
+    },
+    select: {
+      totalAmount: true,
+      date: true,
+    },
+    orderBy: { date: 'asc' },
+  });
+
+  const totalMonth = monthSales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+  let maxDay = null;
+  if (monthSales.length > 0) {
+    const maxSale = monthSales.reduce((max, sale) => sale.totalAmount > max.totalAmount ? sale : max, monthSales[0]);
+    maxDay = {
+      date: maxSale.date,
+      amount: maxSale.totalAmount,
+    };
+  }
+
   return NextResponse.json({
-    history: dailySale ? [dailySale] : [],
     detail: dailySale,
+    monthSummary: {
+      total: totalMonth,
+      maxDay: maxDay,
+    },
   });
 }
