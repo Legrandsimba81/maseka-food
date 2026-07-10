@@ -3,10 +3,41 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star, Share2 } from "lucide-react";
 import AddToCartButton from "@/components/AddToCartButton";
 import { Phone, MapPin, Clock, User } from "lucide-react";
+import ShareButton from "@/components/ShareButtonProduit";
+import { Metadata } from "next";
 
+// Métadonnées pour le SEO et le partage
+export const metadata: Metadata = {
+  title: "Offres spéciales - Maseka Food",
+  description: "Profitez de nos promotions exceptionnelles sur toute la carte avant qu'elles ne disparaissent !",
+  openGraph: {
+    title: "Offres spéciales - Maseka Food",
+    description: "Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !",
+    images: [
+      {
+        url: "/images/promo.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Promotions Maseka Food",
+      },
+    ],
+    siteName: "Maseka Food",
+    url: "https://maseka-food.vercel.app/promotions",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Offres spéciales - Maseka Food",
+    description: "Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !",
+    images: ["/images/promo.jpg"],
+  },
+  alternates: {
+    canonical: "https://maseka-food.vercel.app/promotions",
+  },
+};
 
 export default function PromotionsPage() {
   const [products, setProducts] = useState([]);
@@ -33,18 +64,18 @@ export default function PromotionsPage() {
   }
 
   return (
-    <div >
-      <div className="container mx-auto px-4 pt-8 ">
+    <div>
+      {/* Section hero */}
+      <div className="container mx-auto px-4 pt-8">
         <section>
-          <div className="container  mx-auto px-4 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-            {/* Texte */}
+          <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl  text-gray-800 dark:text-white mb-2">
-                <span>Bienvenue chez</span> <br /><span className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-600 dark:text-orange-500 mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl text-gray-800 dark:text-white mb-2">
+                <span>Bienvenue chez</span> <br />
+                <span className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-600 dark:text-orange-500">
                   maseka food promo
                 </span>
               </h1>
-
               <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-6">
                 Vous rêviez de nos burgers généreux, de nos pizzas croustillantes, de nos gâteaux d’anniversaire,
                 du chawarma épicé ou de nos saucisses ? Ne cherchez plus : profitez de nos offres exceptionnelles
@@ -59,8 +90,6 @@ export default function PromotionsPage() {
                 </Link>
               </div>
             </div>
-
-            {/* Image */}
             <div className="flex-1 flex justify-center">
               <div className="relative w-full max-w-md md:max-w-lg rounded-2xl overflow-hidden">
                 <Image
@@ -77,6 +106,7 @@ export default function PromotionsPage() {
         </section>
       </div>
 
+      {/* Barre d'info */}
       <div className="bg-gray-900 text-white py-2 text-sm mb-8 dark:bg-gray-400 dark:text-gray-900">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
           <div className="flex flex-wrap justify-center gap-4">
@@ -87,7 +117,7 @@ export default function PromotionsPage() {
               <MapPin size={14} /> Butembo, Nord-Kivu
             </span>
             <span className="hidden items-center gap-1.5 md:inline-flex">
-              <Clock size={14} /> 6h – 20h (Lundi – Dimanche)
+              <Clock size={14} /> 8h – 20h (Lundi – Dimanche)
             </span>
           </div>
           <Link href="/profile" className="hidden md:flex items-center gap-1.5 hover:text-orange-400 transition">
@@ -95,24 +125,36 @@ export default function PromotionsPage() {
           </Link>
         </div>
       </div>
+
+      {/* Bannière promo avec bouton partage */}
       <div className="container mx-auto px-4 pt-8">
-        {/* Bannière */}
-        <div className="bg-gradient-to-r from-red-500 to-amber-500 rounded-2xl p-8 mb-10 text-white text-center">
+        <div className="bg-gradient-to-r from-red-500 to-amber-500 rounded-2xl p-6 md:p-8 mb-10 text-white text-center relative">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Offres spéciales</h1>
-          <p className="text-lg">Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !</p>
-          {/* <p>1047466074437-vj5sf86tmgiqhqk7idejeprlmj1dhaps.apps.googleusercontent.com</p> */}
+          <p className="text-lg mb-4">Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <ShareButton
+              title="Offres spéciales Maseka Food"
+              description="Profitez de nos promotions exceptionnelles avant qu'elles ne disparaissent !"
+              url="https://maseka-food.vercel.app/promotions"
+            />
+            <Link
+              href="/products"
+              className="bg-white text-orange-600 hover:bg-orange-100 font-semibold px-6 py-2 rounded-xl transition shadow-md inline-flex items-center gap-2"
+            >
+              <ShoppingCart size={18} /> Voir les offres
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Grille des produits */}
       <div className="container mx-auto px-4 py-8">
-        {/* Grille des produits en promo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
             <div key={product.id} className="group relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-              {/* Badge promo */}
               <div className="absolute top-2 left-2 z-10 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
                 <Star size={12} fill="white" /> PROMO
               </div>
-              {/* Image */}
               <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
                 <Image
                   src={product.imageUrl || "/images/produits/placeholder.jpg"}
@@ -141,6 +183,31 @@ export default function PromotionsPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Section CTA (Appel à l'action) */}
+        <div className="mt-16 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-8 text-center shadow-lg">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-4">
+            Ne manquez pas ces offres exceptionnelles !
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+            Commandez dès maintenant et faites-vous livrer vos produits préférés à Butembo ou venez les déguster sur place.
+            Nos équipes vous accueillent du lundi au dimanche de 6h à 20h.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/products"
+              className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-8 py-3 rounded-xl transition shadow-md flex items-center gap-2"
+            >
+              <ShoppingCart size={20} /> Commander maintenant
+            </Link>
+            <Link
+              href="/contact"
+              className="bg-transparent border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white font-semibold px-8 py-3 rounded-xl transition"
+            >
+              Nous contacter
+            </Link>
+          </div>
         </div>
       </div>
     </div>
