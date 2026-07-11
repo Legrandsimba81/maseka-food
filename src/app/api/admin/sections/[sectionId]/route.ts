@@ -24,7 +24,7 @@ export async function PUT(
     }
 
     const data: any = {};
-    let changes = [];
+    let changes: string[] = [];
     if (name && name !== section.name) {
       data.name = name;
       changes.push(`Nom : "${section.name}" → "${name}"`);
@@ -47,16 +47,10 @@ export async function PUT(
       data,
     });
 
-    // Envoi de l'email avec try/catch pour ne pas planter toute la route
+    // Envoi de l'email de notification (non bloquant)
     try {
-      const adminEmail = session.user.email;
-      if (!adminEmail) {
-        console.error("Email de l'admin non disponible dans la session");
-        // On peut décider de ne pas envoyer d'email mais de quand même répondre avec succès
-        return NextResponse.json(updated);
-      }
       await sendEmail(
-        adminEmail,
+        session.user.email!,
         `Modification de la section "${section.name}"`,
         `
           <h2>📝 Modification de la section</h2>
@@ -68,13 +62,16 @@ export async function PUT(
           <p>Si vous n'êtes pas à l'origine de ces modifications, veuillez contacter immédiatement l'administrateur.</p>
         `
       );
-      console.log(`Email envoyé à ${adminEmail}`);
-    } catch (emailError) {
-      console.error("Erreur lors de l'envoi de l'email de modification:", emailError);
-      // On renvoie une erreur 500 avec le détail pour que l'utilisateur sache que l'email a échoué
+    } catch (emailError: any) {
+      console.error("Erreur envoi email modification section:", emailError);
+      // On retourne un succès avec un avertissement
       return NextResponse.json(
-        { error: "La section a été modifiée, mais l'email de notification n'a pas pu être envoyé. Veuillez vérifier vos paramètres d'email." },
-        { status: 500 }
+        {
+          success: true,
+          section: updated,
+          warning: "Section modifiée, mais l'email de notification n'a pas pu être envoyé. Vérifiez vos paramètres d'email."
+        },
+        { status: 207 }
       );
     }
 

@@ -9,7 +9,6 @@ export async function POST(
   req: Request,
   { params }: { params: { sectionId: string } }
 ) {
-  // 1. Journaliser le début de la requête
   console.log(`[delete-request] Début pour la section: ${params.sectionId}`);
 
   const session = await getServerSession(authOptions);
@@ -18,7 +17,6 @@ export async function POST(
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  // 2. Journaliser l'email de l'utilisateur pour vérifier qu'il existe
   console.log(`[delete-request] Email de l'utilisateur: ${session.user.email}`);
 
   try {
@@ -35,8 +33,6 @@ export async function POST(
 
     console.log(`[delete-request] Token généré: ${token}`);
 
-    // 3. Journaliser la mise à jour de la section
-    console.log(`[delete-request] Mise à jour de la section avec le token...`);
     await prisma.section.update({
       where: { id: params.sectionId },
       data: {
@@ -44,13 +40,12 @@ export async function POST(
         deleteTokenExpiry: expiry,
       },
     });
-    console.log(`[delete-request] Section mise à jour avec succès`);
+    console.log(`[delete-request] Section mise à jour avec le token`);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://maseka-food.vercel.app";
     const confirmUrl = `${baseUrl}/api/admin/sections/confirm-delete?token=${token}`;
 
-    // 4. Tester l'envoi de l'email avec un bloc try/catch spécifique
-    console.log(`[delete-request] Tentative d'envoi d'email à: ${session.user.email}`);
+    // Envoi de l'email (bloquant mais avec try/catch)
     try {
       await sendEmail(
         session.user.email!,
@@ -65,15 +60,13 @@ export async function POST(
         `
       );
       console.log(`[delete-request] Email envoyé avec succès`);
-    } catch (emailError) {
-      // 5. Capturer et journaliser les erreurs d'envoi d'email
+    } catch (emailError: any) {
       console.error("[delete-request] Erreur lors de l'envoi de l'email:", emailError);
-      // On peut choisir de renvoyer une erreur ou de continuer
-      // Ici, on continue pour que l'utilisateur sache que l'email a échoué
+      // On retourne une erreur explicite
       return NextResponse.json(
-        { 
-          error: "Erreur lors de l'envoi de l'email", 
-          details: emailError.message 
+        {
+          error: "Erreur lors de l'envoi de l'email de confirmation",
+          details: emailError.message
         },
         { status: 500 }
       );
@@ -81,7 +74,6 @@ export async function POST(
 
     return NextResponse.json({ success: true, message: "Email de confirmation envoyé" });
   } catch (error: any) {
-    // 6. Capturer toutes les autres erreurs
     console.error("[delete-request] Erreur générale:", error);
     return NextResponse.json(
       { error: "Erreur serveur", details: error.message, stack: error.stack },
