@@ -283,6 +283,8 @@ model Section {
   updatedAt     DateTime         @updatedAt
   products      SectionProduct[]
   dailySales    DailySale[]
+  deleteToken       String?   @unique
+  deleteTokenExpiry DateTime?
 }
 
 // Produits d'une section
