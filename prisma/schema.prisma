@@ -274,17 +274,17 @@ model StockMovement {
 
 // Section (point de vente)
 model Section {
-  id            String           @id @default(cuid())
-  name          String           @unique
-  password      String           // mot de passe hashé
-  description   String?
-  isActive      Boolean          @default(true)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  products      SectionProduct[]
-  dailySales    DailySale[]
+  id                String    @id @default(cuid())
+  name              String    @unique
+  password          String
+  description       String?
+  isActive          Boolean   @default(true)
   deleteToken       String?   @unique
   deleteTokenExpiry DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  products          SectionProduct[]
+  dailySales        DailySale[]
 }
 
 // Produits d'une section

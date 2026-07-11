@@ -15,6 +15,7 @@ export async function POST(
   }
 
   try {
+    // 1. Récupérer la section
     const section = await prisma.section.findUnique({
       where: { id: params.sectionId },
     });
@@ -22,9 +23,11 @@ export async function POST(
       return NextResponse.json({ error: "Section non trouvée" }, { status: 404 });
     }
 
+    // 2. Générer un token
     const token = crypto.randomBytes(32).toString("hex");
-    const expiry = new Date(Date.now() + 3600 * 1000);
+    const expiry = new Date(Date.now() + 3600 * 1000); // 1 heure
 
+    // 3. Mettre à jour la section avec le token
     await prisma.section.update({
       where: { id: params.sectionId },
       data: {
@@ -33,9 +36,11 @@ export async function POST(
       },
     });
 
+    // 4. Construire le lien de confirmation
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://maseka-food.vercel.app";
     const confirmUrl = `${baseUrl}/api/admin/sections/confirm-delete?token=${token}`;
 
+    // 5. Envoyer l'email
     await sendEmail(
       session.user.email!,
       `Confirmation suppression section "${section.name}"`,
@@ -50,8 +55,12 @@ export async function POST(
     );
 
     return NextResponse.json({ success: true, message: "Email de confirmation envoyé" });
-  } catch (error) {
-    console.error("Erreur demande suppression:", error);
-    return NextResponse.json({ error: "Erreur serveur", details: error.message }, { status: 500 });
+  } catch (error: any) {
+    // Journaliser l'erreur détaillée
+    console.error("Erreur delete-request:", error);
+    return NextResponse.json(
+      { error: "Erreur serveur", details: error.message, stack: error.stack },
+      { status: 500 }
+    );
   }
 }
