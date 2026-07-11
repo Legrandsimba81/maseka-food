@@ -47,22 +47,36 @@ export async function PUT(
       data,
     });
 
-    // Email de notification
-    const adminEmail = session.user.email!;
-    const changesText = changes.join("\n");
-    await sendEmail(
-      adminEmail,
-      `Modification de la section "${section.name}"`,
-      `
-        <h2>📝 Modification de la section</h2>
-        <p><strong>Section :</strong> ${section.name}</p>
-        <p>Les modifications suivantes ont été effectuées :</p>
-        <ul>
-          ${changes.map(c => `<li>${c}</li>`).join('')}
-        </ul>
-        <p>Si vous n'êtes pas à l'origine de ces modifications, veuillez contacter immédiatement l'administrateur.</p>
-      `
-    );
+    // Envoi de l'email avec try/catch pour ne pas planter toute la route
+    try {
+      const adminEmail = session.user.email;
+      if (!adminEmail) {
+        console.error("Email de l'admin non disponible dans la session");
+        // On peut décider de ne pas envoyer d'email mais de quand même répondre avec succès
+        return NextResponse.json(updated);
+      }
+      await sendEmail(
+        adminEmail,
+        `Modification de la section "${section.name}"`,
+        `
+          <h2>📝 Modification de la section</h2>
+          <p><strong>Section :</strong> ${section.name}</p>
+          <p>Les modifications suivantes ont été effectuées :</p>
+          <ul>
+            ${changes.map(c => `<li>${c}</li>`).join('')}
+          </ul>
+          <p>Si vous n'êtes pas à l'origine de ces modifications, veuillez contacter immédiatement l'administrateur.</p>
+        `
+      );
+      console.log(`Email envoyé à ${adminEmail}`);
+    } catch (emailError) {
+      console.error("Erreur lors de l'envoi de l'email de modification:", emailError);
+      // On renvoie une erreur 500 avec le détail pour que l'utilisateur sache que l'email a échoué
+      return NextResponse.json(
+        { error: "La section a été modifiée, mais l'email de notification n'a pas pu être envoyé. Veuillez vérifier vos paramètres d'email." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(updated);
   } catch (error) {
