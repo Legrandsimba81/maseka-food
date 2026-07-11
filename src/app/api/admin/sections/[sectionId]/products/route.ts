@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET – Liste des produits d'une section
 export async function GET(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -28,7 +27,6 @@ export async function GET(
   return NextResponse.json(products);
 }
 
-// POST – Ajouter un produit
 export async function POST(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -68,7 +66,6 @@ export async function POST(
   }
 }
 
-// PUT – Modifier un produit (nom, prix, quantité, unité)
 export async function PUT(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -102,7 +99,6 @@ export async function PUT(
   }
 }
 
-// DELETE – Supprimer un produit
 export async function DELETE(
   req: Request,
   { params }: { params: { sectionId: string } }

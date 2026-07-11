@@ -21,39 +21,37 @@ export async function POST(
       return NextResponse.json({ error: "Section non trouvée" }, { status: 404 });
     }
 
-    // Récupérer les produits du jour
     const products = await prisma.sectionProduct.findMany({
       where: { sectionId: params.sectionId },
     });
 
-    // Calculs des totaux
-    const totalAmount = products.reduce((sum, p) => sum + p.quantity * p.price, 0);
-    const totalUnits = products.reduce((sum, p) => sum + p.quantity, 0);
-
-    // Mise à jour des statistiques dans DailySale (si existant)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const dailySale = await prisma.dailySale.findFirst({
+    let dailySale = await prisma.dailySale.findFirst({
       where: {
         sectionId: params.sectionId,
         date: { gte: today, lt: tomorrow },
       },
     });
 
-    if (dailySale) {
-      await prisma.dailySale.update({
-        where: { id: dailySale.id },
+    if (!dailySale) {
+      dailySale = await prisma.dailySale.create({
         data: {
-          totalAmount: totalAmount,
-          totalItemsSold: totalUnits,
+          sectionId: params.sectionId,
+          date: today,
+          totalAmount: 0,
+          totalInitialStock: 0,
+          totalItemsSold: 0,
         },
       });
     }
 
-    // Construction du message simplifié
+    const totalAmount = dailySale.totalAmount || 0;
+    const totalUnits = dailySale.totalItemsSold || 0;
+
     const dateStr = new Date().toLocaleDateString('fr-FR', {
       weekday: 'long',
       day: 'numeric',
@@ -62,25 +60,27 @@ export async function POST(
     });
     const timeStr = new Date().toLocaleTimeString('fr-FR');
 
-    const message = `
+    const emailBody = `
 📊 RAPPORT DE VENTE - ${section.name}
 📅 ${dateStr}
 🕐 Clôturé à ${timeStr}
 
 💰 Total des ventes : ${totalAmount.toFixed(2)} $
-📦 Nombre total d'unités vendues : ${totalUnits}
+📦 Nombre d'unités vendues : ${totalUnits}
 
-💡 Pour consulter le détail des ventes, rendez-vous dans l'historique de la section.
+💡 Pour plus de détails, consultez l'historique de la section.
     `;
 
-    // Envoi de l'email
-    await sendEmail(
-      process.env.EMAIL_FROM!,
-      `Rapport de vente - ${section.name} - ${dateStr}`,
-      `<pre>${message}</pre>`
-    );
+    try {
+      await sendEmail(
+        process.env.EMAIL_FROM!,
+        `Rapport de vente - ${section.name} - ${dateStr}`,
+        `<pre>${emailBody}</pre>`
+      );
+    } catch (emailError) {
+      console.error("Erreur envoi email:", emailError);
+    }
 
-    // Réinitialisation des quantités à 0
     await prisma.$transaction(
       products.map(p =>
         prisma.sectionProduct.update({
@@ -90,7 +90,12 @@ export async function POST(
       )
     );
 
-    return NextResponse.json({ success: true, message: "Journée clôturée" });
+    return NextResponse.json({
+      success: true,
+      message: "Journée clôturée",
+      totalAmount,
+      totalUnits,
+    });
   } catch (error) {
     console.error("Erreur clôture:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
