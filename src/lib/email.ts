@@ -122,7 +122,7 @@ export async function sendOrderConfirmationEmail(order: any) {
   `).join('');
 
   const html = `
-    <h2>📦 Nouvelle commande #${order.id}</h2>
+    <h2>Nouvelle commande #${order.id}</h2>
     <p><strong>Client :</strong> ${customerName} (${customerEmail})</p>
     <p><strong>Adresse de livraison :</strong> ${deliveryAddress}</p>
     <p><strong>Heure de livraison :</strong> ${deliveryTime}</p>

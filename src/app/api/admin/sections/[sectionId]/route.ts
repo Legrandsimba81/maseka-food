@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "@/lib/email";
 
+// PUT – Modifier une section
 export async function PUT(
   req: Request,
   { params }: { params: { sectionId: string } }
@@ -15,7 +16,7 @@ export async function PUT(
   }
 
   try {
-    const { name, description, password } = await req.json();
+    const { name, description, currentPassword, newPassword } = await req.json();
     const section = await prisma.section.findUnique({
       where: { id: params.sectionId },
     });
@@ -25,6 +26,7 @@ export async function PUT(
 
     const data: any = {};
     let changes: string[] = [];
+
     if (name && name !== section.name) {
       data.name = name;
       changes.push(`Nom : "${section.name}" → "${name}"`);
@@ -33,8 +35,15 @@ export async function PUT(
       data.description = description;
       changes.push(`Description : "${section.description || '(vide)'}" → "${description || '(vide)'}"`);
     }
-    if (password) {
-      data.password = await bcrypt.hash(password, 10);
+    if (newPassword) {
+      if (!currentPassword) {
+        return NextResponse.json({ error: "Veuillez fournir le mot de passe actuel pour le changer" }, { status: 400 });
+      }
+      const isValid = await bcrypt.compare(currentPassword, section.password);
+      if (!isValid) {
+        return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 401 });
+      }
+      data.password = await bcrypt.hash(newPassword, 10);
       changes.push("Mot de passe modifié");
     }
 
@@ -47,7 +56,7 @@ export async function PUT(
       data,
     });
 
-    // Envoi de l'email de notification (non bloquant)
+    // Email de notification (non bloquant)
     try {
       await sendEmail(
         session.user.email!,
@@ -62,22 +71,52 @@ export async function PUT(
           <p>Si vous n'êtes pas à l'origine de ces modifications, veuillez contacter immédiatement l'administrateur.</p>
         `
       );
-    } catch (emailError: any) {
-      console.error("Erreur envoi email modification section:", emailError);
-      // On retourne un succès avec un avertissement
-      return NextResponse.json(
-        {
-          success: true,
-          section: updated,
-          warning: "Section modifiée, mais l'email de notification n'a pas pu être envoyé. Vérifiez vos paramètres d'email."
-        },
-        { status: 207 }
-      );
+    } catch (emailError) {
+      console.error("Erreur envoi email:", emailError);
     }
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Erreur modification section:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
+// DELETE – Supprimer une section (avec mot de passe)
+export async function DELETE(
+  req: Request,
+  { params }: { params: { sectionId: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  try {
+    const { password } = await req.json();
+    if (!password) {
+      return NextResponse.json({ error: "Mot de passe requis" }, { status: 400 });
+    }
+
+    const section = await prisma.section.findUnique({
+      where: { id: params.sectionId },
+    });
+    if (!section) {
+      return NextResponse.json({ error: "Section non trouvée" }, { status: 404 });
+    }
+
+    const isValid = await bcrypt.compare(password, section.password);
+    if (!isValid) {
+      return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
+    }
+
+    await prisma.section.delete({
+      where: { id: params.sectionId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erreur suppression section:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

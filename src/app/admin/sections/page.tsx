@@ -14,6 +14,9 @@ export default function SectionsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", description: "", currentPassword: "", newPassword: "" });
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (session?.user?.role === "admin") {
@@ -49,7 +52,6 @@ export default function SectionsPage() {
   };
 
   const saveEdit = async (id: string) => {
-    // Validation : si newPassword est rempli, currentPassword doit être fourni
     if (editForm.newPassword && !editForm.currentPassword) {
       toast.error("Veuillez entrer le mot de passe actuel pour le changer");
       return;
@@ -74,16 +76,32 @@ export default function SectionsPage() {
     }
   };
 
-  const requestDelete = async (id: string) => {
-    if (!confirm("Envoyer un email de confirmation pour supprimer cette section ?")) return;
-    setDeletingId(id);
-    const res = await fetch(`/api/admin/sections/${id}/delete-request`, {
-      method: "POST",
+  const openDeleteModal = (id: string) => {
+    setSectionToDelete(id);
+    setDeletePassword("");
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!sectionToDelete) return;
+    if (!deletePassword) {
+      toast.error("Veuillez entrer le mot de passe");
+      return;
+    }
+    setDeletingId(sectionToDelete);
+    const res = await fetch(`/api/admin/sections/${sectionToDelete}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: deletePassword }),
     });
     if (res.ok) {
-      toast.success("Email de confirmation envoyé ! Vérifiez votre boîte mail.");
+      toast.success("Section supprimée");
+      setShowDeleteModal(false);
+      setSectionToDelete(null);
+      fetchSections();
     } else {
-      toast.error("Erreur");
+      const err = await res.json();
+      toast.error(err.error || "Mot de passe incorrect");
     }
     setDeletingId(null);
   };
@@ -165,7 +183,7 @@ export default function SectionsPage() {
                         <Edit size={18} />
                       </button>
                       <button
-                        onClick={() => requestDelete(section.id)}
+                        onClick={() => openDeleteModal(section.id)}
                         disabled={deletingId === section.id}
                         className="text-red-500 hover:text-red-700 p-1"
                       >
@@ -203,6 +221,41 @@ export default function SectionsPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h2 className="text-xl font-bold mb-4">Confirmer la suppression</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Pour supprimer cette section, veuillez entrer son mot de passe.
+            </p>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Mot de passe de la section"
+              className="input-field w-full mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button onClick={confirmDelete} className="btn-primary bg-red-600 hover:bg-red-700">
+                Supprimer
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSectionToDelete(null);
+                  setDeletePassword("");
+                }}
+                className="btn-secondary"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
