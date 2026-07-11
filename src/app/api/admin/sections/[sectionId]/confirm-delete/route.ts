@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Token invalide ou expiré" }, { status: 400 });
     }
 
-    // Supprimer la section et ses données liées (cascade)
+    // Suppression en cascade (les produits et ventes seront supprimés grâce à onDelete: Cascade)
     await prisma.section.delete({
       where: { id: section.id },
     });

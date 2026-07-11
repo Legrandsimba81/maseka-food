@@ -22,9 +22,8 @@ export async function POST(
       return NextResponse.json({ error: "Section non trouvée" }, { status: 404 });
     }
 
-    // Générer un token unique
     const token = crypto.randomBytes(32).toString("hex");
-    const expiry = new Date(Date.now() + 3600 * 1000); // 1 heure
+    const expiry = new Date(Date.now() + 3600 * 1000);
 
     await prisma.section.update({
       where: { id: params.sectionId },
@@ -37,24 +36,22 @@ export async function POST(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://maseka-food.vercel.app";
     const confirmUrl = `${baseUrl}/api/admin/sections/confirm-delete?token=${token}`;
 
-    const html = `
-      <h2>Confirmation de suppression de la section</h2>
-      <p>Vous avez demandé la suppression de la section <strong>${section.name}</strong>.</p>
-      <p>Cliquez sur le lien ci-dessous pour confirmer cette suppression :</p>
-      <a href="${confirmUrl}">${confirmUrl}</a>
-      <p>Ce lien expire dans 1 heure.</p>
-      <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
-    `;
-
     await sendEmail(
       session.user.email!,
       `Confirmation suppression section "${section.name}"`,
-      html
+      `
+        <h2>⚠️ Confirmation de suppression</h2>
+        <p>Vous avez demandé la suppression de la section <strong>${section.name}</strong>.</p>
+        <p>Cliquez sur le lien ci-dessous pour confirmer :</p>
+        <a href="${confirmUrl}">${confirmUrl}</a>
+        <p>Ce lien expire dans 1 heure.</p>
+        <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+      `
     );
 
     return NextResponse.json({ success: true, message: "Email de confirmation envoyé" });
   } catch (error) {
     console.error("Erreur demande suppression:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur serveur", details: error.message }, { status: 500 });
   }
 }

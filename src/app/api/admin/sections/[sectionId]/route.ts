@@ -15,13 +15,7 @@ export async function PUT(
   }
 
   try {
-    const { name, description, password, currentPassword } = await req.json();
-
-    // Vérifier que le mot de passe actuel est fourni
-    if (!currentPassword) {
-      return NextResponse.json({ error: "Mot de passe actuel requis" }, { status: 400 });
-    }
-
+    const { name, description, password } = await req.json();
     const section = await prisma.section.findUnique({
       where: { id: params.sectionId },
     });
@@ -29,26 +23,23 @@ export async function PUT(
       return NextResponse.json({ error: "Section non trouvée" }, { status: 404 });
     }
 
-    // Vérifier le mot de passe actuel
-    const isValid = await bcrypt.compare(currentPassword, section.password);
-    if (!isValid) {
-      return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 401 });
-    }
-
-    // Préparer les données de mise à jour
     const data: any = {};
-    let passwordChanged = false;
-    if (name) data.name = name;
-    if (description !== undefined) data.description = description;
+    let changes = [];
+    if (name && name !== section.name) {
+      data.name = name;
+      changes.push(`Nom : "${section.name}" → "${name}"`);
+    }
+    if (description !== undefined && description !== section.description) {
+      data.description = description;
+      changes.push(`Description : "${section.description || '(vide)'}" → "${description || '(vide)'}"`);
+    }
     if (password) {
       data.password = await bcrypt.hash(password, 10);
-      passwordChanged = true;
+      changes.push("Mot de passe modifié");
     }
 
-    // Vérifier si des modifications sont demandées
-    const hasChanges = Object.keys(data).length > 0;
-    if (!hasChanges) {
-      return NextResponse.json({ error: "Aucune modification demandée" }, { status: 400 });
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "Aucune modification" }, { status: 400 });
     }
 
     const updated = await prisma.section.update({
@@ -56,28 +47,22 @@ export async function PUT(
       data,
     });
 
-    // Envoyer un email de notification à l'admin
+    // Email de notification
     const adminEmail = session.user.email!;
-    const changes = [];
-    if (name) changes.push(`Nom: ${section.name} → ${name}`);
-    if (description !== undefined && description !== section.description) changes.push(`Description: ${section.description || "(vide)"} → ${description || "(vide)"}`);
-    if (passwordChanged) changes.push("Mot de passe: modifié");
-
-    const emailHtml = `
-      <h2>Modification de la section "${section.name}"</h2>
-      <p>Bonjour,</p>
-      <p>La section <strong>${section.name}</strong> a été modifiée par ${session.user.name || "l'administrateur"} (${session.user.email}).</p>
-      <ul>
-        ${changes.map(c => `<li>${c}</li>`).join('')}
-      </ul>
-      <p>Si vous n'êtes pas à l'origine de cette modification, contactez immédiatement le support.</p>
-    `;
-
+    const changesText = changes.join("\n");
     await sendEmail(
       adminEmail,
       `Modification de la section "${section.name}"`,
-      emailHtml
-    ).catch(console.error); // ne pas bloquer la réponse
+      `
+        <h2>📝 Modification de la section</h2>
+        <p><strong>Section :</strong> ${section.name}</p>
+        <p>Les modifications suivantes ont été effectuées :</p>
+        <ul>
+          ${changes.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+        <p>Si vous n'êtes pas à l'origine de ces modifications, veuillez contacter immédiatement l'administrateur.</p>
+      `
+    );
 
     return NextResponse.json(updated);
   } catch (error) {
