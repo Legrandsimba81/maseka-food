@@ -12,7 +12,7 @@ export default function SectionsPage() {
   const [loading, setLoading] = useState(true);
   const [showManagement, setShowManagement] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", description: "", password: "" });
+  const [editForm, setEditForm] = useState({ name: "", description: "", currentPassword: "", newPassword: "" });
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,27 +38,39 @@ export default function SectionsPage() {
     setEditForm({
       name: section.name,
       description: section.description || "",
-      password: "",
+      currentPassword: "",
+      newPassword: "",
     });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditForm({ name: "", description: "", password: "" });
+    setEditForm({ name: "", description: "", currentPassword: "", newPassword: "" });
   };
 
   const saveEdit = async (id: string) => {
+    // Validation : si newPassword est rempli, currentPassword doit être fourni
+    if (editForm.newPassword && !editForm.currentPassword) {
+      toast.error("Veuillez entrer le mot de passe actuel pour le changer");
+      return;
+    }
     const res = await fetch(`/api/admin/sections/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editForm),
+      body: JSON.stringify({
+        name: editForm.name,
+        description: editForm.description,
+        currentPassword: editForm.currentPassword || undefined,
+        newPassword: editForm.newPassword || undefined,
+      }),
     });
     if (res.ok) {
       toast.success("Section modifiée");
       setEditingId(null);
       fetchSections();
     } else {
-      toast.error("Erreur");
+      const err = await res.json();
+      toast.error(err.error || "Erreur");
     }
   };
 
@@ -115,13 +127,22 @@ export default function SectionsPage() {
                       className="input-field"
                       placeholder="Description"
                     />
-                    <input
-                      type="password"
-                      value={editForm.password}
-                      onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                      className="input-field"
-                      placeholder="Nouveau mot de passe (laisser vide pour ne pas changer)"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input
+                        type="password"
+                        value={editForm.currentPassword}
+                        onChange={(e) => setEditForm({ ...editForm, currentPassword: e.target.value })}
+                        className="input-field"
+                        placeholder="Mot de passe actuel (pour changer)"
+                      />
+                      <input
+                        type="password"
+                        value={editForm.newPassword}
+                        onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
+                        className="input-field"
+                        placeholder="Nouveau mot de passe (optionnel)"
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <button onClick={() => saveEdit(section.id)} className="btn-primary flex items-center gap-2">
                         <Save size={16} /> Enregistrer
